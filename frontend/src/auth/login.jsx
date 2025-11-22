@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { User, Lock } from "lucide-react";
 import { toast } from "react-hot-toast";
+import axios from "axios";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -20,21 +21,19 @@ const Login = () => {
 
     setLoading(true);
     try {
-      // Replace with your actual API call
-      const response = await fetch("/api/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+      const response = await axios.post("/api/login", {
+        email,
+        password,
       });
 
-      if (response.ok) {
-        toast.success("Login successful!");
-        navigate("/dashboard");
-      } else {
-        toast.error("Invalid credentials");
-      }
+      toast.success("Login successful!");
+      navigate("/home");
     } catch (error) {
-      toast.error("Login failed");
+      if (error.response?.status === 401) {
+        toast.error("Invalid credentials");
+      } else {
+        toast.error(error.response?.data?.message || "Login failed");
+      }
     } finally {
       setLoading(false);
     }
