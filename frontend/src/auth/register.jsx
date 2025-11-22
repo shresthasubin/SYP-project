@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Mail, Lock, Eye, EyeOff, Film } from "lucide-react";
 import { toast } from "react-hot-toast";
+import axios from "axios";
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -45,29 +46,23 @@ const Register = () => {
     if (!formData.agreeTerms) {
       toast.error("Please agree to the terms and conditions");
       return;
-    }
+    }             
 
     setLoading(true);
     try {
-      // Replace with your actual API call
-      const response = await fetch("/api/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          fullName: formData.fullName,
-          email: formData.email,
-          password: formData.password,
-        }),
+      const response = await axios.post("/api/register", {
+        fullName: formData.fullName,
+        email: formData.email,
+        password: formData.password,
       });
-
-      if (response.ok) {
-        toast.success("Account created successfully!");
-        navigate("/login");
-      } else {
-        toast.error("Registration failed");
-      }
+      toast.success("Account created successfully!");
+      navigate("/login");
     } catch (error) {
-      toast.error("Registration failed");
+      if (error.response?.status === 400) {
+        toast.error(error.response?.data?.message || "Email already exists");
+      } else {
+        toast.error(error.response?.data?.message || "Registration failed");
+      }
     } finally {
       setLoading(false);
     }
