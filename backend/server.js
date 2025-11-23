@@ -25,7 +25,7 @@ import './model/user.model.js'
 
 const startServer = async () => {
     await conenctDB();
-    await sequelize.sync({force:true})
+    await sequelize.sync({force:false})
     app.listen(port, () => {
         console.log(`App is listening at PORT: [${port}]`)
     })
