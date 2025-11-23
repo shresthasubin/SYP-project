@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { User, Lock } from "lucide-react";
+import { User, Lock, Eye, EyeOff, Film } from "lucide-react";
 import { toast } from "react-hot-toast";
 import axios from "axios";
 
@@ -9,6 +9,7 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [passwordVisible, setPasswordVisible] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -21,11 +22,14 @@ const Login = () => {
 
     setLoading(true);
     try {
-      const response = await axios.post("http://localhost:3000/api/user/login", {
-        email,
-        password,
-      },
-    {withCredentials: true});
+      const response = await axios.post(
+        "http://localhost:3000/api/user/login",
+        {
+          email,
+          password,
+        },
+        { withCredentials: true }
+      );
 
       toast.success("Login successful!");
       navigate("/");
@@ -90,13 +94,24 @@ const Login = () => {
                   <input
                     id="password"
                     name="password"
-                    type="password"
+                    type={passwordVisible ? "text" : "password"}
                     placeholder="••••••••"
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="form-input h-12 w-full flex-1 rounded-lg border-0 bg-[#2C273E] pl-11 pr-4 text-base font-normal text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#A726D7]/50"
+                    className="form-input h-12 w-full rounded-lg border-0 bg-[#2C273E] pl-11 pr-12 text-base font-normal text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#A726D7]/50"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setPasswordVisible(!passwordVisible)}
+                    className="absolute right-4 text-gray-600 dark:text-gray-400 flex items-center justify-center hover:text-[#A726D7] dark:hover:text-[#A726D7] transition-colors duration-200"
+                  >
+                    {passwordVisible ? (
+                      <EyeOff className="w-5 h-5" />
+                    ) : (
+                      <Eye className="w-5 h-5" />
+                    )}
+                  </button>
                 </div>
               </div>
 
