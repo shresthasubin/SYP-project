@@ -10,7 +10,7 @@ const Register = () => {
     email: "",
     password: "",
     confirmPassword: "",
-    agreeTerms: false,
+    agreeTerm: false,
   });
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -43,26 +43,26 @@ const Register = () => {
       return;
     }
 
-    if (!formData.agreeTerms) {
+    if (!formData.agreeTerm) {
       toast.error("Please agree to the terms and conditions");
       return;
     }             
 
     setLoading(true);
     try {
-      const response = await axios.post("/api/register", {
-        fullName: formData.fullName,
+      const response = await axios.post("http://localhost:3000/api/user/register", {
+        fullname: formData.fullName,
         email: formData.email,
         password: formData.password,
-      });
+        agreeTerm: formData.agreeTerm
+      },
+    {
+      withCredentials: true
+    });
       toast.success("Account created successfully!");
       navigate("/login");
     } catch (error) {
-      if (error.response?.status === 400) {
-        toast.error(error.response?.data?.message || "Email already exists");
-      } else {
-        toast.error(error.response?.data?.message || "Registration failed");
-      }
+        toast.error(error.response?.data?.message)
     } finally {
       setLoading(false);
     }
@@ -205,16 +205,16 @@ const Register = () => {
                   {/* Terms & Conditions Checkbox */}
                   <div className="flex items-start gap-3 pt-2">
                     <input
-                      id="agreeTerms"
-                      name="agreeTerms"
+                      id="agreeTerm"
+                      name="agreeTerm"
                       type="checkbox"
-                      checked={formData.agreeTerms}
+                      checked={formData.agreeTerm}
                       onChange={handleChange}
                       className="form-checkbox h-5 w-5 rounded border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-[#A726D7] focus:ring-2 focus:ring-[#A726D7] dark:focus:ring-[#A726D7] dark:focus:ring-offset-[#262C3C] cursor-pointer mt-1"
                     />
                     <label
                       className="text-xs text-white leading-relaxed cursor-pointer"
-                      htmlFor="agreeTerms"
+                      htmlFor="agreeTerm"
                     >
                       I agree to the{" "}
                       <Link

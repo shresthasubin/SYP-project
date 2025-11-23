@@ -21,13 +21,14 @@ const Login = () => {
 
     setLoading(true);
     try {
-      const response = await axios.post("/api/login", {
+      const response = await axios.post("http://localhost:3000/api/user/login", {
         email,
         password,
-      });
+      },
+    {withCredentials: true});
 
       toast.success("Login successful!");
-      navigate("/home");
+      navigate("/");
     } catch (error) {
       if (error.response?.status === 401) {
         toast.error("Invalid credentials");
@@ -106,11 +107,10 @@ const Login = () => {
                     id="remember-me"
                     name="remember-me"
                     type="checkbox"
-                    checked={rememberMe}
                     onChange={(e) => setRememberMe(e.target.checked)}
                     className="form-checkbox h-4 w-4 rounded border-slate-600 bg-[#2C273E] text-[#A726D7] focus:ring-[#A726D7]/50"
                   />
-                  <label className="text-slate-400" htmlFor="remember-me">
+                  <label className="text-slate-400" htmlFor="rememberMe">
                     Remember me
                   </label>
                 </div>
