@@ -1,34 +1,27 @@
-import express from 'express'
-import { sequelize,conenctDB } from './db/index.js'
-import dotenv from 'dotenv'
+import express from 'express';
 import cors from 'cors';
-import router from './routes/index.js';
-import cookieParser from 'cookie-parser';
+import dotenv from 'dotenv';
+import movieRoutes from './routes/movieRoutes.js';
+import hallRoutes from './routes/hallRoutes.js';
 
-dotenv.config({
-    path: './.env'
-})
+dotenv.config();
 
-const app = express()
-const port = process.env.PORT || 3000
+const app = express();
+const PORT = process.env.PORT || 5000;
 
-app.use(express.json())
-app.use(cors({
-    origin:'http://localhost:5173',
-    credentials: true
-}))
-app.use(cookieParser())
+// Middleware
+app.use(cors());
+app.use(express.json());
 
-app.use('/api',router)
+// Routes
+app.use('/api/movies', movieRoutes);
+app.use('/api/halls', hallRoutes);
 
-import './model/user.model.js'
+// Root route
+app.get('/', (req, res) => {
+  res.send('API is running...');
+});
 
-const startServer = async () => {
-    await conenctDB();
-    await sequelize.sync({force:false})
-    app.listen(port, () => {
-        console.log(`App is listening at PORT: [${port}]`)
-    })
-}
-
-startServer()
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});

@@ -1,1 +1,15 @@
 @import "tailwindcss";
+
+@theme {
+  --color-neon-red: #FF0033;
+  --color-neon-blue: #00F0FF;
+  --color-dark-bg: #0F0F1A;
+  --color-card-bg: #1E1E2F;
+  --color-sidebar-bg: #161625;
+}
+
+@layer base {
+  body {
+    @apply bg-dark-bg text-gray-100 font-sans antialiased;
+  }
+}

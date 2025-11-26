@@ -1,18 +1,17 @@
-import React from "react";
-import { Routes, Route } from "react-router-dom";
-import Login from "./auth/login.jsx";
-import Register from "./auth/register.jsx";
+import React from 'react';
+import { Routes, Route } from 'react-router-dom';
+import Dashboard from './pages/Dashboard';
+import MovieList from './pages/Movies/MovieList';
+import HallList from './pages/Halls/HallList';
 
-
-
-const App = () => {
+function App() {
   return (
     <Routes>
-      <Route path="/" element={<h1>Coming Soon</h1>} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
+      <Route path="/" element={<Dashboard />} />
+      <Route path="/movies" element={<MovieList />} />
+      <Route path="/halls" element={<HallList />} />
     </Routes>
   );
-};
+}
 
 export default App;
