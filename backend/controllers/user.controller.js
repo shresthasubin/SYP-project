@@ -36,7 +36,8 @@ const userRegister = async (req, res) => {
     } catch (err) {
         return res.status(500).json({
             success: false,
-            message: 'Server failed to register user'
+            message: 'Server failed to register user',
+            error: err.message
         })
     }
 }
@@ -97,7 +98,8 @@ const userLogin = async (req, res) => {
     } catch (err) {
         return res.status(500).json({
             success: false,
-            message: 'Server failed: Login'
+            message: 'Server failed: Login',
+            error: err.message
         })
     }
 }
@@ -135,7 +137,8 @@ const userDelete = async (req, res) => {
     } catch (err) {
         return res.status(500).json({
             success: false,
-            message: 'Server Failed: Cannot Delete'
+            message: 'Server Failed: Cannot Delete',
+            error: err.message
         })
     }
 }
@@ -153,7 +156,8 @@ const userGetAll = async (req, res) => {
     } catch (err) {
         return res.status(500).json({
             success: false,
-            message: 'Server error, cannot fetch all user'
+            message: 'Server error, cannot fetch all user',
+            error: err.message
         })
     }
 }
@@ -190,7 +194,8 @@ const userRoleUpdate = async (req, res) => {
     } catch (err) {
         return res.status(500).json({
             success: false,
-            message: 'Server failed: Cannot Update Data'
+            message: 'Server failed: Cannot Update Data',
+            error: err.message
         })
     }
 }
