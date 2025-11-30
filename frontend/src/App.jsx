@@ -2,15 +2,39 @@ import React from "react";
 import { Routes, Route } from "react-router-dom";
 import Login from "./auth/login.jsx";
 import Register from "./auth/register.jsx";
-
-
+import Landing from "./pages/Landing.jsx";
+import MoviesPage from "./pages/MoviesPage.jsx";
+import Locations from "./pages/Locations.jsx";
+import About from "./pages/About.jsx";
+import Contact from "./pages/Contact.jsx";
+import MovieDetail from "./pages/MovieDetail.jsx";
+import Layout from "./components/Layout.jsx";
+import Terms from "./pages/Terms.jsx";
+import Privacy from "./pages/Privacy.jsx";
+import Cookie from "./pages/Cookie.jsx";
+import FAQ from "./pages/FAQ.jsx";
+import NotFound from "./pages/NotFound.jsx";
 
 const App = () => {
   return (
     <Routes>
-      <Route path="/" element={<h1>Coming Soon</h1>} />
+      <Route element={<Layout />}>
+        <Route path="/" element={<Landing />} />
+        <Route path="/movies" element={<MoviesPage />} />
+        <Route path="/movies/:id" element={<MovieDetail />} />
+        <Route path="/locations" element={<Locations />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/legal/terms" element={<Terms />} />
+        <Route path="/legal/privacy" element={<Privacy />} />
+        <Route path="/legal/cookie" element={<Cookie />} />
+        <Route path="/faq" element={<FAQ />} />
+      </Route>
+
+      {/* auth is kept separate outside layout (simple) */}
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 };
