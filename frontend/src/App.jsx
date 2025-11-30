@@ -14,6 +14,10 @@ import Privacy from "./pages/Privacy.jsx";
 import Cookie from "./pages/Cookie.jsx";
 import FAQ from "./pages/FAQ.jsx";
 import NotFound from "./pages/NotFound.jsx";
+import AdminLayout from "./components/admin/AdminLayout.jsx";
+import Dashboard from "./pages/admin/Dashboard.jsx";
+import Movies from "./pages/admin/Movies.jsx";
+import Halls from "./pages/admin/Halls.jsx";
 
 const App = () => {
   return (
@@ -29,6 +33,13 @@ const App = () => {
         <Route path="/legal/privacy" element={<Privacy />} />
         <Route path="/legal/cookie" element={<Cookie />} />
         <Route path="/faq" element={<FAQ />} />
+      </Route>
+
+      {/* Admin Routes */}
+      <Route path="/admin" element={<AdminLayout />}>
+        <Route index element={<Dashboard />} />
+        <Route path="movies" element={<Movies />} />
+        <Route path="halls" element={<Halls />} />
       </Route>
 
       {/* auth is kept separate outside layout (simple) */}
