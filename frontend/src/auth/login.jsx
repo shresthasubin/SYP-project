@@ -48,7 +48,7 @@ const Login = () => {
     <div className="relative flex h-auto min-h-screen w-full flex-col bg-background-light dark:bg-background-dark font-display group/design-root overflow-x-hidden text-white">
       <div className="flex flex-1">
         {/* Left Side - Login Form */}
-        <div className="relative z-10 flex w-full flex-col justify-center bg-[#1E192D] p-8 md:w-1/2 lg:w-2/5">
+        <div className="relative z-10 flex w-full flex-col justify-center bg-black p-8 md:w-1/2 lg:w-2/5">
           <div className="mx-auto w-full max-w-sm">
             <div className="mb-8 text-left">
               <h1 className="text-4xl font-bold tracking-tight">Login</h1>
@@ -76,7 +76,7 @@ const Login = () => {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="form-input h-12 w-full flex-1 rounded-lg border-0 bg-[#2C273E] pl-11 pr-4 text-base font-normal text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#A726D7]/50"
+                    className="form-input h-12 w-full rounded-lg border-0 bg-black pl-11 pr-4 text-base font-normal text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#D72626]/50"
                   />
                 </div>
               </div>
@@ -99,12 +99,12 @@ const Login = () => {
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="form-input h-12 w-full rounded-lg border-0 bg-[#2C273E] pl-11 pr-12 text-base font-normal text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#A726D7]/50"
+                    className="form-input h-12 w-full rounded-lg border-0 bg-black pl-11 pr-12 text-base font-normal text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#D72626]/50"
                   />
                   <button
                     type="button"
                     onClick={() => setPasswordVisible(!passwordVisible)}
-                    className="absolute right-4 text-gray-600 dark:text-gray-400 flex items-center justify-center hover:text-[#A726D7] dark:hover:text-[#A726D7] transition-colors duration-200"
+                    className="absolute right-4 text-gray-600 dark:text-gray-400 flex items-center justify-center hover:text-[#D72626] dark:hover:text-[#D72626] transition-colors duration-200"
                   >
                     {passwordVisible ? (
                       <EyeOff className="w-5 h-5" />
@@ -123,7 +123,7 @@ const Login = () => {
                     name="remember-me"
                     type="checkbox"
                     onChange={(e) => setRememberMe(e.target.checked)}
-                    className="form-checkbox h-4 w-4 rounded border-slate-600 bg-[#2C273E] text-[#A726D7] focus:ring-[#A726D7]/50"
+                    className="form-checkbox h-4 w-4 rounded border-slate-600 bg-black text-[#D72626] focus:ring-[#D72626]/50"
                   />
                   <label className="text-slate-400" htmlFor="rememberMe">
                     Remember me
@@ -131,7 +131,7 @@ const Login = () => {
                 </div>
                 <Link
                   to="/forgot-password"
-                  className="font-medium text-slate-400 hover:text-[#A726D7]"
+                  className="font-medium text-slate-400 hover:text-[#D72626]"
                 >
                   Forgot your password?
                 </Link>
@@ -141,7 +141,7 @@ const Login = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="flex h-12 w-full items-center justify-center rounded-lg bg-[#A726D7] px-4 py-2 text-base font-semibold text-white transition-colors hover:bg-[#A726D7]/90 focus:outline-none focus:ring-2 focus:ring-[#A726D7] focus:ring-offset-2 dark:focus:ring-offset-background-dark disabled:opacity-50"
+                className="flex h-12 w-full items-center justify-center rounded-lg bg-[#D72626] px-4 py-2 text-base font-semibold text-white transition-colors hover:bg-[#D72626]/90 focus:outline-none focus:ring-2 focus:ring-[#D72626] focus:ring-offset-2 dark:focus:ring-offset-background-dark disabled:opacity-50"
               >
                 {loading ? "Logging in..." : "Login"}
               </button>
@@ -153,7 +153,7 @@ const Login = () => {
                 Don't have an account?{" "}
                 <Link
                   to="/register"
-                  className="font-semibold text-[#A726D7] hover:underline"
+                  className="font-semibold text-[#D72626] hover:underline"
                 >
                   Sign up
                 </Link>

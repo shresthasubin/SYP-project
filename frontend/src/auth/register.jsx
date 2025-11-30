@@ -46,23 +46,26 @@ const Register = () => {
     if (!formData.agreeTerm) {
       toast.error("Please agree to the terms and conditions");
       return;
-    }             
+    }
 
     setLoading(true);
     try {
-      const response = await axios.post("http://localhost:3000/api/user/register", {
-        fullname: formData.fullName,
-        email: formData.email,
-        password: formData.password,
-        agreeTerm: formData.agreeTerm
-      },
-    {
-      withCredentials: true
-    });
+      const response = await axios.post(
+        "http://localhost:3000/api/user/register",
+        {
+          fullname: formData.fullName,
+          email: formData.email,
+          password: formData.password,
+          agreeTerm: formData.agreeTerm,
+        },
+        {
+          withCredentials: true,
+        }
+      );
       toast.success("Account created successfully!");
       navigate("/login");
     } catch (error) {
-        toast.error(error.response?.data?.message)
+      toast.error(error.response?.data?.message);
     } finally {
       setLoading(false);
     }
@@ -72,7 +75,7 @@ const Register = () => {
     <div className="relative flex h-screen w-full flex-col bg-background-light dark:bg-background-dark font-display group/design-root overflow-x-hidden">
       <div className="layout-container flex h-full grow flex-col">
         <div className="flex flex-1 justify-center items-center">
-          <div className="flex w-full h-full overflow-hidden bg-[#1E192D] dark:bg-[#1C2431]">
+          <div className="flex w-full h-full overflow-hidden bg-black dark:bg-black">
             {/* Left Column: Image */}
             <div className="hidden lg:flex lg:w-1/2">
               <div
@@ -88,7 +91,7 @@ const Register = () => {
               <div className="flex flex-col gap-6">
                 {/* Header */}
                 <div className="flex items-center gap-3">
-                  <Film className="text-[#A726D7] w-8 h-8" />
+                  <Film className="text-[#D72626] w-8 h-8" />
                   <p className="text-xl font-bold text-white tracking-tight">
                     CinemaHub
                   </p>
@@ -111,7 +114,7 @@ const Register = () => {
                     <p className="text-white text-xs font-semibold leading-normal pb-3 uppercase tracking-wide">
                       Full Name
                     </p>
-                    <div className="flex w-full flex-1 items-stretch rounded-lg border border-gray-200 dark:border-gray-600 focus-within:ring-2 focus-within:ring-[#A726D7] bg-white dark:bg-[#262C3C] transition-all duration-200">
+                    <div className="flex w-full flex-1 items-stretch rounded-lg border border-gray-200 dark:border-gray-600 focus-within:ring-2 focus-within:ring-[#D72626] bg-white dark:bg-[#262C3C] transition-all duration-200">
                       <input
                         name="fullName"
                         type="text"
@@ -119,7 +122,7 @@ const Register = () => {
                         required
                         value={formData.fullName}
                         onChange={handleChange}
-                        className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-gray-900 dark:text-white focus:outline-0 focus:ring-2 focus:ring-[#A726D7] border border-gray-200 dark:border-gray-600 bg-white dark:bg-[#262C3C] h-14 placeholder:text-gray-500 dark:placeholder:text-gray-400 px-4 text-sm font-normal leading-normal transition-all duration-200"
+                        className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-gray-900 dark:text-white focus:outline-0 focus:ring-2 focus:ring-[#D72626] border border-gray-200 dark:border-gray-600 bg-white dark:bg-[#262C3C] h-14 placeholder:text-gray-500 dark:placeholder:text-gray-400 px-4 text-sm font-normal leading-normal transition-all duration-200"
                       />
                     </div>
                   </label>
@@ -129,7 +132,7 @@ const Register = () => {
                     <p className="text-white text-xs font-semibold leading-normal pb-3 uppercase tracking-wide">
                       Email Address
                     </p>
-                    <div className="flex w-full flex-1 items-stretch rounded-lg border border-gray-200 dark:border-gray-600 focus-within:ring-2 focus-within:ring-[#A726D7] bg-white dark:bg-[#262C3C] transition-all duration-200">
+                    <div className="flex w-full flex-1 items-stretch rounded-lg border border-gray-200 dark:border-gray-600 focus-within:ring-2 focus-within:ring-[#D72626] bg-white dark:bg-[#262C3C] transition-all duration-200">
                       <input
                         name="email"
                         type="email"
@@ -137,7 +140,7 @@ const Register = () => {
                         required
                         value={formData.email}
                         onChange={handleChange}
-                        className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-gray-900 dark:text-white focus:outline-0 focus:ring-2 focus:ring-[#A726D7] border border-gray-200 dark:border-gray-600 bg-white dark:bg-[#262C3C] h-14 placeholder:text-gray-500 dark:placeholder:text-gray-400 px-4 text-sm font-normal leading-normal transition-all duration-200"
+                        className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-gray-900 dark:text-white focus:outline-0 focus:ring-2 focus:ring-[#D72626] border border-gray-200 dark:border-gray-600 bg-white dark:bg-[#262C3C] h-14 placeholder:text-gray-500 dark:placeholder:text-gray-400 px-4 text-sm font-normal leading-normal transition-all duration-200"
                       />
                     </div>
                   </label>
@@ -147,7 +150,7 @@ const Register = () => {
                     <p className="text-white text-xs font-semibold leading-normal pb-3 uppercase tracking-wide">
                       Password
                     </p>
-                    <div className="flex w-full flex-1 items-stretch rounded-lg border border-gray-200 dark:border-gray-600 focus-within:ring-2 focus-within:ring-[#A726D7] bg-white dark:bg-[#262C3C] transition-all duration-200">
+                    <div className="flex w-full flex-1 items-stretch rounded-lg border border-gray-200 dark:border-gray-600 focus-within:ring-2 focus-within:ring-[#D72626] bg-white dark:bg-[#262C3C] transition-all duration-200">
                       <input
                         name="password"
                         type={showPassword ? "text" : "password"}
@@ -160,7 +163,7 @@ const Register = () => {
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="text-gray-600 dark:text-gray-400 flex items-center justify-center px-4 rounded-r-lg hover:text-[#A726D7] dark:hover:text-[#A726D7] transition-colors duration-200"
+                        className="text-gray-600 dark:text-gray-400 flex items-center justify-center px-4 rounded-r-lg hover:text-[#D72626] dark:hover:text-[#D72626] transition-colors duration-200"
                       >
                         {showPassword ? (
                           <EyeOff className="w-5 h-5" />
@@ -176,7 +179,7 @@ const Register = () => {
                     <p className="text-white text-xs font-semibold leading-normal pb-3 uppercase tracking-wide">
                       Confirm Password
                     </p>
-                    <div className="flex w-full flex-1 items-stretch rounded-lg border border-gray-200 dark:border-gray-600 focus-within:ring-2 focus-within:ring-[#A726D7] bg-white dark:bg-[#262C3C] transition-all duration-200">
+                    <div className="flex w-full flex-1 items-stretch rounded-lg border border-gray-200 dark:border-gray-600 focus-within:ring-2 focus-within:ring-[#D72626] bg-white dark:bg-[#262C3C] transition-all duration-200">
                       <input
                         name="confirmPassword"
                         type={showConfirmPassword ? "text" : "password"}
@@ -191,7 +194,7 @@ const Register = () => {
                         onClick={() =>
                           setShowConfirmPassword(!showConfirmPassword)
                         }
-                        className="text-gray-600 dark:text-gray-400 flex items-center justify-center px-4 rounded-r-lg hover:text-[#A726D7] dark:hover:text-[#A726D7] transition-colors duration-200"
+                        className="text-gray-600 dark:text-gray-400 flex items-center justify-center px-4 rounded-r-lg hover:text-[#D72626] dark:hover:text-[#D72626] transition-colors duration-200"
                       >
                         {showConfirmPassword ? (
                           <EyeOff className="w-5 h-5" />
@@ -210,7 +213,7 @@ const Register = () => {
                       type="checkbox"
                       checked={formData.agreeTerm}
                       onChange={handleChange}
-                      className="form-checkbox h-5 w-5 rounded border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-[#A726D7] focus:ring-2 focus:ring-[#A726D7] dark:focus:ring-[#A726D7] dark:focus:ring-offset-[#262C3C] cursor-pointer mt-1"
+                      className="form-checkbox h-5 w-5 rounded border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-[#D72626] focus:ring-2 focus:ring-[#D72626] dark:focus:ring-[#D72626] dark:focus:ring-offset-[#262C3C] cursor-pointer mt-1"
                     />
                     <label
                       className="text-xs text-white leading-relaxed cursor-pointer"
@@ -219,14 +222,14 @@ const Register = () => {
                       I agree to the{" "}
                       <Link
                         to="/terms"
-                        className="font-semibold text-[#A726D7] hover:text-[#A726D7]/80 transition-colors"
+                        className="font-semibold text-[#D72626] hover:text-[#D72626]/80 transition-colors"
                       >
                         Terms of Service
                       </Link>{" "}
                       and{" "}
                       <Link
                         to="/privacy"
-                        className="font-semibold text-[#A726D7] hover:text-[#A726D7]/80 transition-colors"
+                        className="font-semibold text-[#D72626] hover:text-[#D72626]/80 transition-colors"
                       >
                         Privacy Policy
                       </Link>
@@ -237,7 +240,7 @@ const Register = () => {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="flex items-center justify-center whitespace-nowrap rounded-lg bg-[#A726D7] h-11 px-6 text-sm font-bold text-white transition-all duration-200 hover:bg-[#A726D7]/90 active:bg-[#A726D7]/80 mt-6 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+                    className="flex items-center justify-center whitespace-nowrap rounded-lg bg-[#D72626] h-11 px-6 text-sm font-bold text-white transition-all duration-200 hover:bg-[#D72626]/90 active:bg-[#D72626]/80 mt-6 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
                   >
                     {loading ? "Creating account..." : "Sign Up"}
                   </button>
@@ -248,7 +251,7 @@ const Register = () => {
                   Already have an account?{" "}
                   <Link
                     to="/login"
-                    className="font-semibold text-[#A726D7] hover:underline"
+                    className="font-semibold text-[#D72626] hover:underline"
                   >
                     Log In
                   </Link>

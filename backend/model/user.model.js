@@ -27,7 +27,8 @@ const User = sequelize.define(
             allowNull: false,
             set(value) {
                 this.setDataValue("password", value.trim())
-            }
+            },
+            
         },
         agreeTerm: {
             type: DataTypes.BOOLEAN
