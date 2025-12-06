@@ -62,14 +62,12 @@ const Movies = () => {
     try {
       if (editingMovie) {
         await axios.put(`http://localhost:3000/api/movie/update/${editingMovie.id}`, data, {
-          withCredentials: true,
-          headers: { 'Content-Type': 'multipart/form-data' }
+          withCredentials: true
         });
         toast.success('Movie updated successfully');
       } else {
         await axios.post('http://localhost:3000/api/movie/register', data, {
-          withCredentials: true,
-          headers: { 'Content-Type': 'multipart/form-data' }
+          withCredentials: true
         });
         toast.success('Movie registered successfully');
       }
@@ -77,6 +75,7 @@ const Movies = () => {
       fetchMovies();
       resetForm();
     } catch (error) {
+      console.error('Movie save error', error.response || error.message);
       toast.error(error.response?.data?.message || 'Operation failed');
     }
   };

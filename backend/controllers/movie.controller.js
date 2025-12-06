@@ -93,9 +93,7 @@ const movieDelete = async (req,res) => {
             })
         }
 
-        await movie.destroy({where: {
-            id: id
-        }})
+        await movie.destroy()
 
         return res.status(200).json({
             success: true,

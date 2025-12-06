@@ -8,6 +8,12 @@ const AdminLayout = () => {
   const navigate = useNavigate();
   const { isAuthenticated, loading, logout, user } = useContext(AuthContext);
 
+  const isActive = (path) =>
+  location.pathname === path
+    ? "bg-white/10 text-white"
+    : "text-slate-400 hover:bg-white/5 hover:text-white";
+
+
   // Protect admin routes
   useEffect(() => {
     if (!loading && !isAuthenticated) {
