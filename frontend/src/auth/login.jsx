@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { User, Lock, Eye, EyeOff, Film } from "lucide-react";
 import { toast } from "react-hot-toast";
 import axios from "axios";
+import { AuthContext } from "../context/AuthContext.jsx";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -11,6 +12,7 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [passwordVisible, setPasswordVisible] = useState(false);
   const navigate = useNavigate();
+  const { login } = useContext(AuthContext);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -31,8 +33,12 @@ const Login = () => {
         { withCredentials: true }
       );
 
-      toast.success("Login successful!");
-      navigate("/");
+      if (response.data.success) {
+        // Store user info in context
+        login(response.data.data.userExist, response.data.data.token);
+        toast.success("Login successful!");
+        navigate("/");
+      }
     } catch (error) {
       if (error.response?.status === 401) {
         toast.error("Invalid credentials");
