@@ -5,6 +5,7 @@ import { title } from "process";
 
 const movieRegister = async (req, res) => {
     try {
+        
         const { movie_title, description, genre, duration} = req.body
         if (!movie_title || !description || !genre || !duration) {
             return res.status(400).json({
@@ -12,6 +13,16 @@ const movieRegister = async (req, res) => {
                 message: "Movie details must be filled to register"
             })
         }
+
+        let genreArr 
+        if (genre.includes(", ")) {
+            genreArr = genre.split(", ")
+        } else if (genre.includes(",")) {
+            genreArr = genre.split(",")
+        } else {
+            genreArr = genre.split(" ")
+        }
+
         if (!req.user) {
             return res.status(404).json({
                 success: false,
@@ -43,7 +54,7 @@ const movieRegister = async (req, res) => {
         const movie = await Movie.create({
             movie_title,
             description,
-            genre,
+            genre: genreArr,
             duration,
             releaseDate: date.toISOString().split('T')[0],
             isPlaying: true,

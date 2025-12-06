@@ -26,7 +26,7 @@ const Movies = () => {
 
   const fetchMovies = async () => {
     try {
-      const response = await axios.get('http://localhost:3000/api/movie/get');
+      const response = await axios.get('http://localhost:3000/api/movie/get', {withCredentials: true});
       if (response.data.success) {
         setMovies(response.data.data);
       }

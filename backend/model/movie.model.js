@@ -8,35 +8,22 @@ const Movie = sequelize.define(
             type: DataTypes.STRING(30),
             allowNull: false,
             set(value) {
-                this.setDataValue("movie_title", value.trim())
+                if (typeof value === 'string') {
+                    this.setDataValue("movie_title", value.trim())
+                }
             }
         },
         description: {
             type: DataTypes.TEXT,
-            set(value) {
-                this.setDataValue("description", value.trim())
+            et(value) {
+                if (typeof value === 'string') {
+                    this.setDataValue("movie_title", value.trim())
+                }
             }
         },
         genre: {
-            type: DataTypes.ENUM("action",
-                "adventure",
-                "comedy",
-                "drama",
-                "romance",
-                "thriller",
-                "horror",
-                "fantasy",
-                "science_fiction",
-                "mystery",
-                "crime",
-                "animation",
-                "documentary",
-                "family",
-                "history",
-                "war"
-            ),
-            allowNull: false,
-            defaultValue: "action"
+            type: DataTypes.JSON,
+            allowNull: false
         },
         duration: {
             type: DataTypes.INTEGER,
