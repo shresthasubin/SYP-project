@@ -1,6 +1,7 @@
+/* 1️⃣ ALL imports first */
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
 
+/* 2️⃣ Theme tokens */
 @theme {
   --font-sans: 'Outfit', system-ui, sans-serif;
 
@@ -8,7 +9,7 @@
   --color-secondary: #12141c;
   --color-accent: #e50914;
   --color-accent-hover: #b20710;
-  
+
   --color-text-primary: #ffffff;
   --color-text-secondary: #9ca3af;
 
@@ -20,22 +21,26 @@
   }
 }
 
+/* 3️⃣ Base layer styles */
 @layer base {
   html {
     @apply scroll-smooth;
   }
-  
+
   body {
-    @apply bg-primary text-text-primary font-sans antialiased selection:bg-accent selection:text-white;
+    @apply bg-primary text-text-primary font-sans antialiased
+           selection:bg-accent selection:text-white;
   }
 
   /* Custom Scrollbar */
   ::-webkit-scrollbar {
     width: 8px;
   }
+
   ::-webkit-scrollbar-track {
     @apply bg-secondary;
   }
+
   ::-webkit-scrollbar-thumb {
     @apply bg-white/10 rounded-full hover:bg-accent transition-colors;
   }
