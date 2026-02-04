@@ -76,7 +76,7 @@ const userLogin = async (req, res) => {
       process.env.TOKEN_SECRET,
       {
         expiresIn: "1h",
-      }
+      },
     );
 
     res.cookie("token", token, {
@@ -121,7 +121,7 @@ const userDelete = async (req, res) => {
       });
     }
 
-    if (user.role !== "super-admin") {
+    if (user.role !== "admin") {
       user.isDeleted = true;
       await user.save();
     }
@@ -173,7 +173,7 @@ const userRoleUpdate = async (req, res) => {
     }
 
     const { role } = req.body;
-    if (req.user.role == "super-admin") {
+    if (req.user.role == "admin") {
       user.role = role;
       await user.save();
     } else {

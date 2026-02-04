@@ -1,39 +1,40 @@
-import express from 'express'
-import { sequelize,conenctDB } from './db/index.js'
-import dotenv from 'dotenv'
-import cors from 'cors';
-import router from './routes/index.js';
-import cookieParser from 'cookie-parser';
+import express from "express";
+import { sequelize, conenctDB } from "./db/index.js";
+import dotenv from "dotenv";
+import cors from "cors";
+import router from "./routes/index.js";
+import cookieParser from "cookie-parser";
 
 dotenv.config({
-    path: './.env'
-})
+  path: "./.env",
+});
 
-const app = express()
-const port = process.env.PORT || 3000
+const app = express();
+const port = process.env.PORT || 3000;
 
-app.use(express.json())
-app.use(cors({
-    origin:'http://localhost:5173',
-    credentials: true
-}))
+app.use(express.json());
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    credentials: true,
+  }),
+);
 app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser())
+app.use(cookieParser());
 
-app.use('/uploads', express.static('uploads'))
+app.use("/uploads", express.static("uploads"));
 
-app.use('/api',router)
-
-import './model/user.model.js'
-import './model/movie.model.js'
-import './model/hall.model.js'
+app.use("/api", router);
 
 const startServer = async () => {
-    await conenctDB();
-    await sequelize.sync({force:false})
-    app.listen(port, () => {
-        console.log(`App is listening at PORT: [${port}]`)
-    })
-}
+  await conenctDB();
+  await sequelize.sync({ force: true });
+  app.listen(port, () => {
+    console.log(`App is listening at PORT: [${port}]`);
+    app.get("/", (req, res) => {
+      res.send("Backend is running...");
+    });
+  });
+};
 
-startServer()
+startServer();

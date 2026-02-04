@@ -19,13 +19,9 @@ userRouter.post("/logout", userLogout);
 userRouter.get("/get", userGetAll);
 userRouter.put(
   "/update/:id",
-  [verifyJWT, roleCheck(["super-admin"])],
-  userRoleUpdate
+  [verifyJWT, roleCheck(["admin"])],
+  userRoleUpdate,
 );
-userRouter.delete(
-  "/delete/:id",
-  [verifyJWT, roleCheck(["super-admin"])],
-  userDelete
-);
+userRouter.delete("/delete/:id", [verifyJWT, roleCheck(["admin"])], userDelete);
 
 export default userRouter;
