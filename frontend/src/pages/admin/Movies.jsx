@@ -142,86 +142,159 @@ const Movies = () => {
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white">Movies</h1>
-          <p className="mt-2 text-slate-400">Manage your movie catalog</p>
+          <h1 className="text-3xl font-bold text-white">Movie Management</h1>
+          <p className="mt-1 text-slate-400">
+            Add, edit, or remove movies from your cinema's listing.
+          </p>
         </div>
         <button
           onClick={() => {
             resetForm();
             setShowModal(true);
           }}
-          className="flex items-center gap-2 rounded-lg bg-[#D72626] px-4 py-2 font-semibold text-white hover:bg-[#D72626]/90 transition-colors"
+          className="flex items-center gap-2 rounded-lg bg-[#D72626] px-4 py-2 font-semibold text-white hover:bg-red-700 transition-colors"
         >
           <Plus size={20} />
-          Add Movie
+          Add New Movie
         </button>
       </div>
 
       {/* Search Bar */}
-      <div className="relative">
-        <Search
-          className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-          size={20}
-        />
-        <input
-          type="text"
-          placeholder="Search movies..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full rounded-xl bg-black border border-white/10 py-3 pl-12 pr-4 text-white placeholder:text-slate-500 focus:border-[#D72626] focus:outline-none"
-        />
+      <div className="flex items-center gap-4">
+        <div className="relative flex-1">
+          <Search
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"
+            size={18}
+          />
+          <input
+            type="text"
+            placeholder="Search movies..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full rounded-lg bg-slate-900 border border-slate-700 py-2 pl-11 pr-4 text-white placeholder:text-slate-500 focus:border-purple-500 focus:outline-none"
+          />
+        </div>
       </div>
 
-      {/* Movies Grid */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {filteredMovies.map((movie) => (
-          <div
-            key={movie.id}
-            className="group relative overflow-hidden rounded-xl bg-black border border-white/10 transition-all hover:border-[#D72626]/50"
-          >
-            <div className="aspect-[2/3] w-full bg-slate-800 relative">
-              {movie.moviePoster ? (
-                <img
-                  src={`http://localhost:3000/uploads/${movie.moviePoster}`}
-                  alt={movie.movie_title}
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <div className="flex h-full items-center justify-center">
-                  <Film size={48} className="text-slate-600" />
-                </div>
-              )}
-              <div className="absolute inset-0 bg-black/60 opacity-0 transition-opacity group-hover:opacity-100 flex items-center justify-center gap-4">
-                <button
-                  onClick={() => openEditModal(movie)}
-                  className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
-                >
-                  <Edit2 size={20} />
-                </button>
-                <button
-                  onClick={() => handleDelete(movie.id)}
-                  className="p-2 rounded-full bg-red-500/20 hover:bg-red-500/40 text-red-500 transition-colors"
-                >
-                  <Trash2 size={20} />
-                </button>
-              </div>
-            </div>
-            <div className="p-4">
-              <h3 className="font-bold text-white truncate">
-                {movie.movie_title}
-              </h3>
-              <div className="mt-2 flex items-center gap-4 text-sm text-slate-400">
-                <span className="flex items-center gap-1">
-                  <Clock size={14} />
-                  {movie.duration}m
-                </span>
-                <span className="truncate">{movie.genre}</span>
-              </div>
-            </div>
+      {/* Movies Table */}
+      <div className="rounded-lg border border-slate-700 bg-slate-950 overflow-hidden">
+        {filteredMovies.length === 0 ? (
+          <div className="flex h-64 items-center justify-center">
+            <p className="text-slate-400">No movies found</p>
           </div>
-        ))}
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-slate-700 bg-slate-900">
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">
+                    TITLE
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">
+                    GENRE
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">
+                    RELEASE DATE
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">
+                    STATUS
+                  </th>
+                  <th className="px-6 py-4 text-center text-sm font-semibold text-slate-300">
+                    ACTIONS
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredMovies.map((movie) => (
+                  <tr
+                    key={movie.id}
+                    className="border-b border-slate-800 hover:bg-slate-900/50 transition-colors"
+                  >
+                    {/* Poster & Title */}
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-4">
+                        <div className="h-16 w-12 flex-shrink-0 rounded bg-slate-800 overflow-hidden">
+                          {movie.moviePoster ? (
+                            <img
+                              src={`http://localhost:3000/uploads/${movie.moviePoster}`}
+                              alt={movie.movie_title}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <div className="flex h-full items-center justify-center">
+                              <Film size={20} className="text-slate-600" />
+                            </div>
+                          )}
+                        </div>
+                        <div>
+                          <p className="font-medium text-white">
+                            {movie.movie_title}
+                          </p>
+                        </div>
+                      </div>
+                    </td>
+
+                    {/* Genre */}
+                    <td className="px-6 py-4">
+                      <p className="text-sm text-slate-300">
+                        {typeof movie.genre === "string"
+                          ? movie.genre
+                          : Array.isArray(movie.genre)
+                            ? movie.genre.join(", ")
+                            : "N/A"}
+                      </p>
+                    </td>
+
+                    {/* Release Date */}
+                    <td className="px-6 py-4">
+                      <p className="text-sm text-slate-300">
+                        {movie.releaseDate
+                          ? new Date(movie.releaseDate).toLocaleDateString()
+                          : "N/A"}
+                      </p>
+                    </td>
+
+                    {/* Status */}
+                    <td className="px-6 py-4">
+                      <span
+                        className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
+                          movie.isPlaying
+                            ? "bg-green-900/30 text-green-400"
+                            : "bg-amber-900/30 text-amber-400"
+                        }`}
+                      >
+                        {movie.isPlaying ? "Now Showing" : "Coming Soon"}
+                      </span>
+                    </td>
+
+                    {/* Actions */}
+                    <td className="px-6 py-4">
+                      <div className="flex items-center justify-center gap-3">
+                        <button
+                          onClick={() => openEditModal(movie)}
+                          className="p-2 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-blue-400 transition-colors"
+                          title="Edit"
+                        >
+                          <Edit2 size={18} />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(movie.id)}
+                          className="p-2 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-red-400 transition-colors"
+                          title="Delete"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {/* Modal */}

@@ -148,96 +148,138 @@ const Halls = () => {
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white">Halls</h1>
-          <p className="mt-2 text-slate-400">Manage your cinema halls</p>
+          <h1 className="text-3xl font-bold text-white">Halls Management</h1>
+          <p className="mt-1 text-slate-400">
+            Add, edit, and view cinema halls.
+          </p>
         </div>
         <button
           onClick={() => {
             resetForm();
             setShowModal(true);
           }}
-          className="flex items-center gap-2 rounded-lg bg-[#D72626] px-4 py-2 font-semibold text-white hover:bg-[#D72626]/90 transition-colors"
+          className="flex items-center gap-2 rounded-lg bg-purple-600 px-4 py-2 font-semibold text-white hover:bg-purple-700 transition-colors"
         >
           <Plus size={20} />
-          Add Hall
+          Add New Hall
         </button>
       </div>
 
       {/* Search Bar */}
-      <div className="relative">
-        <Search
-          className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-          size={20}
-        />
-        <input
-          type="text"
-          placeholder="Search halls..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full rounded-xl bg-black border border-white/10 py-3 pl-12 pr-4 text-white placeholder:text-slate-500 focus:border-[#D72626] focus:outline-none"
-        />
+      <div className="flex items-center gap-4">
+        <div className="relative flex-1">
+          <Search
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"
+            size={18}
+          />
+          <input
+            type="text"
+            placeholder="Search halls..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full rounded-lg bg-slate-900 border border-slate-700 py-2 pl-11 pr-4 text-white placeholder:text-slate-500 focus:border-purple-500 focus:outline-none"
+          />
+        </div>
       </div>
 
-      {/* Halls Grid */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {filteredHalls.map((hall) => (
-          <div
-            key={hall.id}
-            className={`group relative overflow-hidden rounded-xl bg-black border ${hall.isActive ? "border-[#D72626]" : "border-slate-600"} transition-all hover:border-[#D72626]/50`}
-          >
-            <div className="aspect-video w-full bg-slate-800 relative">
-              {hall.hallPoster ? (
-                <img
-                  src={`http://localhost:3000/uploads/${hall.hallPoster}`}
-                  alt={hall.hall_name}
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <div className="flex h-full items-center justify-center">
-                  <MapPin size={48} className="text-slate-600" />
-                </div>
-              )}
-              <div className="absolute top-2 right-2 px-2 py-1 rounded bg-black/80 text-xs text-white">
-                {hall.isActive ? "Active" : "Inactive"}
-              </div>
-              <div className="absolute inset-0 bg-black/60 opacity-0 transition-opacity group-hover:opacity-100 flex items-center justify-center gap-4">
-                <button
-                  onClick={() => openEditModal(hall)}
-                  className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
-                >
-                  <Edit2 size={20} />
-                </button>
-                {hall.isActive && (
-                  <button
-                    onClick={() => handleDelete(hall.id)}
-                    className="p-2 rounded-full bg-red-500/20 hover:bg-red-500/40 text-red-500 transition-colors"
-                  >
-                    <Trash2 size={20} />
-                  </button>
-                )}
-              </div>
-            </div>
-            <div className="p-4 space-y-2">
-              <h3 className="font-bold text-white text-lg">{hall.hall_name}</h3>
-              <div className="flex items-center gap-2 text-sm text-slate-400">
-                <MapPin size={16} className="text-[#D72626]" />
-                <span className="truncate">{hall.hall_location}</span>
-              </div>
-              <div className="flex items-center justify-between text-sm text-slate-400 pt-2 border-t border-white/5">
-                <div className="flex items-center gap-2">
-                  <Phone size={14} />
-                  <span>{hall.hall_contact}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Users size={14} />
-                  <span>{hall.capacity} Seats</span>
-                </div>
-              </div>
-            </div>
+      {/* Halls Table */}
+      <div className="rounded-lg border border-slate-700 bg-slate-950 overflow-hidden">
+        {filteredHalls.length === 0 ? (
+          <div className="flex h-64 items-center justify-center">
+            <p className="text-slate-400">No halls found</p>
           </div>
-        ))}
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-slate-700 bg-slate-900">
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">
+                    HALL NAME
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">
+                    CAPACITY
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">
+                    SCREENS
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">
+                    STATUS
+                  </th>
+                  <th className="px-6 py-4 text-center text-sm font-semibold text-slate-300">
+                    ACTIONS
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredHalls.map((hall) => (
+                  <tr
+                    key={hall.id}
+                    className="border-b border-slate-800 hover:bg-slate-900/50 transition-colors"
+                  >
+                    {/* Hall Name */}
+                    <td className="px-6 py-4">
+                      <p className="font-medium text-white">{hall.hall_name}</p>
+                    </td>
+
+                    {/* Capacity */}
+                    <td className="px-6 py-4">
+                      <p className="text-sm text-slate-300">
+                        {hall.capacity} Seats
+                      </p>
+                    </td>
+
+                    {/* Screens (placeholder - from capacity) */}
+                    <td className="px-6 py-4">
+                      <p className="text-sm text-slate-300">1</p>
+                    </td>
+
+                    {/* Status */}
+                    <td className="px-6 py-4">
+                      <span
+                        className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
+                          hall.isActive
+                            ? "bg-green-900/30 text-green-400"
+                            : "bg-amber-900/30 text-amber-400"
+                        }`}
+                      >
+                        {hall.isActive ? "Active" : "Under Maintenance"}
+                      </span>
+                    </td>
+
+                    {/* Actions */}
+                    <td className="px-6 py-4">
+                      <div className="flex items-center justify-center gap-3">
+                        <button
+                          title="Layout"
+                          className="p-2 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors"
+                        >
+                          <FileText size={18} />
+                        </button>
+                        <button
+                          onClick={() => openEditModal(hall)}
+                          className="p-2 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-blue-400 transition-colors"
+                          title="Edit"
+                        >
+                          <Edit2 size={18} />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(hall.id)}
+                          className="p-2 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-red-400 transition-colors"
+                          title="Delete"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {/* Modal */}
