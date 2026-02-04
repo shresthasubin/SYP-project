@@ -6,7 +6,7 @@ import { upload } from "../utils/multer.js";
 const movieRouter = express.Router()
 
 movieRouter.post('/register', 
-    [verifyJWT, roleCheck(['hall-admin'])], 
+    [verifyJWT, roleCheck(['hall-admin','admin'])], 
     upload.fields([
         { name: "moviePoster", maxCount: 1 },
         { name: "movieTrailer", maxCount: 1 }
@@ -15,17 +15,17 @@ movieRouter.post('/register',
 )
 
 movieRouter.delete('/delete/:id', 
-    [verifyJWT, roleCheck(['hall-admin'])], 
+    [verifyJWT, roleCheck(['hall-admin','admin'])], 
     movieDelete
 )
 
 movieRouter.get('/get', 
-    [verifyJWT, roleCheck(['hall-admin'])], 
+    [verifyJWT, roleCheck(['hall-admin','admin'])], 
     movieGet
 )
 
 movieRouter.put('/update/:id', 
-    [verifyJWT, roleCheck(['hall-admin'])], 
+    [verifyJWT, roleCheck(['hall-admin','admin'])], 
     upload.fields([
         { name: "moviePoster", maxCount: 1 },
         { name: "movieTrailer", maxCount: 1 }

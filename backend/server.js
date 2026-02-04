@@ -31,14 +31,14 @@ app.use("/api", router);
 const seedAdmin = async () => {
   try {
     const adminExists = await User.findOne({
-      where: { email: "admin@cinemahub.com" },
+      where: { email: process.env.seed_admin },
     });
 
     if (!adminExists) {
-      const hashedPassword = await bcrypt.hash("Admin@123", 10);
+      const hashedPassword = await bcrypt.hash(process.env.seed_admin_pass, 10);
       await User.create({
         fullname: "Admin",
-        email: "admin@cinemahub.com",
+        email: process.env.seed_admin,
         password: hashedPassword,
         agreeTerm: true,
         role: "admin",

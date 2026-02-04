@@ -14,17 +14,17 @@ const hallRouter = express.Router();
 hallRouter.post(
   "/register",
   verifyJWT,
-  upload.single("hallPoster"),
+  upload.single("hallPoster"),roleCheck(["admin","hall-admin"]),
   hallRegister,
 );
 hallRouter.put(
   "/update/:id",
-  [verifyJWT, roleCheck(["admin"])],
+  [verifyJWT, roleCheck(["admin","hall-admin"])],
   upload.single("hallPoster"),
   hallUpdate,
 );
-hallRouter.get("/get", [verifyJWT, roleCheck(["admin"])], hallGet);
-hallRouter.get("/get-active", [verifyJWT, roleCheck(["admin"])], hallGetActive);
+hallRouter.get("/get", [verifyJWT, roleCheck(["admin","hall-admin"])], hallGet);
+hallRouter.get("/get-active", [verifyJWT, roleCheck(["admin","hall-admin"])], hallGetActive);
 hallRouter.delete("/delete/:id", [verifyJWT, roleCheck(["admin"])], hallDelete);
 
 export default hallRouter;

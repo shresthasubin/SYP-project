@@ -1,5 +1,6 @@
 import React from "react";
 import { Routes, Route } from "react-router-dom";
+import { Toaster } from "react-hot-toast";
 import Login from "./auth/login.jsx";
 import Register from "./auth/register.jsx";
 import Landing from "./pages/Landing.jsx";
@@ -23,6 +24,30 @@ import { AuthProvider } from "./context/AuthContext.jsx";
 const App = () => {
   return (
     <AuthProvider>
+      <Toaster
+        position="top-right"
+        reverseOrder={false}
+        gutter={8}
+        toastOptions={{
+          duration: 3000,
+          style: {
+            background: "#363636",
+            color: "#fff",
+          },
+          success: {
+            duration: 3000,
+            style: {
+              background: "#10b981",
+            },
+          },
+          error: {
+            duration: 3000,
+            style: {
+              background: "#ef4444",
+            },
+          },
+        }}
+      />
       <Routes>
         <Route element={<Layout />}>
           <Route path="/" element={<Landing />} />

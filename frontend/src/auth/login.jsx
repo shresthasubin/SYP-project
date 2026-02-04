@@ -40,8 +40,10 @@ const Login = () => {
         toast.success("Login successful!");
 
         // Navigate based on user role
-        if (userData.role === "admin" || userData.role === "hall-admin") {
+        if (userData.role === "admin") {
           navigate("/admin");
+        } else if (userData.role === "hall-admin") {
+          navigate("/halladmin");
         } else {
           navigate("/");
         }
