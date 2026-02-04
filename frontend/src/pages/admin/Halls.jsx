@@ -1,22 +1,34 @@
-import React, { useState, useEffect } from 'react';
-import { Plus, Search, Edit2, Trash2, X, Upload, MapPin, Phone, Users, FileText } from 'lucide-react';
-import axios from 'axios';
-import { toast } from 'react-hot-toast';
+import React, { useState, useEffect } from "react";
+import {
+  Plus,
+  Search,
+  Edit2,
+  Trash2,
+  X,
+  Upload,
+  MapPin,
+  Phone,
+  Users,
+  FileText,
+} from "lucide-react";
+import axios from "axios";
+import { toast } from "react-hot-toast";
 
 const Halls = () => {
   const [halls, setHalls] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [editingHall, setEditingHall] = useState(null);
 
   const [formData, setFormData] = useState({
-    hall_name: '',
-    hall_location: '',
-    hall_contact: '',
-    license: '',
-    capacity: '',
-    hallPoster: null
+    hall_name: "",
+    hall_location: "",
+    hall_contact: "",
+    license: "",
+    capacity: "",
+    hallPoster: null,
+    isActive: true,
   });
 
   useEffect(() => {
@@ -25,72 +37,81 @@ const Halls = () => {
 
   const fetchHalls = async () => {
     try {
-      const response = await axios.get('http://localhost:3000/api/hall/get');
+      const response = await axios.get("http://localhost:3000/api/hall/get", {
+        withCredentials: true,
+      });
       if (response.data.success) {
         setHalls(response.data.data);
       }
     } catch (error) {
-      toast.error('Failed to fetch halls');
+      toast.error("Failed to fetch halls");
     } finally {
       setLoading(false);
     }
   };
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
   };
 
   const handleFileChange = (e) => {
     const { name, files } = e.target;
     if (files && files[0]) {
-      setFormData(prev => ({ ...prev, [name]: files[0] }));
+      setFormData((prev) => ({ ...prev, [name]: files[0] }));
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     const data = new FormData();
-    data.append('hall_name', formData.hall_name);
-    data.append('hall_location', formData.hall_location);
-    data.append('hall_contact', formData.hall_contact);
-    data.append('license', formData.license);
-    data.append('capacity', formData.capacity);
-    if (formData.hallPoster) data.append('hallPoster', formData.hallPoster);
+    data.append("hall_name", formData.hall_name);
+    data.append("hall_location", formData.hall_location);
+    data.append("hall_contact", formData.hall_contact);
+    data.append("license", formData.license);
+    data.append("capacity", formData.capacity);
+    data.append("isActive", formData.isActive);
+    if (formData.hallPoster) data.append("hallPoster", formData.hallPoster);
 
     try {
       if (editingHall) {
-        await axios.put(`http://localhost:3000/api/hall/update/${editingHall.id}`, data, {
-          withCredentials: true,
-          headers: { 'Content-Type': 'multipart/form-data' }
-        });
-        toast.success('Hall updated successfully');
+        await axios.put(
+          `http://localhost:3000/api/hall/update/${editingHall.id}`,
+          data,
+          {
+            withCredentials: true,
+          },
+        );
+        toast.success("Hall updated successfully");
       } else {
-        await axios.post('http://localhost:3000/api/hall/register', data, {
+        await axios.post("http://localhost:3000/api/hall/register", data, {
           withCredentials: true,
-          headers: { 'Content-Type': 'multipart/form-data' }
         });
-        toast.success('Hall registered successfully');
+        toast.success("Hall registered successfully");
       }
       setShowModal(false);
       fetchHalls();
       resetForm();
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Operation failed');
+      toast.error(error.response?.data?.message || "Operation failed");
     }
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to deactivate this hall?')) return;
-    
+    if (!window.confirm("Are you sure you want to deactivate this hall?"))
+      return;
+
     try {
       await axios.delete(`http://localhost:3000/api/hall/delete/${id}`, {
-        withCredentials: true
+        withCredentials: true,
       });
-      toast.success('Hall deactivated successfully');
+      toast.success("Hall deactivated successfully");
       fetchHalls();
     } catch (error) {
-      toast.error('Failed to deactivate hall');
+      toast.error("Failed to deactivate hall");
     }
   };
 
@@ -102,25 +123,27 @@ const Halls = () => {
       hall_contact: hall.hall_contact,
       license: hall.license,
       capacity: hall.capacity,
-      hallPoster: null
+      hallPoster: null,
+      isActive: hall.isActive,
     });
     setShowModal(true);
   };
 
   const resetForm = () => {
     setFormData({
-      hall_name: '',
-      hall_location: '',
-      hall_contact: '',
-      license: '',
-      capacity: '',
-      hallPoster: null
+      hall_name: "",
+      hall_location: "",
+      hall_contact: "",
+      license: "",
+      capacity: "",
+      hallPoster: null,
+      isActive: true,
     });
     setEditingHall(null);
   };
 
-  const filteredHalls = halls.filter(hall => 
-    hall.hall_name.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredHalls = halls.filter((hall) =>
+    hall.hall_name.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   return (
@@ -130,8 +153,11 @@ const Halls = () => {
           <h1 className="text-3xl font-bold text-white">Halls</h1>
           <p className="mt-2 text-slate-400">Manage your cinema halls</p>
         </div>
-        <button 
-          onClick={() => { resetForm(); setShowModal(true); }}
+        <button
+          onClick={() => {
+            resetForm();
+            setShowModal(true);
+          }}
           className="flex items-center gap-2 rounded-lg bg-[#D72626] px-4 py-2 font-semibold text-white hover:bg-[#D72626]/90 transition-colors"
         >
           <Plus size={20} />
@@ -141,7 +167,10 @@ const Halls = () => {
 
       {/* Search Bar */}
       <div className="relative">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+        <Search
+          className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+          size={20}
+        />
         <input
           type="text"
           placeholder="Search halls..."
@@ -154,11 +183,14 @@ const Halls = () => {
       {/* Halls Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {filteredHalls.map((hall) => (
-          <div key={hall.id} className={`group relative overflow-hidden rounded-xl bg-black border ${hall.isActive ? 'border-white/10' : 'border-red-900/50 opacity-75'} transition-all hover:border-[#D72626]/50`}>
+          <div
+            key={hall.id}
+            className={`group relative overflow-hidden rounded-xl bg-black border ${hall.isActive ? "border-[#D72626]" : "border-slate-600"} transition-all hover:border-[#D72626]/50`}
+          >
             <div className="aspect-video w-full bg-slate-800 relative">
               {hall.hallPoster ? (
-                <img 
-                  src={`http://localhost:3000/uploads/${hall.hallPoster}`} 
+                <img
+                  src={`http://localhost:3000/uploads/${hall.hallPoster}`}
                   alt={hall.hall_name}
                   className="h-full w-full object-cover"
                 />
@@ -168,17 +200,17 @@ const Halls = () => {
                 </div>
               )}
               <div className="absolute top-2 right-2 px-2 py-1 rounded bg-black/80 text-xs text-white">
-                {hall.isActive ? 'Active' : 'Inactive'}
+                {hall.isActive ? "Active" : "Inactive"}
               </div>
               <div className="absolute inset-0 bg-black/60 opacity-0 transition-opacity group-hover:opacity-100 flex items-center justify-center gap-4">
-                <button 
+                <button
                   onClick={() => openEditModal(hall)}
                   className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
                 >
                   <Edit2 size={20} />
                 </button>
                 {hall.isActive && (
-                  <button 
+                  <button
                     onClick={() => handleDelete(hall.id)}
                     className="p-2 rounded-full bg-red-500/20 hover:bg-red-500/40 text-red-500 transition-colors"
                   >
@@ -214,9 +246,9 @@ const Halls = () => {
           <div className="w-full max-w-2xl rounded-2xl bg-[#1a1a1a] p-6 shadow-xl border border-white/10">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-white">
-                {editingHall ? 'Edit Hall' : 'Add New Hall'}
+                {editingHall ? "Edit Hall" : "Add New Hall"}
               </h2>
-              <button 
+              <button
                 onClick={() => setShowModal(false)}
                 className="p-2 rounded-full hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
               >
@@ -227,7 +259,9 @@ const Halls = () => {
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid gap-6 md:grid-cols-2">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-300">Hall Name</label>
+                  <label className="text-sm font-medium text-slate-300">
+                    Hall Name
+                  </label>
                   <input
                     type="text"
                     name="hall_name"
@@ -238,7 +272,9 @@ const Halls = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-300">Location</label>
+                  <label className="text-sm font-medium text-slate-300">
+                    Location
+                  </label>
                   <input
                     type="text"
                     name="hall_location"
@@ -249,7 +285,9 @@ const Halls = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-300">Contact</label>
+                  <label className="text-sm font-medium text-slate-300">
+                    Contact
+                  </label>
                   <input
                     type="text"
                     name="hall_contact"
@@ -260,7 +298,9 @@ const Halls = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-300">Capacity</label>
+                  <label className="text-sm font-medium text-slate-300">
+                    Capacity
+                  </label>
                   <input
                     type="number"
                     name="capacity"
@@ -271,7 +311,9 @@ const Halls = () => {
                   />
                 </div>
                 <div className="space-y-2 md:col-span-2">
-                  <label className="text-sm font-medium text-slate-300">License Number</label>
+                  <label className="text-sm font-medium text-slate-300">
+                    License Number
+                  </label>
                   <input
                     type="text"
                     name="license"
@@ -284,7 +326,9 @@ const Halls = () => {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-300">Hall Poster</label>
+                <label className="text-sm font-medium text-slate-300">
+                  Hall Poster
+                </label>
                 <div className="relative">
                   <input
                     type="file"
@@ -299,10 +343,42 @@ const Halls = () => {
                     className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-white/10 bg-black/50 p-4 text-slate-400 hover:border-[#D72626]/50 hover:text-[#D72626] transition-colors"
                   >
                     <Upload size={20} />
-                    <span>{formData.hallPoster ? formData.hallPoster.name : 'Upload Hall Image'}</span>
+                    <span>
+                      {formData.hallPoster
+                        ? formData.hallPoster.name
+                        : "Upload Hall Image"}
+                    </span>
                   </label>
                 </div>
               </div>
+
+              {editingHall && (
+                <div className="flex items-center gap-3 rounded-lg bg-black/50 p-4 border border-white/10">
+                  <input
+                    type="checkbox"
+                    name="isActive"
+                    id="isActive"
+                    checked={formData.isActive}
+                    onChange={handleInputChange}
+                    className="form-checkbox h-5 w-5 rounded border-white/20 bg-black text-[#D72626] focus:ring-[#D72626]/50 cursor-pointer"
+                  />
+                  <label
+                    htmlFor="isActive"
+                    className="text-sm font-medium text-slate-300 cursor-pointer flex-1"
+                  >
+                    Hall is Active
+                  </label>
+                  <span
+                    className={`text-xs font-semibold px-2 py-1 rounded ${
+                      formData.isActive
+                        ? "bg-green-500/20 text-green-400"
+                        : "bg-red-500/20 text-red-400"
+                    }`}
+                  >
+                    {formData.isActive ? "Active" : "Inactive"}
+                  </span>
+                </div>
+              )}
 
               <div className="flex justify-end gap-4 pt-4 border-t border-white/10">
                 <button
@@ -316,7 +392,7 @@ const Halls = () => {
                   type="submit"
                   className="rounded-lg bg-[#D72626] px-6 py-2 font-semibold text-white hover:bg-[#D72626]/90 transition-colors"
                 >
-                  {editingHall ? 'Update Hall' : 'Add Hall'}
+                  {editingHall ? "Update Hall" : "Add Hall"}
                 </button>
               </div>
             </form>

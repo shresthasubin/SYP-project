@@ -4,6 +4,8 @@ import dotenv from "dotenv";
 import cors from "cors";
 import router from "./routes/index.js";
 import cookieParser from "cookie-parser";
+import bcrypt from "bcryptjs";
+import User from "./model/user.model.js";
 
 dotenv.config({
   path: "./.env",
@@ -19,16 +21,41 @@ app.use(
     credentials: true,
   }),
 );
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 
 app.use("/uploads", express.static("uploads"));
 
 app.use("/api", router);
 
+const seedAdmin = async () => {
+  try {
+    const adminExists = await User.findOne({
+      where: { email: "admin@cinemahub.com" },
+    });
+
+    if (!adminExists) {
+      const hashedPassword = await bcrypt.hash("Admin@123", 10);
+      await User.create({
+        fullname: "Admin",
+        email: "admin@cinemahub.com",
+        password: hashedPassword,
+        agreeTerm: true,
+        role: "admin",
+      });
+      console.log(" Admin user seeded successfully");
+    } else {
+      console.log(" Admin user already exists");
+    }
+  } catch (err) {
+    console.log(" Error seeding admin:", err.message);
+  }
+};
+
 const startServer = async () => {
   await conenctDB();
-  await sequelize.sync({ force: true });
+  await sequelize.sync({ force: false });
+  await seedAdmin();
   app.listen(port, () => {
     console.log(`App is listening at PORT: [${port}]`);
     app.get("/", (req, res) => {

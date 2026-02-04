@@ -30,14 +30,21 @@ const Login = () => {
           email,
           password,
         },
-        { withCredentials: true }
+        { withCredentials: true },
       );
 
       if (response.data.success) {
         // Store user info in context
-        login(response.data.data.userExist, response.data.data.token);
+        const userData = response.data.data.userExist;
+        login(userData, response.data.data.token);
         toast.success("Login successful!");
-        navigate("/");
+
+        // Navigate based on user role
+        if (userData.role === "admin" || userData.role === "hall-admin") {
+          navigate("/admin");
+        } else {
+          navigate("/");
+        }
       }
     } catch (error) {
       if (error.response?.status === 401) {

@@ -49,7 +49,6 @@ const userLogin = async (req, res) => {
       where: {
         email,
       },
-      attributes: ["id", "email", "password", "role"],
     });
     if (!userExist) {
       return res.status(404).json({
