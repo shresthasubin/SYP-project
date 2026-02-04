@@ -19,6 +19,7 @@ import AdminLayout from "./components/admin/AdminLayout.jsx";
 import Dashboard from "./pages/admin/Dashboard.jsx";
 import Movies from "./pages/admin/Movies.jsx";
 import Halls from "./pages/admin/Halls.jsx";
+import User from "./pages/admin/User.jsx";
 import { AuthProvider } from "./context/AuthContext.jsx";
 
 const App = () => {
@@ -67,6 +68,7 @@ const App = () => {
           <Route index element={<Dashboard />} />
           <Route path="movies" element={<Movies />} />
           <Route path="halls" element={<Halls />} />
+          <Route path="users" element={<User />} />
         </Route>
 
         {/* auth is kept separate outside layout (simple) */}

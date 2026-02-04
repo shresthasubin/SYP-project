@@ -1,6 +1,6 @@
 import React, { useContext, useEffect } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Film, MapPin, LogOut } from "lucide-react";
+import { LayoutDashboard, Film, MapPin, LogOut, User } from "lucide-react";
 import { AuthContext } from "../../context/AuthContext.jsx";
 
 const AdminLayout = () => {
@@ -9,10 +9,9 @@ const AdminLayout = () => {
   const { isAuthenticated, loading, logout, user } = useContext(AuthContext);
 
   const isActive = (path) =>
-  location.pathname === path
-    ? "bg-white/10 text-white"
-    : "text-slate-400 hover:bg-white/5 hover:text-white";
-
+    location.pathname === path
+      ? "bg-white/10 text-white"
+      : "text-slate-400 hover:bg-white/5 hover:text-white";
 
   // Protect admin routes
   useEffect(() => {
@@ -47,7 +46,7 @@ const AdminLayout = () => {
           <Link
             to="/admin"
             className={`flex items-center gap-3 rounded-lg px-4 py-3 transition-colors ${isActive(
-              "/admin"
+              "/admin",
             )}`}
           >
             <LayoutDashboard size={20} />
@@ -55,9 +54,18 @@ const AdminLayout = () => {
           </Link>
 
           <Link
+            to="/admin/users"
+            className={`flex items-center gap-3 rounded-lg px-4 py-3 transition-colors ${isActive(
+              "/admin/users",
+            )}`}
+          >
+            <User size={20} />
+            <span className="font-medium">Users</span>
+          </Link>
+          <Link
             to="/admin/movies"
             className={`flex items-center gap-3 rounded-lg px-4 py-3 transition-colors ${isActive(
-              "/admin/movies"
+              "/admin/movies",
             )}`}
           >
             <Film size={20} />
@@ -67,7 +75,7 @@ const AdminLayout = () => {
           <Link
             to="/admin/halls"
             className={`flex items-center gap-3 rounded-lg px-4 py-3 transition-colors ${isActive(
-              "/admin/halls"
+              "/admin/halls",
             )}`}
           >
             <MapPin size={20} />
