@@ -1,27 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Edit2, Trash2, Search, Plus, X } from "lucide-react";
+import { API_BASE_URL } from "../../config/api";
 
 const User = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [users, setUsers] = useState([
-    {
-      id: 1,
-      name: "Alex Johnson",
-      email: "alex@example.com",
-      phone: "555-0129",
-      status: "active",
-      joinDate: "2024-01-15",
-    },
-    {
-      id: 2,
-      name: "Maria Garcia",
-      email: "maria@example.com",
-      phone: "555-0130",
-      status: "active",
-      joinDate: "2024-01-20",
-    },
-   
-  ]);
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const [showModal, setShowModal] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
@@ -32,10 +17,35 @@ const User = () => {
     status: "active",
   });
 
+  // Fetch users from API
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await fetch(`${API_BASE_URL}/user/get`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch users");
+      }
+      const result = await response.json();
+      if (result.success && result.data) {
+        setUsers(result.data);
+      }
+    } catch (err) {
+      setError(err.message);
+      console.error("Error fetching users:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const filteredUsers = users.filter(
     (user) =>
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase()),
+      (user.fullname || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (user.email || "").toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   const handleAddUser = () => {
@@ -44,37 +54,84 @@ const User = () => {
     setFormData({ name: "", email: "", phone: "", status: "active" });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (formData.name && formData.email && formData.phone) {
-      if (editingUser) {
-        setUsers(
-          users.map((u) =>
-            u.id === editingUser.id ? { ...u, ...formData } : u,
-          ),
-        );
-      } else {
-        const newUser = {
-          id: users.length + 1,
-          ...formData,
-          joinDate: new Date().toISOString().split("T")[0],
-        };
-        setUsers([...users, newUser]);
+      try {
+        if (editingUser) {
+          // Update user
+          const response = await fetch(
+            `${API_BASE_URL}/user/update/${editingUser.id}`,
+            {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              credentials: "include",
+              body: JSON.stringify({
+                fullname: formData.name,
+                email: formData.email,
+                phone: formData.phone,
+              }),
+            },
+          );
+          if (!response.ok) {
+            throw new Error("Failed to update user");
+          }
+        } else {
+          // Add new user - Note: Backend may require different fields
+          const response = await fetch(`${API_BASE_URL}/user/register`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              fullname: formData.name,
+              email: formData.email,
+              password: "defaultPassword123", // You may want to handle this differently
+              agreeTerm: true,
+            }),
+          });
+          if (!response.ok) {
+            throw new Error("Failed to add user");
+          }
+        }
+        setShowModal(false);
+        setFormData({ name: "", email: "", phone: "", status: "active" });
+        await fetchUsers(); // Refresh user list
+      } catch (err) {
+        setError(err.message);
+        console.error("Error submitting form:", err);
       }
-      setShowModal(false);
-      setFormData({ name: "", email: "", phone: "", status: "active" });
     }
   };
 
   const openEditModal = (user) => {
     setEditingUser(user);
-    setFormData(user);
+    setFormData({
+      name: user.fullname || "",
+      email: user.email || "",
+      phone: user.phone || "",
+      status: user.status || "active",
+    });
     setShowModal(true);
   };
 
-  const handleDeleteUser = (id) => {
+  const handleDeleteUser = async (id) => {
     if (window.confirm("Are you sure you want to delete this user?")) {
-      setUsers(users.filter((u) => u.id !== id));
+      try {
+        const response = await fetch(`${API_BASE_URL}/user/delete/${id}`, {
+          method: "DELETE",
+          credentials: "include",
+        });
+        if (!response.ok) {
+          throw new Error("Failed to delete user");
+        }
+        await fetchUsers(); // Refresh user list
+      } catch (err) {
+        setError(err.message);
+        console.error("Error deleting user:", err);
+      }
     }
   };
 
@@ -116,7 +173,16 @@ const User = () => {
 
       {/* Users Table */}
       <div className="rounded-lg border border-cherry-700 bg-cherry-950 overflow-hidden">
-        {filteredUsers.length === 0 ? (
+        {error && (
+          <div className="bg-red-900/30 border-b border-red-700 p-4 text-red-400">
+            <p>Error: {error}</p>
+          </div>
+        )}
+        {loading ? (
+          <div className="flex h-64 items-center justify-center">
+            <p className="text-slate-400">Loading users...</p>
+          </div>
+        ) : filteredUsers.length === 0 ? (
           <div className="flex h-64 items-center justify-center">
             <p className="text-slate-400">No users found</p>
           </div>
@@ -152,7 +218,7 @@ const User = () => {
                     className="border-b border-slate-800 hover:bg-slate-900/50 transition-colors"
                   >
                     <td className="px-6 py-4">
-                      <p className="font-medium text-white">{user.name}</p>
+                      <p className="font-medium text-white">{user.fullname}</p>
                     </td>
                     <td className="px-6 py-4">
                       <p className="text-sm text-slate-300">{user.email}</p>
@@ -170,12 +236,14 @@ const User = () => {
                               : "bg-red-900/30 text-red-400"
                         }`}
                       >
-                        {user.status.charAt(0).toUpperCase() +
-                          user.status.slice(1)}
+                        {(user.status || "active").charAt(0).toUpperCase() +
+                          (user.status || "active").slice(1)}
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      <p className="text-sm text-slate-300">{user.joinDate}</p>
+                      <p className="text-sm text-slate-300">
+                        {user.joinDate || user.createdAt || "N/A"}
+                      </p>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center justify-center gap-3">

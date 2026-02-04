@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
+import { API_BASE_URL, API_SERVER_URL } from "../../config/api";
 
 const Movies = () => {
   const [movies, setMovies] = useState([]);
@@ -36,7 +37,7 @@ const Movies = () => {
 
   const fetchMovies = async () => {
     try {
-      const response = await axios.get("http://localhost:3000/api/movie/get", {
+      const response = await axios.get(`${API_BASE_URL}/movie/get`, {
         withCredentials: true,
       });
       if (response.data.success) {
@@ -75,7 +76,7 @@ const Movies = () => {
     try {
       if (editingMovie) {
         await axios.put(
-          `http://localhost:3000/api/movie/update/${editingMovie.id}`,
+          `${API_BASE_URL}/movie/update/${editingMovie.id}`,
           data,
           {
             withCredentials: true,
@@ -83,7 +84,7 @@ const Movies = () => {
         );
         toast.success("Movie updated successfully");
       } else {
-        await axios.post("http://localhost:3000/api/movie/register", data, {
+        await axios.post(`${API_BASE_URL}/movie/register`, data, {
           withCredentials: true,
         });
         toast.success("Movie registered successfully");
@@ -101,7 +102,7 @@ const Movies = () => {
     if (!window.confirm("Are you sure you want to delete this movie?")) return;
 
     try {
-      await axios.delete(`http://localhost:3000/api/movie/delete/${id}`, {
+      await axios.delete(`${API_BASE_URL}/movie/delete/${id}`, {
         withCredentials: true,
       });
       toast.success("Movie deleted successfully");
@@ -219,7 +220,7 @@ const Movies = () => {
                         <div className="h-16 w-12 flex-shrink-0 rounded bg-slate-800 overflow-hidden">
                           {movie.moviePoster ? (
                             <img
-                              src={`http://localhost:3000/uploads/${movie.moviePoster}`}
+                              src={`${API_SERVER_URL}/uploads/${movie.moviePoster}`}
                               alt={movie.movie_title}
                               className="h-full w-full object-cover"
                             />

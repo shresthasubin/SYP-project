@@ -6,56 +6,53 @@ import {
   Trash2,
   X,
   Upload,
-  MapPin,
-  Phone,
-  Users,
-  FileText,
+  Film,
+  Calendar,
+  Clock,
 } from "lucide-react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
+import { API_BASE_URL, API_SERVER_URL } from "../../config/api";
 
-const Halls = () => {
-  const [halls, setHalls] = useState([]);
+const Movies = () => {
+  const [movies, setMovies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [editingHall, setEditingHall] = useState(null);
+  const [editingMovie, setEditingMovie] = useState(null);
 
+  // Form State
   const [formData, setFormData] = useState({
-    hall_name: "",
-    hall_location: "",
-    hall_contact: "",
-    license: "",
-    capacity: "",
-    hallPoster: null,
-    isActive: true,
+    movie_title: "",
+    description: "",
+    genre: "",
+    duration: "",
+    moviePoster: null,
+    movieTrailer: null,
   });
 
   useEffect(() => {
-    fetchHalls();
+    fetchMovies();
   }, []);
 
-  const fetchHalls = async () => {
+  const fetchMovies = async () => {
     try {
-      const response = await axios.get("http://localhost:3000/api/hall/get", {
+      const response = await axios.get(`${API_BASE_URL}/movie/get`, {
         withCredentials: true,
       });
       if (response.data.success) {
-        setHalls(response.data.data);
+        setMovies(response.data.data);
       }
     } catch (error) {
-      toast.error("Failed to fetch halls");
+      toast.error("Failed to fetch movies");
     } finally {
       setLoading(false);
     }
   };
 
   const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleFileChange = (e) => {
@@ -68,82 +65,80 @@ const Halls = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const data = new FormData();
-    data.append("hall_name", formData.hall_name);
-    data.append("hall_location", formData.hall_location);
-    data.append("hall_contact", formData.hall_contact);
-    data.append("license", formData.license);
-    data.append("capacity", formData.capacity);
-    data.append("isActive", formData.isActive);
-    if (formData.hallPoster) data.append("hallPoster", formData.hallPoster);
+    data.append("movie_title", formData.movie_title);
+    data.append("description", formData.description);
+    data.append("genre", formData.genre);
+    data.append("duration", formData.duration);
+    if (formData.moviePoster) data.append("moviePoster", formData.moviePoster);
+    if (formData.movieTrailer)
+      data.append("movieTrailer", formData.movieTrailer);
 
     try {
-      if (editingHall) {
+      if (editingMovie) {
         await axios.put(
-          `http://localhost:3000/api/hall/update/${editingHall.id}`,
+          `${API_BASE_URL}/movie/update/${editingMovie.id}`,
           data,
           {
             withCredentials: true,
           },
         );
-        toast.success("Hall updated successfully");
+        toast.success("Movie updated successfully");
       } else {
-        await axios.post("http://localhost:3000/api/hall/register", data, {
+        await axios.post(`${API_BASE_URL}/movie/register`, data, {
           withCredentials: true,
         });
-        toast.success("Hall registered successfully");
+        toast.success("Movie registered successfully");
       }
       setShowModal(false);
-      fetchHalls();
+      fetchMovies();
       resetForm();
     } catch (error) {
+      console.error("Movie save error", error.response || error.message);
       toast.error(error.response?.data?.message || "Operation failed");
     }
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to deactivate this hall?"))
-      return;
+    if (!window.confirm("Are you sure you want to delete this movie?")) return;
 
     try {
-      await axios.delete(`http://localhost:3000/api/hall/delete/${id}`, {
+      await axios.delete(`${API_BASE_URL}/movie/delete/${id}`, {
         withCredentials: true,
       });
-      toast.success("Hall deactivated successfully");
-      fetchHalls();
+      toast.success("Movie deleted successfully");
+      fetchMovies();
     } catch (error) {
-      toast.error("Failed to deactivate hall");
+      toast.error("Failed to delete movie");
     }
   };
 
-  const openEditModal = (hall) => {
-    setEditingHall(hall);
+  const openEditModal = (movie) => {
+    setEditingMovie(movie);
     setFormData({
-      hall_name: hall.hall_name,
-      hall_location: hall.hall_location,
-      hall_contact: hall.hall_contact,
-      license: hall.license,
-      capacity: hall.capacity,
-      hallPoster: null,
-      isActive: hall.isActive,
+      movie_title: movie.movie_title,
+      description: movie.description,
+      genre: movie.genre,
+      duration: movie.duration,
+      moviePoster: null, // Reset files on edit
+      movieTrailer: null,
     });
     setShowModal(true);
   };
 
   const resetForm = () => {
     setFormData({
-      hall_name: "",
-      hall_location: "",
-      hall_contact: "",
-      license: "",
-      capacity: "",
-      hallPoster: null,
-      isActive: true,
+      movie_title: "",
+      description: "",
+      genre: "",
+      duration: "",
+      moviePoster: null,
+      movieTrailer: null,
     });
-    setEditingHall(null);
+    setEditingMovie(null);
   };
 
-  const filteredHalls = halls.filter((hall) =>
-    hall.hall_name.toLowerCase().includes(searchTerm.toLowerCase()),
+  const filteredMovies = movies.filter((movie) =>
+    movie.movie_title.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   return (
@@ -151,9 +146,9 @@ const Halls = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white">Halls Management</h1>
+          <h1 className="text-3xl font-bold text-white">Movie Management</h1>
           <p className="mt-1 text-slate-400">
-            Add, edit, and view cinema halls.
+            Add, edit, or remove movies from your cinema's listing.
           </p>
         </div>
         <button
@@ -161,10 +156,10 @@ const Halls = () => {
             resetForm();
             setShowModal(true);
           }}
-          className="flex items-center gap-2 rounded-lg bg-purple-600 px-4 py-2 font-semibold text-white hover:bg-purple-700 transition-colors"
+          className="flex items-center gap-2 rounded-lg bg-[#D72626] px-4 py-2 font-semibold text-white hover:bg-red-700 transition-colors"
         >
           <Plus size={20} />
-          Add New Hall
+          Add New Movie
         </button>
       </div>
 
@@ -177,7 +172,7 @@ const Halls = () => {
           />
           <input
             type="text"
-            placeholder="Search halls..."
+            placeholder="Search movies..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full rounded-lg bg-slate-900 border border-slate-700 py-2 pl-11 pr-4 text-white placeholder:text-slate-500 focus:border-purple-500 focus:outline-none"
@@ -185,11 +180,11 @@ const Halls = () => {
         </div>
       </div>
 
-      {/* Halls Table */}
+      {/* Movies Table */}
       <div className="rounded-lg border border-slate-700 bg-slate-950 overflow-hidden">
-        {filteredHalls.length === 0 ? (
+        {filteredMovies.length === 0 ? (
           <div className="flex h-64 items-center justify-center">
-            <p className="text-slate-400">No halls found</p>
+            <p className="text-slate-400">No movies found</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -197,13 +192,13 @@ const Halls = () => {
               <thead>
                 <tr className="border-b border-slate-700 bg-slate-900">
                   <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">
-                    HALL NAME
+                    TITLE
                   </th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">
-                    CAPACITY
+                    GENRE
                   </th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">
-                    SCREENS
+                    RELEASE DATE
                   </th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">
                     STATUS
@@ -214,38 +209,65 @@ const Halls = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredHalls.map((hall) => (
+                {filteredMovies.map((movie) => (
                   <tr
-                    key={hall.id}
+                    key={movie.id}
                     className="border-b border-slate-800 hover:bg-slate-900/50 transition-colors"
                   >
-                    {/* Hall Name */}
+                    {/* Poster & Title */}
                     <td className="px-6 py-4">
-                      <p className="font-medium text-white">{hall.hall_name}</p>
+                      <div className="flex items-center gap-4">
+                        <div className="h-16 w-12 flex-shrink-0 rounded bg-slate-800 overflow-hidden">
+                          {movie.moviePoster ? (
+                            <img
+                              src={`${API_SERVER_URL}/uploads/${movie.moviePoster}`}
+                              alt={movie.movie_title}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <div className="flex h-full items-center justify-center">
+                              <Film size={20} className="text-slate-600" />
+                            </div>
+                          )}
+                        </div>
+                        <div>
+                          <p className="font-medium text-white">
+                            {movie.movie_title}
+                          </p>
+                        </div>
+                      </div>
                     </td>
 
-                    {/* Capacity */}
+                    {/* Genre */}
                     <td className="px-6 py-4">
                       <p className="text-sm text-slate-300">
-                        {hall.capacity} Seats
+                        {typeof movie.genre === "string"
+                          ? movie.genre
+                          : Array.isArray(movie.genre)
+                            ? movie.genre.join(", ")
+                            : "N/A"}
                       </p>
                     </td>
 
-                    {/* Screens (placeholder - from capacity) */}
+                    {/* Release Date */}
                     <td className="px-6 py-4">
-                      <p className="text-sm text-slate-300">1</p>
+                      <p className="text-sm text-slate-300">
+                        {movie.releaseDate
+                          ? new Date(movie.releaseDate).toLocaleDateString()
+                          : "N/A"}
+                      </p>
                     </td>
 
                     {/* Status */}
                     <td className="px-6 py-4">
                       <span
                         className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
-                          hall.isActive
+                          movie.isPlaying
                             ? "bg-green-900/30 text-green-400"
                             : "bg-amber-900/30 text-amber-400"
                         }`}
                       >
-                        {hall.isActive ? "Active" : "Under Maintenance"}
+                        {movie.isPlaying ? "Now Showing" : "Coming Soon"}
                       </span>
                     </td>
 
@@ -253,20 +275,14 @@ const Halls = () => {
                     <td className="px-6 py-4">
                       <div className="flex items-center justify-center gap-3">
                         <button
-                          title="Layout"
-                          className="p-2 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors"
-                        >
-                          <FileText size={18} />
-                        </button>
-                        <button
-                          onClick={() => openEditModal(hall)}
+                          onClick={() => openEditModal(movie)}
                           className="p-2 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-blue-400 transition-colors"
                           title="Edit"
                         >
                           <Edit2 size={18} />
                         </button>
                         <button
-                          onClick={() => handleDelete(hall.id)}
+                          onClick={() => handleDelete(movie.id)}
                           className="p-2 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-red-400 transition-colors"
                           title="Delete"
                         >
@@ -288,7 +304,7 @@ const Halls = () => {
           <div className="w-full max-w-2xl rounded-2xl bg-[#1a1a1a] p-6 shadow-xl border border-white/10">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-white">
-                {editingHall ? "Edit Hall" : "Add New Hall"}
+                {editingMovie ? "Edit Movie" : "Add New Movie"}
               </h2>
               <button
                 onClick={() => setShowModal(false)}
@@ -302,12 +318,12 @@ const Halls = () => {
               <div className="grid gap-6 md:grid-cols-2">
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-300">
-                    Hall Name
+                    Movie Title
                   </label>
                   <input
                     type="text"
-                    name="hall_name"
-                    value={formData.hall_name}
+                    name="movie_title"
+                    value={formData.movie_title}
                     onChange={handleInputChange}
                     required
                     className="w-full rounded-lg bg-black border border-white/10 p-3 text-white focus:border-[#D72626] focus:outline-none"
@@ -315,12 +331,12 @@ const Halls = () => {
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-300">
-                    Location
+                    Genre
                   </label>
                   <input
                     type="text"
-                    name="hall_location"
-                    value={formData.hall_location}
+                    name="genre"
+                    value={formData.genre}
                     onChange={handleInputChange}
                     required
                     className="w-full rounded-lg bg-black border border-white/10 p-3 text-white focus:border-[#D72626] focus:outline-none"
@@ -328,99 +344,86 @@ const Halls = () => {
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-300">
-                    Contact
-                  </label>
-                  <input
-                    type="text"
-                    name="hall_contact"
-                    value={formData.hall_contact}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full rounded-lg bg-black border border-white/10 p-3 text-white focus:border-[#D72626] focus:outline-none"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-300">
-                    Capacity
+                    Duration (mins)
                   </label>
                   <input
                     type="number"
-                    name="capacity"
-                    value={formData.capacity}
+                    name="duration"
+                    value={formData.duration}
                     onChange={handleInputChange}
                     required
                     className="w-full rounded-lg bg-black border border-white/10 p-3 text-white focus:border-[#D72626] focus:outline-none"
                   />
                 </div>
-                <div className="space-y-2 md:col-span-2">
+                <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-300">
-                    License Number
+                    Description
                   </label>
-                  <input
-                    type="text"
-                    name="license"
-                    value={formData.license}
+                  <textarea
+                    name="description"
+                    value={formData.description}
                     onChange={handleInputChange}
                     required
+                    rows="1"
                     className="w-full rounded-lg bg-black border border-white/10 p-3 text-white focus:border-[#D72626] focus:outline-none"
                   />
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-300">
-                  Hall Poster
-                </label>
-                <div className="relative">
-                  <input
-                    type="file"
-                    name="hallPoster"
-                    onChange={handleFileChange}
-                    accept="image/*"
-                    className="hidden"
-                    id="hall-poster-upload"
-                  />
-                  <label
-                    htmlFor="hall-poster-upload"
-                    className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-white/10 bg-black/50 p-4 text-slate-400 hover:border-[#D72626]/50 hover:text-[#D72626] transition-colors"
-                  >
-                    <Upload size={20} />
-                    <span>
-                      {formData.hallPoster
-                        ? formData.hallPoster.name
-                        : "Upload Hall Image"}
-                    </span>
+              <div className="grid gap-6 md:grid-cols-2">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-slate-300">
+                    Poster Image
                   </label>
+                  <div className="relative">
+                    <input
+                      type="file"
+                      name="moviePoster"
+                      onChange={handleFileChange}
+                      accept="image/*"
+                      className="hidden"
+                      id="poster-upload"
+                    />
+                    <label
+                      htmlFor="poster-upload"
+                      className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-white/10 bg-black/50 p-4 text-slate-400 hover:border-[#D72626]/50 hover:text-[#D72626] transition-colors"
+                    >
+                      <Upload size={20} />
+                      <span>
+                        {formData.moviePoster
+                          ? formData.moviePoster.name
+                          : "Upload Poster"}
+                      </span>
+                    </label>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-slate-300">
+                    Trailer Video
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="file"
+                      name="movieTrailer"
+                      onChange={handleFileChange}
+                      accept="video/*"
+                      className="hidden"
+                      id="trailer-upload"
+                    />
+                    <label
+                      htmlFor="trailer-upload"
+                      className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-white/10 bg-black/50 p-4 text-slate-400 hover:border-[#D72626]/50 hover:text-[#D72626] transition-colors"
+                    >
+                      <Upload size={20} />
+                      <span>
+                        {formData.movieTrailer
+                          ? formData.movieTrailer.name
+                          : "Upload Trailer"}
+                      </span>
+                    </label>
+                  </div>
                 </div>
               </div>
-
-              {editingHall && (
-                <div className="flex items-center gap-3 rounded-lg bg-black/50 p-4 border border-white/10">
-                  <input
-                    type="checkbox"
-                    name="isActive"
-                    id="isActive"
-                    checked={formData.isActive}
-                    onChange={handleInputChange}
-                    className="form-checkbox h-5 w-5 rounded border-white/20 bg-black text-[#D72626] focus:ring-[#D72626]/50 cursor-pointer"
-                  />
-                  <label
-                    htmlFor="isActive"
-                    className="text-sm font-medium text-slate-300 cursor-pointer flex-1"
-                  >
-                    Hall is Active
-                  </label>
-                  <span
-                    className={`text-xs font-semibold px-2 py-1 rounded ${
-                      formData.isActive
-                        ? "bg-green-500/20 text-green-400"
-                        : "bg-red-500/20 text-red-400"
-                    }`}
-                  >
-                    {formData.isActive ? "Active" : "Inactive"}
-                  </span>
-                </div>
-              )}
 
               <div className="flex justify-end gap-4 pt-4 border-t border-white/10">
                 <button
@@ -434,7 +437,7 @@ const Halls = () => {
                   type="submit"
                   className="rounded-lg bg-[#D72626] px-6 py-2 font-semibold text-white hover:bg-[#D72626]/90 transition-colors"
                 >
-                  {editingHall ? "Update Hall" : "Add Hall"}
+                  {editingMovie ? "Update Movie" : "Add Movie"}
                 </button>
               </div>
             </form>
@@ -445,4 +448,4 @@ const Halls = () => {
   );
 };
 
-export default Halls;
+export default Movies;
