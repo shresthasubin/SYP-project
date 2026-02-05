@@ -10,8 +10,8 @@ const AdminLayout = () => {
 
   const isActive = (path) =>
     location.pathname === path
-      ? "bg-white/10 text-white"
-      : "text-slate-400 hover:bg-white/5 hover:text-white";
+      ? "bg-white/10 text-text-primary"
+      : "text-text-secondary hover:bg-white/5 hover:text-text-primary";
 
   // Protect admin routes
   useEffect(() => {
@@ -22,8 +22,8 @@ const AdminLayout = () => {
 
   if (loading) {
     return (
-      <div className="flex h-screen w-full items-center justify-center bg-black">
-        <p className="text-white">Loading...</p>
+      <div className="flex h-screen w-full items-center justify-center bg-primary">
+        <p className="text-text-primary">Loading...</p>
       </div>
     );
   }
@@ -33,9 +33,9 @@ const AdminLayout = () => {
   }
 
   return (
-    <div className="flex h-screen w-full bg-background-dark text-white font-display">
+    <div className="flex h-screen w-full bg-primary text-text-primary font-display">
       {/* Sidebar */}
-      <aside className="w-64 shrink-0 border-r border-white/10 bg-black">
+      <aside className="w-64 shrink-0 border-r border-white/10 bg-primary">
         <div className="flex h-16 items-center px-6 border-b border-white/10">
           <span className="text-xl font-bold text-[#D72626]">
             CinemaHub Admin
@@ -86,7 +86,7 @@ const AdminLayout = () => {
         <div className="mt-auto p-4 border-t border-white/10">
           <button
             onClick={logout}
-            className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
+            className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-text-secondary hover:text-text-primary hover:bg-white/5 transition-colors"
           >
             <LogOut size={20} />
             <span className="font-medium">Logout</span>
@@ -95,7 +95,7 @@ const AdminLayout = () => {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto bg-[#1a1a1a]">
+      <main className="flex-1 overflow-y-auto bg-secondary">
         <div className="container mx-auto p-8">
           <Outlet />
         </div>

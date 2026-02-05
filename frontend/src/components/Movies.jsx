@@ -13,19 +13,79 @@ const SPRING = { type: "spring", stiffness: 300, damping: 30 };
 
 /* ===== DATA ===== */
 const NOW_SHOWING = [
-  { id: 1, title: "Dune: Part Two", rating: 9.4, genre: "Sci-Fi", image: "https://images.unsplash.com/photo-1626814026160-2237a95fc5a0" },
-  { id: 2, title: "Oppenheimer", rating: 9.6, genre: "Drama", image: "https://images.unsplash.com/photo-1598899134739-24c46f58b8c0" },
-  { id: 3, title: "The Batman", rating: 8.9, genre: "Action", image: "https://images.unsplash.com/photo-1509347528160-9a9e33742cd4" },
-  { id: 4, title: "Avatar 2", rating: 8.7, genre: "Adventure", image: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23" },
-  { id: 5, title: "Blade Runner 2049", rating: 9.2, genre: "Sci-Fi", image: "https://images.unsplash.com/photo-1542204165-65bf26472b9b" },
-  { id: 6, title: "Interstellar", rating: 9.5, genre: "Sci-Fi", image: "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa" }
+  {
+    id: 1,
+    title: "Dune: Part Two",
+    rating: 9.4,
+    genre: "Sci-Fi",
+    image: "https://images.unsplash.com/photo-1626814026160-2237a95fc5a0",
+  },
+  {
+    id: 2,
+    title: "Oppenheimer",
+    rating: 9.6,
+    genre: "Drama",
+    image: "https://images.unsplash.com/photo-1598899134739-24c46f58b8c0",
+  },
+  {
+    id: 3,
+    title: "The Batman",
+    rating: 8.9,
+    genre: "Action",
+    image: "https://images.unsplash.com/photo-1509347528160-9a9e33742cd4",
+  },
+  {
+    id: 4,
+    title: "Avatar 2",
+    rating: 8.7,
+    genre: "Adventure",
+    image: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23",
+  },
+  {
+    id: 5,
+    title: "Blade Runner 2049",
+    rating: 9.2,
+    genre: "Sci-Fi",
+    image: "https://images.unsplash.com/photo-1542204165-65bf26472b9b",
+  },
+  {
+    id: 6,
+    title: "Interstellar",
+    rating: 9.5,
+    genre: "Sci-Fi",
+    image: "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa",
+  },
 ];
 
 const UPCOMING = [
-  { id: 7, title: "Inception", rating: 9.3, genre: "Sci-Fi", image: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee" },
-  { id: 8, title: "Tenet", rating: 8.6, genre: "Sci-Fi", image: "https://images.unsplash.com/photo-1524985069026-dd778a71c7b4" },
-  { id: 9, title: "Guardians of Galaxy 3", rating: 9.1, genre: "Action", image: "https://images.unsplash.com/photo-1517602302552-471fe67acf66" },
-  { id: 10, title: "Black Panther 2", rating: 9.0, genre: "Action", image: "https://images.unsplash.com/photo-1604079628437-179d46a53f26" }
+  {
+    id: 7,
+    title: "Inception",
+    rating: 9.3,
+    genre: "Sci-Fi",
+    image: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee",
+  },
+  {
+    id: 8,
+    title: "Tenet",
+    rating: 8.6,
+    genre: "Sci-Fi",
+    image: "https://images.unsplash.com/photo-1524985069026-dd778a71c7b4",
+  },
+  {
+    id: 9,
+    title: "Guardians of Galaxy 3",
+    rating: 9.1,
+    genre: "Action",
+    image: "https://images.unsplash.com/photo-1517602302552-471fe67acf66",
+  },
+  {
+    id: 10,
+    title: "Black Panther 2",
+    rating: 9.0,
+    genre: "Action",
+    image: "https://images.unsplash.com/photo-1604079628437-179d46a53f26",
+  },
 ];
 
 /* ===== CAROUSEL COMPONENT ===== */
@@ -50,16 +110,16 @@ const MovieCarousel = ({ title, movies }) => {
   const maxIndex = Math.max(movies.length - visibleCards, 0);
 
   const nextSlide = () => {
-    if (currentIndex < maxIndex) setCurrentIndex(i => i + 1);
+    if (currentIndex < maxIndex) setCurrentIndex((i) => i + 1);
   };
 
   const prevSlide = () => {
-    if (currentIndex > 0) setCurrentIndex(i => i - 1);
+    if (currentIndex > 0) setCurrentIndex((i) => i - 1);
   };
 
   return (
     <section className="mb-12">
-      <h2 className="text-3xl font-bold mb-6 text-white">{title}</h2>
+      <h2 className="text-3xl font-bold mb-6 text-text-primary">{title}</h2>
       <div ref={containerRef} className="relative overflow-hidden">
         <motion.div
           className="flex cursor-grab active:cursor-grabbing"
@@ -75,10 +135,10 @@ const MovieCarousel = ({ title, movies }) => {
           animate={{ x: -currentIndex * SLIDE_WIDTH }}
           transition={SPRING}
         >
-          {movies.map(movie => (
+          {movies.map((movie) => (
             <div
               key={movie.id}
-              className="flex-shrink-0 rounded-xl overflow-hidden shadow-lg relative group"
+              className="shrink-0 rounded-xl overflow-hidden shadow-lg relative group"
               style={{ width: CARD_WIDTH, height: CARD_HEIGHT }}
               onClick={() => navigate(`/movies/${movie.id}`)}
             >
@@ -87,9 +147,11 @@ const MovieCarousel = ({ title, movies }) => {
                 alt={movie.title}
                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
               />
-              <div className="absolute bottom-0 w-full p-4 bg-gradient-to-t from-black/80 to-transparent">
-                <h3 className="text-white text-lg font-semibold truncate">{movie.title}</h3>
-                <div className="flex justify-between text-sm text-gray-300 mt-1">
+              <div className="absolute bottom-0 w-full p-4 bg-linear-to-t from-black/80 to-transparent">
+                <h3 className="text-white text-lg font-semibold truncate">
+                  {movie.title}
+                </h3>
+                <div className="flex justify-between text-sm text-text-secondary mt-1">
                   <span>{movie.genre}</span>
                   <span className="flex items-center gap-1 text-yellow-400">
                     <Star size={16} fill="currentColor" /> {movie.rating}
@@ -107,7 +169,7 @@ const MovieCarousel = ({ title, movies }) => {
         <button
           onClick={prevSlide}
           disabled={currentIndex === 0}
-          className="absolute left-0 top-1/2 -translate-y-1/2 bg-black/60 p-3 rounded-full disabled:opacity-30 disabled:pointer-events-none"
+          className="absolute left-0 top-1/2 -translate-y-1/2 bg-secondary/80 text-text-primary p-3 rounded-full disabled:opacity-30 disabled:pointer-events-none hover:bg-secondary transition-colors"
         >
           <ChevronLeft size={24} />
         </button>
@@ -116,7 +178,7 @@ const MovieCarousel = ({ title, movies }) => {
         <button
           onClick={nextSlide}
           disabled={currentIndex >= maxIndex}
-          className="absolute right-0 top-1/2 -translate-y-1/2 bg-black/60 p-3 rounded-full disabled:opacity-30 disabled:pointer-events-none"
+          className="absolute right-0 top-1/2 -translate-y-1/2 bg-secondary/80 text-text-primary p-3 rounded-full disabled:opacity-30 disabled:pointer-events-none hover:bg-secondary transition-colors"
         >
           <ChevronRight size={24} />
         </button>

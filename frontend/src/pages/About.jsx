@@ -2,7 +2,7 @@ import React from 'react'
 
 const About = () => {
   return (
-    <section className="py-20 bg-secondary/40">
+    <section className="py-20 pt-24 bg-secondary/40">
       <div className="container mx-auto px-6">
         <h1 className="text-4xl font-extrabold mb-6">About CinemaHub</h1>
         <p className="text-text-secondary leading-relaxed max-w-3xl mb-6">CinemaHub began with a mission to make every movie a memorable event. We combine extraordinary screens and sound design with comfortable seating and hospitality.

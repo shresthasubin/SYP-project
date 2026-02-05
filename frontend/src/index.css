@@ -2,34 +2,42 @@
 @import "tailwindcss";
 
 /* 2️⃣ Theme tokens */
-@theme {
-  --font-sans: 'Outfit', system-ui, sans-serif;
+:root {
+  --color-primary: #ffffff;
+  --color-secondary: #f3f4f6;
+  --color-accent: #e50914;
+  --color-accent-hover: #b20710;
+  --color-text-primary: #000000;
+  --color-text-secondary: #6b7280;
+}
 
+:root.dark {
   --color-primary: #0a0b0f;
   --color-secondary: #12141c;
   --color-accent: #e50914;
   --color-accent-hover: #b20710;
-
   --color-text-primary: #ffffff;
   --color-text-secondary: #9ca3af;
-
-  --animate-pan-zoom: pan-zoom 20s linear infinite alternate;
-
-  @keyframes pan-zoom {
-    0% { transform: scale(1); }
-    100% { transform: scale(1.15); }
-  }
 }
 
 /* 3️⃣ Base layer styles */
 @layer base {
   html {
-    @apply scroll-smooth;
+    scroll-behavior: smooth;
+    font-family: 'Outfit', system-ui, sans-serif;
   }
 
   body {
-    @apply bg-primary text-text-primary font-sans antialiased
-           selection:bg-accent selection:text-white;
+    background-color: var(--color-primary);
+    color: var(--color-text-primary);
+    font-family: inherit;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::selection {
+    background-color: var(--color-accent);
+    color: #fff;
   }
 
   /* Custom Scrollbar */
@@ -38,10 +46,15 @@
   }
 
   ::-webkit-scrollbar-track {
-    @apply bg-secondary;
+    background-color: var(--color-secondary);
   }
 
   ::-webkit-scrollbar-thumb {
-    @apply bg-white/10 rounded-full hover:bg-accent transition-colors;
+    background-color: rgb(255 255 255 / 0.1);
+    border-radius: 9999px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: var(--color-accent);
   }
 }

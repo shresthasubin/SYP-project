@@ -12,7 +12,7 @@ export default function MovieDetail(){
   const movie = MOVIES.find(m => String(m.id) === String(id)) || MOVIES[0]
 
   return (
-    <section className="min-h-[60vh] flex items-center py-20 bg-secondary/40">
+    <section className="min-h-[60vh] flex items-center py-20 pt-24 bg-secondary/40">
       <div className="container mx-auto px-6">
         <div className="grid md:grid-cols-3 gap-8 items-start">
           <div className="md:col-span-1 bg-primary rounded-xl overflow-hidden shadow-xl">

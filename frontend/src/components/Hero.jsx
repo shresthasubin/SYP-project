@@ -1,190 +1,474 @@
 import React, { useState, useEffect } from "react";
-import { Play, Ticket, Star, Calendar, Clock } from "lucide-react";
+import { Play, Ticket, Info } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 import img1 from "../assets/Interstellar.jpg";
 import img2 from "../assets/Oppenheimer.jpg";
 import img3 from "../assets/Dune.jpg";
+import img4 from "../assets/avatar.png";
+import img5 from "../assets/purnaBahadur.png";
+import img6 from "../assets/RoadToNinja.png";
+import img7 from "../assets/Batman.png";
+import img8 from "../assets/unkoSweater.png";
 
 import "../index.css";
 
-const SLIDE_DURATION = 9000; // ms
-const TRANSITION_DURATION = 1.2; // seconds
-
+// ==================== DATA ====================
 const HERO_SLIDES = [
   {
     id: 1,
-    title: "INTERSTELLAR ODYSSEY",
-    image: img1,
-    rating: 9.8,
-    year: "2024",
-    duration: "2h 45m",
-    genre: "Sci-Fi / Adventure",
-    desc: "Embark on a journey beyond the stars. When humanity's time on Earth comes to an end, a team of explorers undertakes the most important mission in human history.",
+    movie_title: "INTERSTELLAR ODYSSEY",
+    moviePoster: img1,
+    rating: "PG-13",
+    releaseDate: "2024-01-01",
+    duration: 165, // 2h 45m in minutes
+    genre: ["Sci-Fi", "Adventure"],
+    match: "98% Match",
+    description:
+      "Embark on a journey beyond the stars. When humanity's time on Earth comes to an end, a team of explorers undertakes the most important mission in human history.",
+    isPlaying: true,
+    playEndDate: "2024-12-31",
+    movieTrailer: "https://example.com/interstellar-trailer",
   },
   {
     id: 2,
-    title: "DUNE: PART TWO",
-    image: img3,
-    rating: 9.4,
-    year: "2024",
-    duration: "2h 46m",
-    genre: "Sci-Fi / Action",
-    desc: "Paul Atreides unites with Chani and the Fremen while on a warpath of revenge against the conspirators who destroyed his family.",
+    movie_title: "DUNE: PART TWO",
+    moviePoster: img3,
+    rating: "PG-13",
+    releaseDate: "2024-03-01",
+    duration: 166, // 2h 46m in minutes
+    genre: ["Sci-Fi", "Action"],
+    match: "95% Match",
+    description:
+      "Paul Atreides unites with Chani and the Fremen while on a warpath of revenge against the conspirators who destroyed his family.",
+    isPlaying: true,
+    playEndDate: "2024-12-31",
+    movieTrailer: "https://example.com/dune-trailer",
   },
   {
     id: 3,
-    title: "OPPENHEIMER",
-    image: img2,
-    rating: 9.6,
-    year: "2023",
-    duration: "3h 00m",
-    genre: "Biography / Drama",
-    desc: "The story of American scientist J. Robert Oppenheimer and his role in the development of the atomic bomb.",
+    movie_title: "OPPENHEIMER",
+    moviePoster: img2,
+    rating: "PG-13",
+    releaseDate: "2023-07-21",
+    duration: 180, // 3h 00m in minutes
+    genre: ["Biography", "Drama"],
+    match: "96% Match",
+    description:
+      "The story of American scientist J. Robert Oppenheimer and his role in the development of the atomic bomb.",
+    isPlaying: true,
+    playEndDate: "2024-12-31",
+    movieTrailer: "https://example.com/oppenheimer-trailer",
+  },
+  {
+    id: 4,
+    movie_title: "AVATAR: THE WAY OF WATER",
+    moviePoster: img4,
+    rating: "PG-13",
+    releaseDate: "2022-12-16",
+    duration: 192, // 3h 12m in minutes
+    genre: ["Sci-Fi", "Fantasy"],
+    match: "94% Match",
+    description:
+      "Jake Sully and Neytiri must protect their family as Pandora faces new threats from human invaders.",
+    isPlaying: true,
+    playEndDate: "2024-12-31",
+    movieTrailer: "https://example.com/avatar-trailer",
+  },
+  {
+    id: 5,
+    movie_title: "Purna Bahadur ko Sarangi",
+    moviePoster: img5,
+    rating: "PG",
+    releaseDate: "2023-01-01",
+    duration: 130, // 2h 10m in minutes
+    genre: ["Drama", "Musical"],
+    match: "92% Match",
+    description:
+      "A heartfelt Nepali story of Purna Bahadur, whose life and struggles are intertwined with the soulful sound of his sarangi.",
+    isPlaying: true,
+    playEndDate: "2024-12-31",
+    movieTrailer: "https://example.com/purna-trailer",
+  },
+  {
+    id: 6,
+    movie_title: "Naruto: Road to Ninja",
+    moviePoster: img6,
+    rating: "PG-13",
+    releaseDate: "2012-07-28",
+    duration: 110, // 1h 50m in minutes
+    genre: ["Anime", "Action"],
+    match: "95% Match",
+    description:
+      "Naruto and Sakura are transported to an alternate reality where they must confront powerful enemies and their own inner struggles.",
+    isPlaying: true,
+    playEndDate: "2024-12-31",
+    movieTrailer: "https://example.com/naruto-trailer",
+  },
+  {
+    id: 7,
+    movie_title: "Batman",
+    moviePoster: img7,
+    rating: "PG-13",
+    releaseDate: "1989-06-23",
+    duration: 126, // 2h 6m in minutes
+    genre: ["Action", "Crime"],
+    match: "93% Match",
+    description:
+      "The Dark Knight faces off against the Joker in Tim Burton's iconic reimagining of Gotham City.",
+    isPlaying: true,
+    playEndDate: "2024-12-31",
+    movieTrailer: "https://example.com/batman-trailer",
+  },
+  {
+    id: 8,
+    movie_title: "Unko Sweater",
+    moviePoster: img8,
+    rating: "PG",
+    releaseDate: "2024-01-01",
+    duration: 105, // 1h 45m in minutes
+    genre: ["Romance", "Drama"],
+    match: "90% Match",
+    description:
+      "A tender Nepali tale of love, memory, and the warmth of a sweater that carries the past into the present.",
+    isPlaying: true,
+    playEndDate: "2024-12-31",
+    movieTrailer: "https://example.com/unko-trailer",
   },
 ];
 
-const Hero = () => {
-  const [currentSlide, setCurrentSlide] = useState(0);
+// ==================== ANIMATION VARIANTS ====================
+const fadeInUp = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -20 },
+};
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setCurrentSlide((prev) => (prev + 1) % HERO_SLIDES.length);
-    }, SLIDE_DURATION);
-    return () => clearTimeout(timer);
-  }, [currentSlide]);
+const staggerContainer = {
+  animate: {
+    transition: {
+      staggerChildren: 0.1,
+    },
+  },
+};
 
-  const slide = HERO_SLIDES[currentSlide];
+// ==================== SUB-COMPONENTS ====================
+
+/**
+ * Background Image Component with Overlay Effects
+ */
+const HeroBackground = ({ movie }) => (
+  <AnimatePresence mode="wait">
+    <motion.div
+      key={`bg-${movie.id}`}
+      className="absolute inset-0 w-full h-full"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 1, ease: "easeInOut" }}
+    >
+      {/* Background Image - Full Width */}
+      <div
+        className="absolute inset-0 bg-cover bg-right"
+        style={{ backgroundImage: `url('${movie.moviePoster}')` }}
+        role="img"
+        aria-label={`${movie.movie_title} backdrop`}
+      />
+
+      {/* Overlay Effects */}
+      <div className="absolute inset-0 bg-accent/10 mix-blend-overlay" />
+      <div className="absolute inset-0 bg-gradient-to-r from-primary from-10% via-primary/80 via-50% to-transparent to-100%" />
+      <div className="absolute inset-0 shadow-[inset_-200px_0_300px_rgba(10,11,15,0.9)]" />
+    </motion.div>
+  </AnimatePresence>
+);
+
+/**
+ * Movie Metadata Badge Component
+ */
+const MovieMetadata = ({ movie }) => (
+  <motion.div
+    variants={fadeInUp}
+    className="flex flex-wrap items-center gap-3 mb-6"
+  >
+    {/* Match Score Badge */}
+    <span className="bg-accent/20 text-accent text-xs font-bold px-3 py-1.5 rounded-md border border-accent/30 uppercase tracking-widest backdrop-blur-sm">
+      {movie.match}
+    </span>
+
+    {/* Movie Info */}
+    <div className="flex items-center gap-2 text-text-secondary text-sm">
+      <span className="font-semibold">{movie.releaseDate.split("-")[0]}</span>
+      <span className="w-1 h-1 rounded-full bg-text-secondary/50" />
+      <span className="px-2 py-0.5 border border-text-secondary/30 rounded text-xs">
+        {movie.rating}
+      </span>
+      <span className="w-1 h-1 rounded-full bg-text-secondary/50" />
+      <span>
+        {Math.floor(movie.duration / 60)}h {movie.duration % 60}m
+      </span>
+    </div>
+
+    {/* Genre Tag */}
+    <span className="text-text-secondary/80 text-xs font-medium px-3 py-1 bg-secondary/20 rounded-full border border-white/10">
+      {Array.isArray(movie.genre) ? movie.genre.join(" / ") : movie.genre}
+    </span>
+  </motion.div>
+);
+
+/**
+ * Animated Movie Title Component
+ */
+const MovieTitle = ({ title }) => (
+  <motion.h1
+    variants={fadeInUp}
+    className="text-white text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black leading-[0.9] tracking-tighter mb-6 uppercase"
+    style={{
+      textShadow:
+        "0 0 40px rgba(229, 9, 20, 0.4), 0 4px 20px rgba(0, 0, 0, 0.8)",
+    }}
+  >
+    {title.split(" ").map((word, i) => (
+      <motion.div
+        key={i}
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.5, delay: i * 0.1 }}
+      >
+        {word}
+      </motion.div>
+    ))}
+  </motion.h1>
+);
+
+/**
+ * Movie Description Component
+ */
+const MovieDescription = ({ description }) => (
+  <motion.p
+    variants={fadeInUp}
+    className="text-text-secondary text-base md:text-lg leading-relaxed mb-8 max-w-xl font-medium"
+  >
+    {description}
+  </motion.p>
+);
+
+/**
+ * Action Buttons Component
+ */
+const ActionButtons = () => (
+  <motion.div variants={fadeInUp} className="flex flex-wrap items-center gap-4">
+    <motion.button
+      className="bg-accent hover:bg-accent-hover text-white flex items-center gap-3 px-8 py-4 rounded-lg font-bold transition-all shadow-lg shadow-accent/30"
+      whileHover={{
+        scale: 1.05,
+        boxShadow: "0 20px 40px rgba(229, 9, 20, 0.4)",
+      }}
+      whileTap={{ scale: 0.98 }}
+      aria-label="Watch movie now"
+    >
+      <Play size={20} fill="currentColor" />
+      <span>Watch Now</span>
+    </motion.button>
+
+    <motion.button
+      className="bg-secondary/30 hover:bg-secondary/50 backdrop-blur-md text-text-primary flex items-center gap-3 px-8 py-4 rounded-lg font-bold border border-white/20 transition-all"
+      whileHover={{ scale: 1.05, borderColor: "rgba(255, 255, 255, 0.4)" }}
+      whileTap={{ scale: 0.98 }}
+      aria-label="More information"
+    >
+      <Info size={20} />
+      <span>More Info</span>
+    </motion.button>
+  </motion.div>
+);
+
+/**
+ * Progress Indicator for Autoplay
+ */
+const ProgressIndicator = ({ activeIndex, total, autoPlay }) => (
+  <div className="flex items-center gap-2 mt-8">
+    {Array.from({ length: total }).map((_, index) => (
+      <div
+        key={index}
+        className="relative h-1 flex-1 bg-white/20 rounded-full overflow-hidden"
+      >
+        {index === activeIndex && autoPlay && (
+          <motion.div
+            className="absolute inset-0 bg-accent"
+            initial={{ scaleX: 0 }}
+            animate={{ scaleX: 1 }}
+            transition={{ duration: 8, ease: "linear" }}
+            style={{ transformOrigin: "left" }}
+          />
+        )}
+        {index === activeIndex && !autoPlay && (
+          <div className="absolute inset-0 bg-accent" />
+        )}
+        {index < activeIndex && (
+          <div className="absolute inset-0 bg-accent/50" />
+        )}
+      </div>
+    ))}
+  </div>
+);
+
+/**
+ * Thumbnail Card Component
+ */
+const ThumbnailCard = ({ movie, index, activeIndex, onClick }) => {
+  const isActive = index === activeIndex;
 
   return (
-    <section className="relative h-screen overflow-hidden bg-black text-white">
-      {/* Background */}
-      <AnimatePresence mode="wait" initial={false}>
-        <motion.div
-          key={`bg-${slide.id}`}
-          className="absolute inset-0"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: TRANSITION_DURATION, ease: "easeInOut" }}
-        >
-          <img
-            src={slide.image}
-            alt={slide.title}
-            className="h-full w-full object-cover animate-pan-zoom"
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/60 to-primary" />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-transparent" />
-        </motion.div>
-      </AnimatePresence>
+    <motion.article
+      className="flex-shrink-0 group cursor-pointer"
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.98 }}
+      onClick={onClick}
+      role="button"
+      tabIndex={0}
+      aria-label={`Select ${movie.movie_title}`}
+      onKeyPress={(e) => e.key === "Enter" && onClick()}
+    >
+      {/* Thumbnail Image */}
+      <div
+        className={`relative min-w-[280px] w-full max-w-sm h-40 rounded-xl overflow-hidden shadow-2xl transition-all duration-300 border-2 ${
+          isActive
+            ? "border-accent shadow-accent/30"
+            : "border-white/10 opacity-60 hover:opacity-100"
+        }`}
+      >
+        <div
+          className={`w-full h-full bg-cover bg-center transition-all duration-500 ${
+            isActive
+              ? "grayscale-0 scale-100"
+              : "grayscale group-hover:grayscale-0"
+          }`}
+          style={{ backgroundImage: `url('${movie.moviePoster}')` }}
+        />
 
-      {/* Content */}
-      <AnimatePresence mode="wait" initial={false}>
-        <motion.div
-          key={`content-${slide.id}`}
-          className="relative z-10 h-full flex items-center"
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -30 }}
-          transition={{ duration: TRANSITION_DURATION, ease: "easeOut", delay: 0.1 }}
-        >
-          <div className="container mx-auto px-6 max-w-7xl pt-20">
-            <motion.span
-              initial={{ opacity: 0, x: -15 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 15 }}
-              transition={{ duration: TRANSITION_DURATION, ease: "easeOut", delay: 0.2 }}
-              className="inline-flex items-center gap-2 bg-accent/10 text-accent px-4 py-2 rounded-full font-bold text-sm mb-6 border border-accent/20 backdrop-blur-md"
-            >
-              <span className="w-2 h-2 rounded-full bg-accent animate-pulse"></span>
-              Now Premiering
-            </motion.span>
+        {/* Overlay on Hover */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-            <motion.h1
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -15 }}
-              transition={{ duration: TRANSITION_DURATION, ease: "easeOut", delay: 0.25 }}
-              className="text-5xl md:text-7xl lg:text-8xl font-black leading-[0.9] mb-8 uppercase tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-white via-white to-white/50 drop-shadow-2xl"
-            >
-              {slide.title}
-            </motion.h1>
-
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: TRANSITION_DURATION, ease: "easeOut", delay: 0.35 }}
-              className="flex flex-wrap items-center gap-4 md:gap-8 mb-10 text-gray-300 text-lg font-medium"
-            >
-              <div className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-lg backdrop-blur-md border border-white/10">
-                <Star fill="#ffd700" className="text-[#ffd700]" size={20} strokeWidth={0} />
-                <span className="text-white font-bold">{slide.rating}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Calendar size={20} className="text-accent" />
-                <span>{slide.year}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Clock size={20} className="text-accent" />
-                <span>{slide.duration}</span>
-              </div>
-              <span className="px-3 py-1 rounded-full border border-white/20 text-sm uppercase tracking-wide">
-                {slide.genre}
-              </span>
-            </motion.div>
-
-            <motion.p
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: TRANSITION_DURATION, ease: "easeOut", delay: 0.4 }}
-              className="text-xl md:text-2xl leading-relaxed text-gray-300 mb-12 max-w-2xl font-light"
-            >
-              {slide.desc}
-            </motion.p>
-
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: TRANSITION_DURATION, ease: "easeOut", delay: 0.45 }}
-              className="flex flex-col sm:flex-row gap-5"
-            >
-              <button className="group bg-accent text-white px-8 py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 hover:bg-accent-hover hover:scale-105 transition-all duration-300 shadow-[0_0_30px_rgba(229,9,20,0.4)] hover:shadow-[0_0_50px_rgba(229,9,20,0.6)]">
-                <Ticket size={24} className="group-hover:rotate-12 transition-transform" />
-                Book Tickets
-              </button>
-              <button className="group bg-white/5 text-white px-8 py-4 rounded-2xl font-bold text-lg backdrop-blur-xl flex items-center justify-center gap-3 border border-white/10 hover:bg-white/10 hover:border-white/30 hover:scale-105 transition-all duration-300">
-                <div className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Play size={14} fill="currentColor" className="ml-0.5" />
-                </div>
-                Watch Trailer
-              </button>
-            </motion.div>
+        {/* Play Icon on Hover */}
+        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <div className="bg-accent/90 rounded-full p-3">
+            <Play size={24} fill="white" className="text-white" />
           </div>
-        </motion.div>
-      </AnimatePresence>
-
-      {/* Slide Indicators */}
-      <div className="absolute bottom-12 right-12 flex gap-4 z-20">
-        {HERO_SLIDES.map((movie, index) => (
-          <button
-            key={movie.id}
-            onClick={() => setCurrentSlide(index)}
-            className={`group relative h-2 transition-all duration-500 ${
-              index === currentSlide ? "w-6" : "w-4"
-            }`}
-          >
-            <div
-              className={`absolute inset-0 rounded-full transition-colors duration-300 ${
-                index === currentSlide ? "bg-accent" : "bg-white/20"
-              }`}
-            ></div>
-          </button>
-        ))}
+        </div>
       </div>
-    </section>
+
+      {/* Title */}
+      <p
+        className={`mt-3 text-sm transition-colors font-medium -ml-1 ${
+          isActive
+            ? "font-bold text-text-primary"
+            : "text-text-secondary group-hover:text-text-primary"
+        }`}
+      >
+        {movie.movie_title}
+      </p>
+    </motion.article>
+  );
+};
+
+// ==================== MAIN COMPONENT ====================
+
+const Hero = () => {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [autoPlay, setAutoPlay] = useState(true);
+
+  const activeMovie = HERO_SLIDES[activeIndex];
+
+  // Auto-advance slides
+  useEffect(() => {
+    if (!autoPlay) return;
+    const timer = setTimeout(() => {
+      setActiveIndex((prev) => (prev + 1) % HERO_SLIDES.length);
+    }, 8000);
+    return () => clearTimeout(timer);
+  }, [activeIndex, autoPlay]);
+
+  // Handle thumbnail click
+  const handleThumbnailClick = (index) => {
+    setActiveIndex(index);
+    setAutoPlay(false);
+    setTimeout(() => setAutoPlay(true), 5000);
+  };
+
+  return (
+    <div className="relative pt-20">
+      {/* ==================== HERO SECTION ==================== */}
+      <section className="relative w-full p min-h-screen flex items-center overflow-hidden bg-primary text-white">
+        {/* Background */}
+        <HeroBackground movie={activeMovie} />
+
+        {/* Content Container */}
+        <div className="relative z-20 max-w-7xl mx-auto px-6 lg:px-20 w-full py-20">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={`content-${activeMovie.id}`}
+              variants={staggerContainer}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              className="max-w-2xl"
+            >
+              {/* Metadata */}
+              <MovieMetadata movie={activeMovie} />
+
+              {/* Title */}
+              <MovieTitle title={activeMovie.movie_title} />
+
+              {/* Description */}
+              <MovieDescription description={activeMovie.description} />
+
+              {/* Action Buttons */}
+              <ActionButtons />
+
+              {/* Progress Indicator */}
+              <ProgressIndicator
+                activeIndex={activeIndex}
+                total={HERO_SLIDES.length}
+                autoPlay={autoPlay}
+              />
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        {/* Bottom Gradient Fade */}
+        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-primary to-transparent z-10" />
+      </section>
+
+      {/* ==================== CAROUSEL SECTION ==================== */}
+      <section className="relative z-30 mt-8 pb-16" aria-label="Movie carousel">
+        <div className="w-full">
+          {/* Section Header */}
+          <div className="flex items-center justify-between mb-6 px-6 lg:px-20 ">
+            <h2 className="text-text-primary font-bold tracking-wider uppercase text-sm flex items-center gap-3">
+              <span className="w-8 h-0.5 bg-accent" aria-hidden="true" />
+              <span>Up Next</span>
+            </h2>
+          </div>
+
+          {/* Thumbnails */}
+          <div
+            className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide px-6 lg:px-20"
+            role="list"
+          >
+            {HERO_SLIDES.map((movie, index) => (
+              <ThumbnailCard
+                key={movie.id}
+                movie={movie}
+                index={index}
+                activeIndex={activeIndex}
+                onClick={() => handleThumbnailClick(index)}
+              />
+            ))}
+          </div>
+        </div>
+      </section>
+    </div>
   );
 };
 

@@ -1,9 +1,11 @@
-import React from 'react'
+import React from "react";
 
 const FAQ = () => (
-  <section className="py-20">
+  <section className="py-20 pt-24">
     <div className="container mx-auto px-6 max-w-4xl">
-      <h1 className="text-3xl font-extrabold mb-4">Frequently Asked Questions</h1>
+      <h1 className="text-3xl font-extrabold mb-4">
+        Frequently Asked Questions
+      </h1>
       <div className="space-y-4 text-text-secondary">
         <div>
           <h4 className="font-semibold">How do I book tickets?</h4>
@@ -16,6 +18,6 @@ const FAQ = () => (
       </div>
     </div>
   </section>
-)
+);
 
-export default FAQ
+export default FAQ;

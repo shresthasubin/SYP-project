@@ -21,62 +21,72 @@ import Movies from "./pages/admin/Movies.jsx";
 import Halls from "./pages/admin/Halls.jsx";
 import User from "./pages/admin/User.jsx";
 import { AuthProvider } from "./context/AuthContext.jsx";
+import { ThemeProvider, useTheme } from "./context/ThemeContext.jsx";
+
+const ThemedToaster = () => {
+  const { isDark } = useTheme();
+  return (
+    <Toaster
+      position="top-right"
+      reverseOrder={false}
+      gutter={8}
+      toastOptions={{
+        duration: 3000,
+        style: {
+          background: isDark ? "#363636" : "#f3f4f6",
+          color: isDark ? "#fff" : "#000",
+        },
+        success: {
+          duration: 3000,
+          style: {
+            background: "#10b981",
+          },
+        },
+        error: {
+          duration: 3000,
+          style: {
+            background: "#ef4444",
+          },
+        },
+      }}
+    />
+  );
+};
 
 const App = () => {
   return (
-    <AuthProvider>
-      <Toaster
-        position="top-right"
-        reverseOrder={false}
-        gutter={8}
-        toastOptions={{
-          duration: 3000,
-          style: {
-            background: "#363636",
-            color: "#fff",
-          },
-          success: {
-            duration: 3000,
-            style: {
-              background: "#10b981",
-            },
-          },
-          error: {
-            duration: 3000,
-            style: {
-              background: "#ef4444",
-            },
-          },
-        }}
-      />
-      <Routes>
-        <Route element={<Layout />}>
-          <Route path="/" element={<Landing />} />
-          <Route path="/movies" element={<MoviesPage />} />
-          <Route path="/movies/:id" element={<MovieDetail />} />
-          <Route path="/locations" element={<Locations />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/legal/terms" element={<Terms />} />
-          <Route path="/legal/privacy" element={<Privacy />} />
-          <Route path="/legal/cookie" element={<Cookie />} />
-          <Route path="/faq" element={<FAQ />} />
-        </Route>
+    <ThemeProvider>
+      <AuthProvider>
+        <ThemedToaster />
+        <Routes>
+          <Route element={<Layout />}>
+            <Route path="/" element={<Landing />} />
+            <Route path="/movies" element={<MoviesPage />} />
+            <Route path="/movies/:id" element={<MovieDetail />} />
+            <Route path="/locations" element={<Locations />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/legal/terms" element={<Terms />} />
+            <Route path="/legal/privacy" element={<Privacy />} />
+            <Route path="/legal/cookie" element={<Cookie />} />
+            <Route path="/faq" element={<FAQ />} />
+          </Route>
 
-        {/* Admin Routes */}
-        <Route path="/admin" element={<AdminLayout />}>
-          <Route index element={<Dashboard />} />
-          <Route path="movies" element={<Movies />} />
-          <Route path="halls" element={<Halls />} />
-          <Route path="users" element={<User />} />
-        </Route>
+          {/* Admin Routes */}
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<Dashboard />} />
+            <Route path="movies" element={<Movies />} />
+            <Route path="halls" element={<Halls />} />
+            <Route path="users" element={<User />} />
+          </Route>
 
-        {/* auth is kept separate outside layout (simple) */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </AuthProvider>
+          {/* auth is kept separate outside layout (simple) */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </AuthProvider>
+    </ThemeProvider>
   );
 };
 
