@@ -12,187 +12,182 @@ const SLIDE_WIDTH = CARD_WIDTH + GAP;
 const SPRING = { type: "spring", stiffness: 300, damping: 30 };
 
 /* ===== DATA ===== */
-const NOW_SHOWING = [
-  {
-    id: 1,
-    title: "Dune: Part Two",
-    rating: 9.4,
-    genre: "Sci-Fi",
-    image: "https://images.unsplash.com/photo-1626814026160-2237a95fc5a0",
-  },
-  {
-    id: 2,
-    title: "Oppenheimer",
-    rating: 9.6,
-    genre: "Drama",
-    image: "https://images.unsplash.com/photo-1598899134739-24c46f58b8c0",
-  },
-  {
-    id: 3,
-    title: "The Batman",
-    rating: 8.9,
-    genre: "Action",
-    image: "https://images.unsplash.com/photo-1509347528160-9a9e33742cd4",
-  },
-  {
-    id: 4,
-    title: "Avatar 2",
-    rating: 8.7,
-    genre: "Adventure",
-    image: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23",
-  },
-  {
-    id: 5,
-    title: "Blade Runner 2049",
-    rating: 9.2,
-    genre: "Sci-Fi",
-    image: "https://images.unsplash.com/photo-1542204165-65bf26472b9b",
-  },
-  {
-    id: 6,
-    title: "Interstellar",
-    rating: 9.5,
-    genre: "Sci-Fi",
-    image: "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa",
-  },
-];
-
-const UPCOMING = [
-  {
-    id: 7,
-    title: "Inception",
-    rating: 9.3,
-    genre: "Sci-Fi",
-    image: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee",
-  },
-  {
-    id: 8,
-    title: "Tenet",
-    rating: 8.6,
-    genre: "Sci-Fi",
-    image: "https://images.unsplash.com/photo-1524985069026-dd778a71c7b4",
-  },
-  {
-    id: 9,
-    title: "Guardians of Galaxy 3",
-    rating: 9.1,
-    genre: "Action",
-    image: "https://images.unsplash.com/photo-1517602302552-471fe67acf66",
-  },
-  {
-    id: 10,
-    title: "Black Panther 2",
-    rating: 9.0,
-    genre: "Action",
-    image: "https://images.unsplash.com/photo-1604079628437-179d46a53f26",
-  },
-];
-
-/* ===== CAROUSEL COMPONENT ===== */
-const MovieCarousel = ({ title, movies }) => {
-  const navigate = useNavigate();
-  const containerRef = useRef(null);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [visibleCards, setVisibleCards] = useState(1);
-
-  /* ===== CALCULATE VISIBLE CARDS ===== */
-  useEffect(() => {
-    const calculate = () => {
-      if (!containerRef.current) return;
-      const width = containerRef.current.offsetWidth;
-      setVisibleCards(Math.floor(width / SLIDE_WIDTH));
-    };
-    calculate();
-    window.addEventListener("resize", calculate);
-    return () => window.removeEventListener("resize", calculate);
-  }, []);
-
-  const maxIndex = Math.max(movies.length - visibleCards, 0);
-
-  const nextSlide = () => {
-    if (currentIndex < maxIndex) setCurrentIndex((i) => i + 1);
-  };
-
-  const prevSlide = () => {
-    if (currentIndex > 0) setCurrentIndex((i) => i - 1);
-  };
-
+function MovieCard({
+  title,
+  year,
+  director,
+  duration,
+  rating,
+  tags,
+  image,
+  accent = "bg-pink-500",
+  reverse = false,
+}) {
   return (
-    <section className="mb-12">
-      <h2 className="text-3xl font-bold mb-6 text-text-primary">{title}</h2>
-      <div ref={containerRef} className="relative overflow-hidden">
-        <motion.div
-          className="flex cursor-grab active:cursor-grabbing"
-          style={{ gap: GAP }}
-          drag="x"
-          dragConstraints={{ left: -maxIndex * SLIDE_WIDTH, right: 0 }}
-          dragElastic={0.1}
-          dragMomentum={false}
-          onDragEnd={(e, info) => {
-            if (info.offset.x < -50 && currentIndex < maxIndex) nextSlide();
-            if (info.offset.x > 50 && currentIndex > 0) prevSlide();
-          }}
-          animate={{ x: -currentIndex * SLIDE_WIDTH }}
-          transition={SPRING}
-        >
-          {movies.map((movie) => (
-            <div
-              key={movie.id}
-              className="shrink-0 rounded-xl overflow-hidden shadow-lg relative group"
-              style={{ width: CARD_WIDTH, height: CARD_HEIGHT }}
-              onClick={() => navigate(`/movies/${movie.id}`)}
-            >
-              <img
-                src={`${movie.image}?w=${CARD_WIDTH}&h=${CARD_HEIGHT}&fit=crop`}
-                alt={movie.title}
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-              />
-              <div className="absolute bottom-0 w-full p-4 bg-linear-to-t from-black/80 to-transparent">
-                <h3 className="text-white text-lg font-semibold truncate">
-                  {movie.title}
-                </h3>
-                <div className="flex justify-between text-sm text-text-secondary mt-1">
-                  <span>{movie.genre}</span>
-                  <span className="flex items-center gap-1 text-yellow-400">
-                    <Star size={16} fill="currentColor" /> {movie.rating}
-                  </span>
-                </div>
-                <button className="mt-2 w-full py-2 bg-accent text-white rounded-lg font-semibold flex items-center justify-center gap-2">
-                  <Ticket size={16} /> Book
-                </button>
-              </div>
-            </div>
-          ))}
-        </motion.div>
-
-        {/* LEFT BUTTON */}
-        <button
-          onClick={prevSlide}
-          disabled={currentIndex === 0}
-          className="absolute left-0 top-1/2 -translate-y-1/2 bg-secondary/80 text-text-primary p-3 rounded-full disabled:opacity-30 disabled:pointer-events-none hover:bg-secondary transition-colors"
-        >
-          <ChevronLeft size={24} />
-        </button>
-
-        {/* RIGHT BUTTON */}
-        <button
-          onClick={nextSlide}
-          disabled={currentIndex >= maxIndex}
-          className="absolute right-0 top-1/2 -translate-y-1/2 bg-secondary/80 text-text-primary p-3 rounded-full disabled:opacity-30 disabled:pointer-events-none hover:bg-secondary transition-colors"
-        >
-          <ChevronRight size={24} />
+    <div className="relative w-[300px] h-[500px] rounded-[35px] shadow-[0_0_50px_#0F274D] overflow-hidden group">
+      {/* Watch Card */}
+      <div
+        className={`absolute inset-0 ${accent} -z-10 flex items-end justify-center pb-4`}
+      >
+        <button className="uppercase font-bold text-lg tracking-wide text-white hover:text-gray-200">
+          watch now
         </button>
       </div>
-    </section>
+
+      {/* Content Card */}
+      <div
+        className={`absolute inset-0 p-6 rounded-[35px] overflow-hidden transition-all duration-500
+        ${reverse ? "top-[-50px] group-hover:top-0" : "group-hover:-top-[50px]"}`}
+      >
+        <img
+          src={image}
+          alt={title}
+          className={`absolute inset-0 w-full h-full object-cover transition-transform duration-500
+          ${reverse ? "scale-110 group-hover:scale-100" : "group-hover:scale-110"}`}
+        />
+
+        {/* Shadow */}
+        <div className="absolute bottom-0 w-full h-[170px] bg-[#0F274D] blur-xl shadow-[0_0_20px_20px_#0F274D]" />
+
+        {/* Content */}
+        <div className="absolute bottom-6 text-white">
+          <h1 className="text-3xl font-bold capitalize">{title}</h1>
+          <p className="text-sm text-gray-300 font-semibold capitalize">
+            {year} · {director}
+          </p>
+
+          <b className="block mt-1">{duration}</b>
+
+          {/* Stars */}
+          <div className="mt-2 text-sm text-gray-400">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <span
+                key={i}
+                className={`fa fa-star ${i <= rating ? "text-orange-400" : ""}`}
+              />
+            ))}
+          </div>
+
+          {/* Tags */}
+          <div className="flex gap-2 mt-4">
+            {tags.map((tag) => (
+              <span
+                key={tag}
+                className="px-3 py-1 text-sm rounded-full bg-white/20"
+              >
+                #{tag}
+              </span>
+            ))}
+          </div>
+
+          {/* Arrow */}
+          <i
+            className={`fa ${
+              reverse ? "fa-angle-down" : "fa-angle-up"
+            } absolute left-1/2 -translate-x-1/2 -bottom-4 text-2xl text-gray-400`}
+          />
+        </div>
+      </div>
+    </div>
   );
-};
+}
+
+
+
+
+
+/* ===== CAROUSEL COMPONENT ===== */
+
 
 /* ===== MAIN MOVIES COMPONENT ===== */
 const Movies = () => {
+  const movies = [
+    {
+      title: "aladdin",
+      year: "2019",
+      director: "Guy Ritchie",
+      duration: "2h 10m",
+      rating: 4,
+      tags: ["action", "romantic", "family"],
+      image: "https://pad.mymovies.it/filmclub/2017/11/159/locandina.jpg",
+      accent: "bg-pink-500"
+    },
+    {
+      title: "The Lion King",
+      year: "2019",
+      director: "Jon Favreau",
+      duration: "1h 58m",
+      rating: 5,
+      tags: ["adventure", "family", "animation"],
+      image: "https://m.media-amazon.com/images/I/81x1-7zDMsL._SL1500_.jpg",
+      accent: "bg-yellow-500"
+    },
+    {
+      title: "Joker",
+      year: "2019",
+      director: "Todd Phillips",
+      duration: "2h 2m",
+      rating: 4,
+      tags: ["drama", "thriller", "crime"],
+      image: "https://www.tallengestore.com/cdn/shop/products/Joker_-_Put_On_A_Happy_Face_-_Joaquin_Phoenix_-_Hollywood_English_Movie_Poster_3_0e557717-f9ae-4d45-82c3-27e08c2a9eeb.jpg",
+      accent: "bg-purple-500"
+    },{
+       title: "aladdin",
+      year: "2019",
+      director: "Guy Ritchie",
+      duration: "2h 10m",
+      rating: 4,
+      tags: ["action", "romantic", "family"],
+      image: "https://pad.mymovies.it/filmclub/2017/11/159/locandina.jpg",
+      accent: "bg-pink-500"
+    },
+    {
+      title: "The Lion King",
+      year: "2019",
+      director: "Jon Favreau",
+      duration: "1h 58m",
+      rating: 5,
+      tags: ["adventure", "family", "animation"],
+      image: "https://m.media-amazon.com/images/I/81x1-7zDMsL._SL1500_.jpg",
+      accent: "bg-yellow-500"
+    },{
+       title: "aladdin",
+      year: "2019",
+      director: "Guy Ritchie",
+      duration: "2h 10m",
+      rating: 4,
+      tags: ["action", "romantic", "family"],
+      image: "https://pad.mymovies.it/filmclub/2017/11/159/locandina.jpg",
+      accent: "bg-pink-500"
+    },
+    {
+      title: "The Lion King",
+      year: "2019",
+      director: "Jon Favreau",
+      duration: "1h 58m",
+      rating: 5,
+      tags: ["adventure", "family", "animation"],
+      image: "https://m.media-amazon.com/images/I/81x1-7zDMsL._SL1500_.jpg",
+      accent: "bg-yellow-500"
+    }
+  ];
+
   return (
     <div className="container mx-auto px-6 py-10">
-      <MovieCarousel title="Now Showing" movies={NOW_SHOWING} />
-      <MovieCarousel title="Upcoming Shows" movies={UPCOMING} />
+      <div className="mb-8">
+        <h2 className="text-2xl font-bold text-text-primary dark:text-text-primary mb-4">
+          Featured Movies
+        </h2>
+        <div className="relative">
+          <div className="flex overflow-x-auto gap-6 pb-4 scrollbar-hide">
+            {movies.map((movie, index) => (
+              <div key={index} className="flex-shrink-0 w-80">
+                <MovieCard {...movie} />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

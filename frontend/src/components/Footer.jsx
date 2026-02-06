@@ -130,7 +130,7 @@ const Footer = () => {
             <p className="text-text-secondary mb-4">
               Subscribe to get latest updates and offers.
             </p>
-            <form className="flex gap-2">
+            <form className="text-text-secondary flex gap-2 border border-black/60 rounded-lg ">
               <input
                 type="email"
                 placeholder="Your email"

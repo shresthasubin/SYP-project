@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { Play, Ticket, Info } from "lucide-react";
+import React, { useState, useEffect, use } from "react";
+import { Play, Ticket, Info, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 import img1 from "../assets/Interstellar.jpg";
@@ -13,7 +13,6 @@ import img8 from "../assets/unkoSweater.png";
 
 import "../index.css";
 
-// ==================== DATA ====================
 const HERO_SLIDES = [
   {
     id: 1,
@@ -169,7 +168,7 @@ const HeroBackground = ({ movie }) => (
     >
       {/* Background Image - Full Width */}
       <div
-        className="absolute inset-0 bg-cover bg-right"
+        className="absolute inset-0 bg-cover bg-right "
         style={{ backgroundImage: `url('${movie.moviePoster}')` }}
         role="img"
         aria-label={`${movie.movie_title} backdrop`}
@@ -178,7 +177,7 @@ const HeroBackground = ({ movie }) => (
       {/* Overlay Effects */}
       <div className="absolute inset-0 bg-accent/10 mix-blend-overlay" />
       <div className="absolute inset-0 bg-gradient-to-r from-primary from-10% via-primary/80 via-50% to-transparent to-100%" />
-      <div className="absolute inset-0 shadow-[inset_-200px_0_300px_rgba(10,11,15,0.9)]" />
+      {/* <div className="absolute inset-0 shadow-[inset_-200px_0_300px_rgba(10,11,15,0.9)]" /> */}
     </motion.div>
   </AnimatePresence>
 );
@@ -189,7 +188,7 @@ const HeroBackground = ({ movie }) => (
 const MovieMetadata = ({ movie }) => (
   <motion.div
     variants={fadeInUp}
-    className="flex flex-wrap items-center gap-3 mb-6"
+    className="flex flex-wrap items-center gap-3 mb-6 filter:blur(0.5px)"
   >
     {/* Match Score Badge */}
     <span className="bg-accent/20 text-accent text-xs font-bold px-3 py-1.5 rounded-md border border-accent/30 uppercase tracking-widest backdrop-blur-sm">
@@ -399,45 +398,164 @@ const Hero = () => {
   return (
     <div className="relative pt-20">
       {/* ==================== HERO SECTION ==================== */}
-      <section className="relative w-full p min-h-screen flex items-center overflow-hidden bg-primary text-white">
-        {/* Background */}
-        <HeroBackground movie={activeMovie} />
+      <section className="relative w-full min-h-screen flex items-center overflow-hidden bg-primary text-white">
+        {/* Background Image */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={`bg-${activeMovie.id}`}
+            className="absolute inset-0 w-full h-full"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 1 }}
+          >
+            <div
+              className="absolute inset-0 bg-cover bg-right"
+              style={{ backgroundImage: `url('${activeMovie.moviePoster}')` }}
+            />
 
-        {/* Content Container */}
-        <div className="relative z-20 max-w-7xl mx-auto px-6 lg:px-20 w-full py-20">
+            {/* Dark Left Gradient Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-r from-black via-black/70 to-transparent" />
+
+            {/* Bottom Gradient */}
+            <div className="absolute bottom-0 w-full h-1/2 bg-gradient-to-t from-primary via-primary/50 to-transparent" />
+          </motion.div>
+        </AnimatePresence>
+
+        {/* Content Container - Moved Further Left */}
+        <div className="relative z-20 w-full py-10 pl-6 lg:pl-12 pr-6">
           <AnimatePresence mode="wait">
             <motion.div
               key={`content-${activeMovie.id}`}
-              variants={staggerContainer}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              className="max-w-2xl"
+              initial={{ opacity: 0, x: -50 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 50 }}
+              transition={{ duration: 0.6 }}
+              className="max-w-xl"
             >
-              {/* Metadata */}
-              <MovieMetadata movie={activeMovie} />
+              {/* Spotlight Label */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.2 }}
+                className="text-accent text-sm font-bold uppercase tracking-widest mb-4"
+              >
+                #{activeIndex + 1} Spotlight
+              </motion.div>
 
               {/* Title */}
-              <MovieTitle title={activeMovie.movie_title} />
+              <motion.h1
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="text-5xl sm:text-6xl md:text-7xl font-black text-white mb-6 leading-tight drop-shadow-lg"
+              >
+                {activeMovie.movie_title}
+              </motion.h1>
+
+              {/* Metadata Badges */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="flex flex-wrap gap-3 mb-6"
+              >
+                <span className="text-sm text-white font-semibold bg-white/10 backdrop-blur px-3 py-1.5 rounded-full border border-white/20 flex items-center gap-2">
+                  📺{" "}
+                  {Array.isArray(activeMovie.genre)
+                    ? activeMovie.genre[0]
+                    : activeMovie.genre}
+                </span>
+                <span className="text-sm text-white font-semibold bg-white/10 backdrop-blur px-3 py-1.5 rounded-full border border-white/20">
+                  ⏱️ {Math.floor(activeMovie.duration / 60)}h{" "}
+                  {activeMovie.duration % 60}m
+                </span>
+                <span className="text-sm text-white font-semibold bg-white/10 backdrop-blur px-3 py-1.5 rounded-full border border-white/20">
+                  📅{" "}
+                  {new Date(activeMovie.releaseDate).toLocaleDateString(
+                    "en-US",
+                    {
+                      year: "numeric",
+                      month: "short",
+                      day: "numeric",
+                    },
+                  )}
+                </span>
+                <span className="text-sm text-white font-semibold bg-white/10 backdrop-blur px-3 py-1.5 rounded-full border border-white/20">
+                  HD
+                </span>
+                <span className="text-sm text-white font-semibold bg-white/10 backdrop-blur px-3 py-1.5 rounded-full border border-white/20">
+                  ⭐ {Math.random().toFixed(1)}
+                </span>
+                <span className="text-sm text-white font-semibold bg-white/10 backdrop-blur px-3 py-1.5 rounded-full border border-white/20">
+                  🔞 {activeMovie.rating}
+                </span>
+              </motion.div>
 
               {/* Description */}
-              <MovieDescription description={activeMovie.description} />
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                className="text-white text-base leading-relaxed max-w-lg mb-8 drop-shadow-lg"
+              >
+                {activeMovie.description}
+              </motion.p>
 
               {/* Action Buttons */}
-              <ActionButtons />
-
-              {/* Progress Indicator */}
-              <ProgressIndicator
-                activeIndex={activeIndex}
-                total={HERO_SLIDES.length}
-                autoPlay={autoPlay}
-              />
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6 }}
+                className="flex gap-4"
+              >
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="px-8 py-3 rounded-full bg-accent text-white font-bold flex items-center gap-2 hover:bg-accent/90 transition-colors drop-shadow-lg"
+                >
+                  <Play size={20} fill="currentColor" />
+                  Watch Now
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="px-8 py-3 rounded-full border-2 border-white text-white font-bold hover:bg-white/10 transition-all drop-shadow-lg"
+                >
+                  Detail →
+                </motion.button>
+              </motion.div>
             </motion.div>
           </AnimatePresence>
         </div>
 
-        {/* Bottom Gradient Fade */}
-        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-primary to-transparent z-10" />
+        {/* Navigation Buttons */}
+        <motion.button
+          onClick={() => {
+            setActiveIndex(
+              (prev) => (prev - 1 + HERO_SLIDES.length) % HERO_SLIDES.length,
+            );
+            setAutoPlay(false);
+            setTimeout(() => setAutoPlay(true), 5000);
+          }}
+          className="absolute right-8 bottom-30 -translate-y-1/2 z-30 bg-white/40 backdrop-blur text-white p-3  hover:bg-red-700 transition-colors drop-shadow-lg"
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <ChevronLeft size={28} />
+        </motion.button>
+        <motion.button
+          onClick={() => {
+            setActiveIndex((prev) => (prev + 1) % HERO_SLIDES.length);
+            setAutoPlay(false);
+            setTimeout(() => setAutoPlay(true), 5000);
+          }}
+          className="absolute right-8 bottom-50 -translate-y-1/2 z-30 bg-white/40 backdrop-blur text-white p-3  hover:bg-red-600 transition-colors drop-shadow-lg"
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <ChevronRight size={28} />
+        </motion.button>
       </section>
 
       {/* ==================== CAROUSEL SECTION ==================== */}
@@ -447,7 +565,7 @@ const Hero = () => {
           <div className="flex items-center justify-between mb-6 px-6 lg:px-20 ">
             <h2 className="text-text-primary font-bold tracking-wider uppercase text-sm flex items-center gap-3">
               <span className="w-8 h-0.5 bg-accent" aria-hidden="true" />
-              <span>Up Next</span>
+              <span>NOW SHOWING</span>
             </h2>
           </div>
 
