@@ -177,7 +177,6 @@ const HeroBackground = ({ movie }) => (
       {/* Overlay Effects */}
       <div className="absolute inset-0 bg-accent/10 mix-blend-overlay" />
       <div className="absolute inset-0 bg-gradient-to-r from-primary from-10% via-primary/80 via-50% to-transparent to-100%" />
-      {/* <div className="absolute inset-0 shadow-[inset_-200px_0_300px_rgba(10,11,15,0.9)]" /> */}
     </motion.div>
   </AnimatePresence>
 );
@@ -255,62 +254,10 @@ const MovieDescription = ({ description }) => (
 /**
  * Action Buttons Component
  */
-const ActionButtons = () => (
-  <motion.div variants={fadeInUp} className="flex flex-wrap items-center gap-4">
-    <motion.button
-      className="bg-accent hover:bg-accent-hover text-white flex items-center gap-3 px-8 py-4 rounded-lg font-bold transition-all shadow-lg shadow-accent/30"
-      whileHover={{
-        scale: 1.05,
-        boxShadow: "0 20px 40px rgba(229, 9, 20, 0.4)",
-      }}
-      whileTap={{ scale: 0.98 }}
-      aria-label="Watch movie now"
-    >
-      <Play size={20} fill="currentColor" />
-      <span>Watch Now</span>
-    </motion.button>
-
-    <motion.button
-      className="bg-secondary/30 hover:bg-secondary/50 backdrop-blur-md text-text-primary flex items-center gap-3 px-8 py-4 rounded-lg font-bold border border-white/20 transition-all"
-      whileHover={{ scale: 1.05, borderColor: "rgba(255, 255, 255, 0.4)" }}
-      whileTap={{ scale: 0.98 }}
-      aria-label="More information"
-    >
-      <Info size={20} />
-      <span>More Info</span>
-    </motion.button>
-  </motion.div>
-);
 
 /**
  * Progress Indicator for Autoplay
  */
-const ProgressIndicator = ({ activeIndex, total, autoPlay }) => (
-  <div className="flex items-center gap-2 mt-8">
-    {Array.from({ length: total }).map((_, index) => (
-      <div
-        key={index}
-        className="relative h-1 flex-1 bg-white/20 rounded-full overflow-hidden"
-      >
-        {index === activeIndex && autoPlay && (
-          <motion.div
-            className="absolute inset-0 bg-accent"
-            initial={{ scaleX: 0 }}
-            animate={{ scaleX: 1 }}
-            transition={{ duration: 8, ease: "linear" }}
-            style={{ transformOrigin: "left" }}
-          />
-        )}
-        {index === activeIndex && !autoPlay && (
-          <div className="absolute inset-0 bg-accent" />
-        )}
-        {index < activeIndex && (
-          <div className="absolute inset-0 bg-accent/50" />
-        )}
-      </div>
-    ))}
-  </div>
-);
 
 /**
  * Thumbnail Card Component
@@ -396,9 +343,9 @@ const Hero = () => {
   };
 
   return (
-    <div className="relative pt-20">
+    <div className="relative ">
       {/* ==================== HERO SECTION ==================== */}
-      <section className="relative w-full min-h-screen flex items-center overflow-hidden bg-primary text-white">
+      <section className="relative w-[100%] min-h-screen flex items-center justify-center overflow-hidden bg-primary text-white">
         {/* Background Image */}
         <AnimatePresence mode="wait">
           <motion.div
