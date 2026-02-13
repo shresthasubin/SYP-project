@@ -7,7 +7,6 @@ const BookingSeat = sequelize.define(
   "BookingSeat",
   {},
   {
-    tableName: "booking_seats",
     timestamps: false,
   }
 );

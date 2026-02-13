@@ -11,7 +11,6 @@ const Showtime = sequelize.define(
     end_time: DataTypes.TIME,
   },
   {
-    tableName: "showtimes",
     timestamps: false,
   }
 );

@@ -60,7 +60,6 @@ const Hall = sequelize.define(
     },
   },
   {
-    tableName: "Hall",
     timestamps: true,
   },
 );

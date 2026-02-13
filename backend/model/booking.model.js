@@ -13,7 +13,7 @@ const Booking = sequelize.define(
     },
   },
   {
-    tableName: "bookings",
+    timestamps: true,
   }
 );
 

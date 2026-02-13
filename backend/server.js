@@ -6,6 +6,14 @@ import router from "./routes/index.js";
 import cookieParser from "cookie-parser";
 import bcrypt from "bcryptjs";
 import User from "./model/user.model.js";
+import Booking from "./model/booking.model.js";
+import BookingSeat from "./model/bookingSeat.model.js";
+import Hall from "./model/hall.model.js";
+import Message from "./model/message.model.js";
+import Movie from "./model/movie.model.js";
+import Payment from "./model/payment.model.js";
+import Seat from "./model/seat.model.js";
+import Showtime from "./model/showtime.model.js";
 
 dotenv.config({
   path: "./.env",
@@ -21,7 +29,7 @@ app.use(
     credentials: true,
   }),
 );
-app.use(express.urlencoded({ extended: false }));
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 app.use("/uploads", express.static("uploads"));
@@ -54,6 +62,7 @@ const seedAdmin = async () => {
 
 const startServer = async () => {
   await conenctDB();
+
   await sequelize.sync({ force: false });
   await seedAdmin();
   app.listen(port, () => {

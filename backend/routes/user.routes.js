@@ -7,6 +7,7 @@ import {
   userRoleUpdate,
   userMe,
   userLogout,
+  userUpdate,
 } from "../controllers/user.controller.js";
 import { verifyJWT, roleCheck } from "../middlewares/auth.middleware.js";
 
@@ -23,5 +24,6 @@ userRouter.put(
   userRoleUpdate,
 );
 userRouter.delete("/delete/:id", [verifyJWT, roleCheck(["admin"])], userDelete);
+userRouter.delete("/update-user/:id", [verifyJWT, roleCheck(["admin"])], userUpdate);
 
 export default userRouter;

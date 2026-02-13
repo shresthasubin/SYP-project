@@ -15,7 +15,6 @@ const Seat = sequelize.define(
     },
   },
   {
-    tableName: "seats",
     timestamps: false,
   }
 );

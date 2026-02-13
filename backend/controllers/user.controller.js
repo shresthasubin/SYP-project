@@ -121,7 +121,7 @@ const userDelete = async (req, res) => {
     }
 
     if (user.role !== "admin") {
-      user.isDeleted = true;
+      user.isDeleted = !user.isDeleted;
       await user.save();
     }
 
@@ -195,6 +195,40 @@ const userRoleUpdate = async (req, res) => {
   }
 };
 
+// updating user
+const userUpdate = async (req, res) => {
+  try {
+    const { userId } = req.params
+    const Id = parseInt(userId)
+    const user = await User.findByPk(Id)
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not available"
+      })
+    }
+
+    const { fullname, password, license } = req.body
+    await user.update({
+      fullname,
+      password,
+      license
+    })
+
+    return res.status(200).json({
+      success: true,
+      message: "User updated successfully",
+      data: user
+    })
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: "Server error: Cannot update user"
+    })
+  }
+}
+
 // get current user info
 const userMe = async (req, res) => {
   try {
@@ -244,6 +278,7 @@ const userLogout = async (req, res) => {
   }
 };
 
+
 export {
   userRegister,
   userLogin,
@@ -252,4 +287,5 @@ export {
   userRoleUpdate,
   userMe,
   userLogout,
+  userUpdate,
 };

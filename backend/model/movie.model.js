@@ -15,7 +15,7 @@ const Movie = sequelize.define(
     },
     description: {
       type: DataTypes.TEXT,
-      et(value) {
+      set(value) {
         if (typeof value === "string") {
           this.setDataValue("movie_title", value.trim());
         }
@@ -48,7 +48,6 @@ const Movie = sequelize.define(
     },
   },
   {
-    tableName: "Movie",
     timestamps: true,
   },
 );
