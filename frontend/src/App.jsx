@@ -20,6 +20,7 @@ import Dashboard from "./pages/admin/Dashboard.jsx";
 import Movies from "./pages/admin/Movies.jsx";
 import Halls from "./pages/admin/Halls.jsx";
 import User from "./pages/admin/User.jsx";
+import SeatLayoutPreview from "../formpage/SeatLayoutPreview.jsx";
 import { AuthProvider } from "./context/AuthContext.jsx";
 import { ThemeProvider, useTheme } from "./context/ThemeContext.jsx";
 
@@ -70,6 +71,7 @@ const App = () => {
             <Route path="/legal/privacy" element={<Privacy />} />
             <Route path="/legal/cookie" element={<Cookie />} />
             <Route path="/faq" element={<FAQ />} />
+            <Route path="/reg" element={<SeatLayoutPreview />} />
           </Route>
 
           {/* Admin Routes */}
