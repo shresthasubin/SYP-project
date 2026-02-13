@@ -4,6 +4,7 @@ import Showtime from "../model/showtime.model.js";
 import Movie from "../model/movie.model.js";
 import Hall from "../model/hall.model.js";
 import Payment from "../model/payment.model.js";
+
 const createBooking = async (req, res) => {
   try {
     const { showtime_id, seats, total_price } = req.body;
