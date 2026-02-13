@@ -92,12 +92,7 @@ function MovieCard({
   );
 }
 
-
-
-
-
 /* ===== CAROUSEL COMPONENT ===== */
-
 
 /* ===== MAIN MOVIES COMPONENT ===== */
 const Movies = () => {
@@ -110,7 +105,7 @@ const Movies = () => {
       rating: 4,
       tags: ["action", "romantic", "family"],
       image: "https://pad.mymovies.it/filmclub/2017/11/159/locandina.jpg",
-      accent: "bg-pink-500"
+      accent: "bg-pink-500",
     },
     {
       title: "The Lion King",
@@ -120,7 +115,7 @@ const Movies = () => {
       rating: 5,
       tags: ["adventure", "family", "animation"],
       image: "https://m.media-amazon.com/images/I/81x1-7zDMsL._SL1500_.jpg",
-      accent: "bg-yellow-500"
+      accent: "bg-yellow-500",
     },
     {
       title: "Joker",
@@ -129,17 +124,19 @@ const Movies = () => {
       duration: "2h 2m",
       rating: 4,
       tags: ["drama", "thriller", "crime"],
-      image: "https://www.tallengestore.com/cdn/shop/products/Joker_-_Put_On_A_Happy_Face_-_Joaquin_Phoenix_-_Hollywood_English_Movie_Poster_3_0e557717-f9ae-4d45-82c3-27e08c2a9eeb.jpg",
-      accent: "bg-purple-500"
-    },{
-       title: "aladdin",
+      image:
+        "https://www.tallengestore.com/cdn/shop/products/Joker_-_Put_On_A_Happy_Face_-_Joaquin_Phoenix_-_Hollywood_English_Movie_Poster_3_0e557717-f9ae-4d45-82c3-27e08c2a9eeb.jpg",
+      accent: "bg-purple-500",
+    },
+    {
+      title: "aladdin",
       year: "2019",
       director: "Guy Ritchie",
       duration: "2h 10m",
       rating: 4,
       tags: ["action", "romantic", "family"],
       image: "https://pad.mymovies.it/filmclub/2017/11/159/locandina.jpg",
-      accent: "bg-pink-500"
+      accent: "bg-pink-500",
     },
     {
       title: "The Lion King",
@@ -149,16 +146,17 @@ const Movies = () => {
       rating: 5,
       tags: ["adventure", "family", "animation"],
       image: "https://m.media-amazon.com/images/I/81x1-7zDMsL._SL1500_.jpg",
-      accent: "bg-yellow-500"
-    },{
-       title: "aladdin",
+      accent: "bg-yellow-500",
+    },
+    {
+      title: "aladdin",
       year: "2019",
       director: "Guy Ritchie",
       duration: "2h 10m",
       rating: 4,
       tags: ["action", "romantic", "family"],
       image: "https://pad.mymovies.it/filmclub/2017/11/159/locandina.jpg",
-      accent: "bg-pink-500"
+      accent: "bg-pink-500",
     },
     {
       title: "The Lion King",
@@ -168,8 +166,8 @@ const Movies = () => {
       rating: 5,
       tags: ["adventure", "family", "animation"],
       image: "https://m.media-amazon.com/images/I/81x1-7zDMsL._SL1500_.jpg",
-      accent: "bg-yellow-500"
-    }
+      accent: "bg-yellow-500",
+    },
   ];
 
   return (
@@ -179,7 +177,7 @@ const Movies = () => {
           Featured Movies
         </h2>
         <div className="relative">
-          <div className="flex overflow-x-auto gap-6 pb-4 scrollbar-hide">
+          <div className="flex overflow-x-auto gap-6 pb-4 ">
             {movies.map((movie, index) => (
               <div key={index} className="flex-shrink-0 w-80">
                 <MovieCard {...movie} />

@@ -54,7 +54,7 @@ const hallUpdate = async (req, res) => {
     if (!hall) {
       return res.status(404).json({
         success: false,
-        message: "Hall with ID doesnot exist",
+        message: "Hall with ID doesn't exist",
       });
     }
 
@@ -143,7 +143,7 @@ const hallDelete = async (req, res) => {
     if (!hall) {
       return res.status(404).json({
         success: false,
-        message: "Hall with id doesnot found",
+        message: "Hall with id doesn't found",
       });
     }
 

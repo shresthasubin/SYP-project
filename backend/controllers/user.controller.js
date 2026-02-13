@@ -53,7 +53,7 @@ const userLogin = async (req, res) => {
     if (!userExist) {
       return res.status(404).json({
         success: false,
-        message: "User doesnot exist",
+        message: "User doesn't exist",
       });
     }
 
@@ -116,7 +116,7 @@ const userDelete = async (req, res) => {
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: "User with id doesnot exist",
+        message: "User with id doesn't exist",
       });
     }
 
@@ -165,9 +165,9 @@ const userRoleUpdate = async (req, res) => {
     const user = await User.findByPk(intId);
 
     if (!user) {
-      return res.stauts(404).json({
+      return res.status(404).json({
         success: false,
-        message: "USer with id doesnot exist",
+        message: "User with id doesn't exist",
       });
     }
 
