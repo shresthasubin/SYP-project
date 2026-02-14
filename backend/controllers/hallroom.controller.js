@@ -1,5 +1,5 @@
-import Hall from "../model/hall.model";
-import Hallroom from "../model/hallroom.model";
+import Hall from "../model/hall.model.js";
+import Hallroom from "../model/hallroom.model.js";
 
 const createRoom = async (req, res) => {
     try {

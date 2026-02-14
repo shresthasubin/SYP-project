@@ -1,5 +1,5 @@
 import express from "express";
-import { createSeat, getSeatsByHall } from "../controller/seat.controller.js";
+import { createSeat, getSeatsByHall } from "../controllers/seat.controller.js";
 
 const seatRoute = express.Router();
 
