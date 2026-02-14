@@ -14,6 +14,8 @@ import Movie from "./model/movie.model.js";
 import Payment from "./model/payment.model.js";
 import Seat from "./model/seat.model.js";
 import Showtime from "./model/showtime.model.js";
+import Hallroom from "./model/hallroom.model.js";
+import Hallclass from "./model/hallclass.model.js";
 
 dotenv.config({
   path: "./.env",
@@ -63,7 +65,7 @@ const seedAdmin = async () => {
 const startServer = async () => {
   await conenctDB();
 
-  await sequelize.sync({ force: false });
+  await sequelize.sync({ force: true });
   await seedAdmin();
   app.listen(port, () => {
     console.log(`App is listening at PORT: [${port}]`);
