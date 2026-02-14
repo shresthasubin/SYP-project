@@ -63,7 +63,7 @@ const createSeat = async (req, res) => {
 
 const getSeatsByHall = async (req, res) => {
   try {
-    const { hallroomId } = req.params
+    const { hallRoomId } = req.params
 
     const seats = await Seat.findAll({
       where: { hallroom_id: hallroomId },

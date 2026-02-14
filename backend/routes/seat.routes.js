@@ -1,10 +1,9 @@
 import express from "express";
 import { createSeat, getSeatsByHall } from "../controller/seat.controller.js";
-import auth from "../middleware/auth.js";
 
-const router = express.Router();
+const seatRoute = express.Router();
 
-router.post("/", auth, createSeat);
-router.get("/hall/:hallId", getSeatsByHall);
+seatRoute.post("/create-seat/:hallRoomId", createSeat);
+seatRoute.get("/get-seat/:hallRoomId", getSeatsByHall);
 
-export default router;
+export default seatRoute;
