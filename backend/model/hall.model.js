@@ -45,9 +45,6 @@ const Hall = sequelize.define(
       type: DataTypes.BOOLEAN,
       defaultValue: true,
     },
-    capacity: {
-      type: DataTypes.INTEGER,
-    },
     registeredDate: {
       type: DataTypes.DATEONLY,
     },

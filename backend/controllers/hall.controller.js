@@ -2,7 +2,7 @@ import Hall from "../model/hall.model.js";
 
 const hallRegister = async (req, res) => {
   try {
-    const { hall_name, hall_location, hall_contact, license, capacity } =
+    const { hall_name, hall_location, hall_contact, license } =
       req.body;
     const registeredDate = new Date();
 
@@ -12,8 +12,7 @@ const hallRegister = async (req, res) => {
       !hall_name ||
       !hall_location ||
       !hall_contact ||
-      !license ||
-      !capacity
+      !license
     ) {
       return res.status(400).json({
         success: false,
@@ -26,7 +25,6 @@ const hallRegister = async (req, res) => {
       hall_location,
       hall_contact,
       license,
-      capacity,
       registeredDate: registeredDate,
       hallPoster: hallPoster,
     });
@@ -64,7 +62,6 @@ const hallUpdate = async (req, res) => {
       hall_contact,
       isActive,
       license,
-      capacity,
       registeredDate,
     } = req.body;
 
@@ -76,7 +73,6 @@ const hallUpdate = async (req, res) => {
       hall_contact,
       isActive: isActive === "true" || isActive === true,
       license,
-      capacity,
       registeredDate,
       hallPoster: hallPoster,
     });

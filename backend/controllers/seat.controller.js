@@ -1,3 +1,4 @@
+import { parse } from "dotenv";
 import Hallroom from "../model/hallroom.model.js";
 import Seat from "../model/seat.model.js";
 
@@ -14,7 +15,8 @@ const numberToAlphabet = (n) => {
 const createSeat = async (req, res) => {
   try {
     const { hallRoomId } = req.params
-    const hallRoom = await Hallroom.findByPk(hallRoomId)
+    const intRoomId = parseInt(hallRoomId)
+    const hallRoom = await Hallroom.findByPk(intRoomId)
     
     if (!hallRoom) {
       return res.status(404).json({
@@ -23,29 +25,67 @@ const createSeat = async (req, res) => {
       })
     }
 
-    const { row, column, seatType } = req.body
-    if (!row || !column || !seatType) {
+    const { row, column, seatType, type } = req.body
+    if (!row || !column || !type) {
       return res.status(400).json({
         success: false,
-        message: "row, column, and seatType are required"
+        message: "row, column, and Type are required"
       });
     }
 
-    if (!Number.isInteger(row) || !Number.isInteger(column) || row <= 0 || column <= 0) {
+    const rowInt = parseInt(row)
+    const columnInt = parseInt(column)
+
+    if (!Number.isInteger(rowInt) || !Number.isInteger(columnInt) || rowInt <= 0 || columnInt <= 0) {
       return res.status(400).json({
         success: false,
         message: "row and column must be positive integers"
       });
     }
-    const seatName = `${numberToAlphabet(row)}${column}`
+
+    const existingSeat = await Seat.findOne({
+      where: {
+        row: rowInt,
+        column: columnInt,
+        hallroom_id: intRoomId
+      }
+    })
+
+    if (existingSeat) {
+      return res.status(400).json({
+        success: false,
+        message: "Seat had already exist"
+      })
+    }
+
+    if (type === "seat") {
+      if (!seatType) {
+        return res.status(400).json({
+          success: false,
+          message: "Seat type must be defined for seat"
+        })
+      }
+    }
+
+    const seatNum = await Seat.count({
+      where: {
+        row: rowInt,
+        hallroom_id: intRoomId,
+        type: "seat"
+      }
+    })
+
+    const seatName = `${numberToAlphabet(row)}${seatNum + 1}`
 
     const seat = await Seat.create({
-      seatName,
-      row,
-      column,
-      hallroom_id: hallRoomId,
-      seatType
-    })
+        seatName: type === "gap"? null: seatName,
+        row: rowInt,
+        column: columnInt,
+        hallroom_id: hallRoomId,
+        seatType: type === "gap"? null: seatType,
+        type
+      })
+    
 
     return res.status(201).json({
       success: true,
@@ -64,12 +104,12 @@ const createSeat = async (req, res) => {
 const getSeatsByHall = async (req, res) => {
   try {
     const { hallRoomId } = req.params
-
+    const intRoomId = parseInt(hallRoomId)
     const seats = await Seat.findAll({
-      where: { hallroom_id: hallRoomId },
+      where: { hallroom_id: intRoomId },
     });
 
-    if (!seats) {
+    if (!seats || seats.length === 0) {
       return res.status(404).json({
         success: false,
         message: "No seats available"

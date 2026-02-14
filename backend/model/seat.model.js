@@ -1,14 +1,13 @@
 import { DataTypes } from "sequelize";
 import { sequelize } from "../db/index.js";
-import Hallroom from "./hall.model.js";
+import Hallroom from "./hallroom.model.js";
 import Hallclass from "./hallclass.model.js";
 
 const Seat = sequelize.define(
   "Seat",
   {
     seatName: {
-      type: DataTypes.STRING,
-      allowNull: false,
+      type: DataTypes.STRING
     },
     row: {
       type: DataTypes.INTEGER,
@@ -28,10 +27,9 @@ const Seat = sequelize.define(
       allowNull: false,
       defaultValue: "available"
     },
-    layoutStatus: {
-      type: DataTypes.ENUM("enabled", "disabled"),
-      allowNull: false,
-      defaultValue: "enabled"
+    type: {
+      type: DataTypes.ENUM("seat", "gap"),
+      allowNull: false
     }
   },
   {

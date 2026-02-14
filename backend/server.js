@@ -65,8 +65,12 @@ const seedAdmin = async () => {
 const startServer = async () => {
   await conenctDB();
 
-  await sequelize.sync({ force: true });
+  await sequelize.sync({ force: false });
   await seedAdmin();
+
+  await Hallclass.findOrCreate({ where: { seatType: 'regular' }, defaults: { price: 10 } });
+  await Hallclass.findOrCreate({ where: { seatType: 'premium' }, defaults: { price: 20 } });
+
   app.listen(port, () => {
     console.log(`App is listening at PORT: [${port}]`);
     app.get("/", (req, res) => {
