@@ -66,7 +66,7 @@ const getSeatsByHall = async (req, res) => {
     const { hallRoomId } = req.params
 
     const seats = await Seat.findAll({
-      where: { hallroom_id: hallroomId },
+      where: { hallroom_id: hallRoomId },
     });
 
     if (!seats) {
