@@ -16,9 +16,9 @@ const Showtime = sequelize.define(
 );
 
 Movie.hasMany(Showtime, { foreignKey: "movie_id" });
-Hall.hasMany(Showtime, { foreignKey: "hall_id" });
-
 Showtime.belongsTo(Movie, { foreignKey: "movie_id" });
+
+Hall.hasMany(Showtime, { foreignKey: "hall_id" });
 Showtime.belongsTo(Hall, { foreignKey: "hall_id" });
 
 export default Showtime;

@@ -1,6 +1,5 @@
 import { sequelize } from "../db/index.js";
 import { DataTypes } from "sequelize";
-import Hall from "./hall.model.js";
 
 const Hallclass = sequelize.define(
     "Hallclass",

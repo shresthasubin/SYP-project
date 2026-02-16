@@ -4,20 +4,20 @@ import Booking from "./booking.model.js";
 import Seat from "./seat.model.js";
 
 const BookingSeat = sequelize.define(
-  "BookingSeat",
-  {},
-  {
-    timestamps: false,
-  }
+    "BookingSeat",
+    {},
+    {
+        timestamps: false,
+    }
 );
 
 Booking.belongsToMany(Seat, {
-  through: BookingSeat,
-  foreignKey: "booking_id",
+    through: BookingSeat,
+    foreignKey: "booking_id",
 });
 Seat.belongsToMany(Booking, {
-  through: BookingSeat,
-  foreignKey: "seat_id",
+    through: BookingSeat,
+    foreignKey: "seat_id",
 });
 
 export default BookingSeat;

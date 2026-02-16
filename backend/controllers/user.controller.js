@@ -1,6 +1,7 @@
 import User from "../model/user.model.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import Hall from "../model/hall.model.js";
 
 // user register
 const userRegister = async (req, res) => {
@@ -71,6 +72,7 @@ const userLogin = async (req, res) => {
         id: userExist.id,
         email: userExist.email,
         role: userExist.role,
+        license: userExist.license
       },
       process.env.TOKEN_SECRET,
       {
@@ -89,7 +91,7 @@ const userLogin = async (req, res) => {
       message: "Login Successful",
       data: {
         userExist,
-        token,
+        token
       },
     });
   } catch (err) {

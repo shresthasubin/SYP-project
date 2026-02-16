@@ -4,6 +4,7 @@ import movieRouter from './movie.routes.js'
 import hallRouter from './hall.routes.js'
 import hallRoomRoute from './hallroom.routes.js'
 import seatRoute from './seat.routes.js'
+import showtimeRoute from './showtime.routes.js'
 
 const router = express.Router()
 
@@ -12,5 +13,6 @@ router.use('/movie', movieRouter)
 router.use('/hall', hallRouter)
 router.use('/hall-room', hallRoomRoute)
 router.use('/seat', seatRoute)
+router.use('/showtime', showtimeRoute)
 
 export default router
