@@ -1,7 +1,7 @@
 import { DataTypes } from "sequelize";
 import { sequelize } from "../db/index.js";
 import Movie from "./movie.model.js";
-import Hall from "./hall.model.js";
+import Hallroom from "./hallroom.model.js";
 
 const Showtime = sequelize.define(
   "Showtime",
@@ -18,7 +18,7 @@ const Showtime = sequelize.define(
 Movie.hasMany(Showtime, { foreignKey: "movie_id" });
 Showtime.belongsTo(Movie, { foreignKey: "movie_id" });
 
-Hall.hasMany(Showtime, { foreignKey: "hall_id" });
-Showtime.belongsTo(Hall, { foreignKey: "hall_id" });
+Hallroom.hasMany(Showtime, { foreignKey: "hallroom_id" });
+Showtime.belongsTo(Hallroom, { foreignKey: "hallroom_id" });
 
 export default Showtime;

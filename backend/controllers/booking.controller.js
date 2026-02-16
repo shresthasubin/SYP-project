@@ -7,7 +7,15 @@ import Payment from "../model/payment.model.js";
 
 const createBooking = async (req, res) => {
   try {
-    const { showtime_id, seats, total_price } = req.body;
+    const { showtime_id } = req.params
+    if (!showtime_id) {
+      return res.status(400).json({
+        success: false,
+        message: "Showtime Id is needed"
+      })
+    }
+    
+    const { seats } = req.body;
 
     const booking = await Booking.create({
       user_id: req.user.id,

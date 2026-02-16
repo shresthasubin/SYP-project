@@ -1,4 +1,3 @@
-import { parse } from "dotenv";
 import Hallroom from "../model/hallroom.model.js";
 import Seat from "../model/seat.model.js";
 

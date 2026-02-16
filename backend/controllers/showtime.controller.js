@@ -1,4 +1,5 @@
 import Hall from "../model/hall.model.js";
+import Hallroom from "../model/hallroom.model.js";
 import Movie from "../model/movie.model.js";
 import Showtime from "../model/showtime.model.js";
 
@@ -35,8 +36,8 @@ const minuteToTime = (minutes) => {
 
 const createShowtime = async (req, res) => {
   try {
-    const { movieId, hallId } = req.params
-    if (!movieId || !hallId) {
+    const { movieId, hallroomId } = req.params
+    if (!movieId || !hallroomId) {
       return res.status(400).json({
         success: false,
         message: "Movie Id and Hall ID are needed"
@@ -50,13 +51,15 @@ const createShowtime = async (req, res) => {
         message: "No Movies Found"
       })
     }
-    const hall = await Hall.findOne({ where: { id: hallId } })
-    if (!hall) {
+    const hallroom = await Hallroom.findOne({ where: { id: hallroomId } })
+    if (!hallroom) {
       return res.status(404).json({
         success: false,
         message: "No Hall Found"
       })
     }
+
+    const hallDetails = await Hall.findByPk(hallroom.hall_id)
 
     const { show_date, start_time } = req.body
 
@@ -72,12 +75,17 @@ const createShowtime = async (req, res) => {
     const showtime = await Showtime.create({
       show_date,
       start_time,
-      end_time
+      end_time,
+      movie_id: movieId,
+      hallroom_id: hallroomId
     })
 
     return res.status(201).json({
       success: true,
-      data: showtime
+      data: {
+        showtime,
+        hallDetails
+      }
     })
   } catch (err) {
     res.status(500).json({
@@ -101,9 +109,9 @@ const updateShowTime = async (req, res) => {
 
     const movie = await Movie.findByPk(showtime.movie_id)
 
-    const { show_date, start_time, end_time } = req.body
+    const { show_date, start_time } = req.body
     
-    end_time = minuteToTime(timeToMinute(start_time) + movie.duration)
+    const end_time = minuteToTime(timeToMinute(start_time) + movie.duration)
 
     await showtime.update({
       show_date,
@@ -159,19 +167,19 @@ const getShowtimesByMovie = async (req, res) => {
   }
 }
 
-const getShowtimesByHall = async (req, res) => {
+const getShowtimesByHallroom = async (req, res) => {
   try {
-    const { hallId } = req.params
-    const hall = await Hall.findByPk(hallId)
+    const { hallroomId } = req.params
+    const hallroom = await Hall.findByPk(hallroomId)
 
-    if (!hall) {
+    if (!hallroom) {
       return res.status(404).json({
         success: false,
         message: "No movies found"
       })
     }
 
-    const showtime = await Showtime.findAll({ where: { movie_id: hallId } })
+    const showtime = await Showtime.findAll({ where: { hallroom_id: hallroomId } })
 
     return res.status(200).json({
       success: true,
@@ -215,6 +223,6 @@ export {
   updateShowTime,
   getShowtimes,
   getShowtimesByMovie,
-  getShowtimesByHall,
+  getShowtimesByHallroom,
   deleteShowtime
 };

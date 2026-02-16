@@ -11,6 +11,7 @@ const Booking = sequelize.define(
       type: DataTypes.ENUM("pending", "confirmed", "cancelled"),
       defaultValue: "pending",
     },
+    seats: DataTypes.ARRAY
   },
   {
     timestamps: true,
@@ -18,9 +19,9 @@ const Booking = sequelize.define(
 );
 
 User.hasMany(Booking, { foreignKey: "user_id" });
-Showtime.hasMany(Booking, { foreignKey: "showtime_id" });
-
 Booking.belongsTo(User, { foreignKey: "user_id" });
+
+Showtime.hasMany(Booking, { foreignKey: "showtime_id" });
 Booking.belongsTo(Showtime, { foreignKey: "showtime_id" });
 
 export default Booking;
