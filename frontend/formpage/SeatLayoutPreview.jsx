@@ -1,16 +1,6 @@
 import React, { useState } from "react";
 
-const defaultLayout = [
-  { row: "A", seats: 12 },
-  { row: "B", seats: 12 },
-  { row: "C", seats: 11 },
-  { row: "D", seats: 11 },
-  { row: "E", seats: 11 },
-  { row: "F", seats: 11 },
-  { row: "G", seats: 11 },
-  { row: "H", seats: 11 },
-  { row: "I", seats: 11 },
-];
+
 
 const SeatLayoutPreview = ({
   totalRows = 9,

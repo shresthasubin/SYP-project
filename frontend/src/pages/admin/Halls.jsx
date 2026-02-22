@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Edit2, Trash2, X, Upload, MapPin, Phone, Users, FileText } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, X, Upload, MapPin, Phone, Users } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
+const API_SERVER_URL = import.meta.env.VITE_API_SERVER_URL || 'http://localhost:3000';
 
 const Halls = () => {
   const [halls, setHalls] = useState([]);
@@ -25,7 +28,9 @@ const Halls = () => {
 
   const fetchHalls = async () => {
     try {
-      const response = await axios.get('http://localhost:3000/api/hall/get');
+      const response = await axios.get(`${API_BASE_URL}/hall/get`, {
+        withCredentials: true
+      });
       if (response.data.success) {
         setHalls(response.data.data);
       }
@@ -60,13 +65,13 @@ const Halls = () => {
 
     try {
       if (editingHall) {
-        await axios.put(`http://localhost:3000/api/hall/update/${editingHall.id}`, data, {
+        await axios.put(`${API_BASE_URL}/hall/update/${editingHall.id}`, data, {
           withCredentials: true,
           headers: { 'Content-Type': 'multipart/form-data' }
         });
         toast.success('Hall updated successfully');
       } else {
-        await axios.post('http://localhost:3000/api/hall/register', data, {
+        await axios.post(`${API_BASE_URL}/hall/register`, data, {
           withCredentials: true,
           headers: { 'Content-Type': 'multipart/form-data' }
         });
@@ -84,7 +89,7 @@ const Halls = () => {
     if (!window.confirm('Are you sure you want to deactivate this hall?')) return;
     
     try {
-      await axios.delete(`http://localhost:3000/api/hall/delete/${id}`, {
+      await axios.delete(`${API_BASE_URL}/hall/delete/${id}`, {
         withCredentials: true
       });
       toast.success('Hall deactivated successfully');
@@ -92,6 +97,11 @@ const Halls = () => {
     } catch (error) {
       toast.error('Failed to deactivate hall');
     }
+  };
+
+  const getPosterUrl = (poster) => {
+    if (!poster) return '';
+    return `${API_SERVER_URL}/uploads/${poster}`;
   };
 
   const openEditModal = (hall) => {
@@ -158,7 +168,7 @@ const Halls = () => {
             <div className="aspect-video w-full bg-slate-800 relative">
               {hall.hallPoster ? (
                 <img 
-                  src={`http://localhost:3000/uploads/${hall.hallPoster}`} 
+                  src={getPosterUrl(hall.hallPoster)}
                   alt={hall.hall_name}
                   className="h-full w-full object-cover"
                 />

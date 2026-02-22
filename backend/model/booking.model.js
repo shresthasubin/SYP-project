@@ -10,8 +10,7 @@ const Booking = sequelize.define(
     booking_status: {
       type: DataTypes.ENUM("pending", "confirmed", "cancelled"),
       defaultValue: "pending",
-    },
-    seats: DataTypes.ARRAY
+    }
   },
   {
     timestamps: true,
