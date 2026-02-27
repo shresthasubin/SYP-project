@@ -220,12 +220,12 @@ const Movies = () => {
                     {/* Poster & Title */}
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-4">
-                        <div className="h-16 w-12 flex-shrink-0 rounded bg-slate-800 overflow-hidden">
+                        <div className="h-20 w-4 shrink-0 rounded-md bg-slate-800 overflow-hidden">
                           {movie.moviePoster ? (
                             <img
                               src={`${API_SERVER_URL}/uploads/${movie.moviePoster}`}
                               alt={movie.movie_title}
-                              className="h-full w-full object-cover"
+                              className="h-20 w-24 object-cover"
                             />
                           ) : (
                             <div className="flex h-full items-center justify-center">

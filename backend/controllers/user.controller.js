@@ -200,36 +200,58 @@ const userRoleUpdate = async (req, res) => {
 // updating user
 const userUpdate = async (req, res) => {
   try {
-    const { userId } = req.params
-    const Id = parseInt(userId)
-    const user = await User.findByPk(Id)
+    const { id } = req.params;
+    const userId = parseInt(id, 10);
+    const user = await User.findByPk(userId);
 
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: "User not available"
-      })
+        message: "User not available",
+      });
     }
 
-    const { fullname, password, license } = req.body
-    await user.update({
-      fullname,
-      password,
-      license
-    })
+    const { fullname, email, password, role } = req.body;
+    const updates = {};
+
+    if (typeof fullname === "string" && fullname.trim()) {
+      updates.fullname = fullname.trim();
+    }
+
+    if (typeof email === "string" && email.trim()) {
+      updates.email = email.trim();
+    }
+
+    if (typeof role === "string" && ["user", "hall-admin", "admin"].includes(role)) {
+      updates.role = role;
+    }
+
+    if (typeof password === "string" && password.trim()) {
+      updates.password = await bcrypt.hash(password.trim(), 10);
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No valid fields to update",
+      });
+    }
+
+    await user.update(updates);
 
     return res.status(200).json({
       success: true,
       message: "User updated successfully",
-      data: user
-    })
+      data: user,
+    });
   } catch (err) {
     return res.status(500).json({
       success: false,
-      message: "Server error: Cannot update user"
-    })
+      message: "Server error: Cannot update user",
+      error: err.message,
+    });
   }
-}
+};
 
 // get current user info
 const userMe = async (req, res) => {

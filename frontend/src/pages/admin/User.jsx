@@ -15,6 +15,7 @@ const User = () => {
     email: "",
     phone: "",
     status: "active",
+    role:"role",
   });
 
   // Fetch users from API

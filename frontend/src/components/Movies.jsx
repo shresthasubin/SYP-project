@@ -15,7 +15,7 @@ function MovieCard({
   reverse = false,
 }) {
   return (
-    <div className="relative w-[300px] h-[500px] rounded-[35px] shadow-[0_0_50px_#0F274D] overflow-hidden group">
+    <div className="relative w-[350px] h-[500px] rounded-[35px] shadow-[0_0_50px_#0F274D] overflow-hidden group">
       <div
         className={`absolute inset-0 ${accent} -z-10 flex items-end justify-center pb-4`}
       >
@@ -40,7 +40,7 @@ function MovieCard({
         <div className="absolute bottom-6 text-white">
           <h1 className="text-3xl font-bold capitalize">{title}</h1>
           <p className="text-sm text-gray-300 font-semibold capitalize">
-            {year} · {director}
+            {year} ï¿½ {director}
           </p>
 
           <b className="block mt-1">{duration}</b>
@@ -170,7 +170,7 @@ const Movies = () => {
           <div className="relative">
             <div className="flex overflow-x-auto gap-6 pb-4">
               {movies.map((movie, index) => (
-                <div key={`${movie.title}-${index}`} className="flex-shrink-0 w-80">
+                <div key={`${movie.title}-${index}`} className="shrink-0 w-80">
                   <MovieCard {...movie} />
                 </div>
               ))}
