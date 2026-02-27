@@ -58,19 +58,28 @@ const options = {
         },
         HallRoomRequest: {
           type: "object",
-          required: ["roomName", "hallclassId", "totalSeats"],
+          required: ["roomName", "rows", "columns"],
           properties: {
             roomName: { type: "string" },
-            hallclassId: { type: "integer" },
-            totalSeats: { type: "integer" },
+            rows: { type: "integer", example: 8 },
+            columns: { type: "integer", example: 12 },
           },
         },
         SeatRequest: {
           type: "object",
-          required: ["rows", "cols"],
+          required: ["row", "column", "type"],
           properties: {
-            rows: { type: "integer" },
-            cols: { type: "integer" },
+            row: { type: "integer", example: 1 },
+            column: { type: "integer", example: 1 },
+            type: {
+              type: "string",
+              enum: ["seat", "gap"],
+            },
+            seatType: {
+              type: "string",
+              enum: ["regular", "premium"],
+              description: "Required when type is `seat`",
+            },
           },
         },
         ShowtimeRequest: {
@@ -218,15 +227,15 @@ const options = {
               "multipart/form-data": {
                 schema: {
                   type: "object",
-                  required: ["movieName", "releaseDate"],
+                  required: ["movie_title", "description", "genre", "duration"],
                   properties: {
-                    movieName: { type: "string" },
-                    releaseDate: { type: "string", format: "date" },
+                    movie_title: { type: "string" },
                     description: { type: "string" },
-                    category: { type: "string" },
+                    genre: {
+                      type: "string",
+                      description: "Comma-separated or space-separated genres",
+                    },
                     duration: { type: "integer" },
-                    language: { type: "string" },
-                    rating: { type: "string" },
                     moviePoster: { type: "string", format: "binary" },
                     movieTrailer: { type: "string", format: "binary" },
                   },
@@ -265,13 +274,12 @@ const options = {
                 schema: {
                   type: "object",
                   properties: {
-                    movieName: { type: "string" },
+                    movie_title: { type: "string" },
                     releaseDate: { type: "string", format: "date" },
                     description: { type: "string" },
-                    category: { type: "string" },
+                    genre: { type: "string" },
                     duration: { type: "integer" },
-                    language: { type: "string" },
-                    rating: { type: "string" },
+                    isPlaying: { type: "boolean" },
                     moviePoster: { type: "string", format: "binary" },
                     movieTrailer: { type: "string", format: "binary" },
                   },
@@ -301,7 +309,7 @@ const options = {
       "/api/hall/register": {
         post: {
           tags: ["Hall"],
-          summary: "Create hall (admin/hall-admin)",
+          summary: "Create hall with optional room/seat layout (admin/hall-admin)",
           security: [{ bearerAuth: [] }],
           requestBody: {
             required: true,
@@ -313,6 +321,7 @@ const options = {
                     {
                       type: "object",
                       properties: {
+                        totalCapacity: { type: "integer", example: 120 },
                         hallPoster: { type: "string", format: "binary" },
                       },
                     },
@@ -435,7 +444,13 @@ const options = {
               schema: { type: "integer" },
             },
           ],
-          responses: { 200: { description: "Application approved" } },
+          responses: {
+            200: { description: "Application approved" },
+            400: {
+              description: "Approval blocked (duplicate hall/contact/license)",
+            },
+            500: { description: "Approval failed due to server/database error" },
+          },
         },
       },
       "/api/hall/applications/{id}/reject": {

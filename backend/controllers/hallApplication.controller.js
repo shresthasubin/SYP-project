@@ -4,6 +4,7 @@ import Hall from "../model/hall.model.js";
 import User from "../model/user.model.js";
 import Hallroom from "../model/hallroom.model.js";
 import Seat from "../model/seat.model.js";
+import { Op } from "sequelize";
 
 const rowToLabel = (rowNumber) => {
   let result = "";
@@ -222,6 +223,26 @@ const approveHallApplication = async (req, res) => {
       });
     }
 
+    const duplicateHall = await Hall.findOne({
+      where: {
+        [Op.or]: [
+          { hall_name: application.hall_name },
+          { hall_contact: application.hall_contact },
+          { license: application.license },
+        ],
+      },
+      transaction: tx,
+    });
+
+    if (duplicateHall) {
+      await tx.rollback();
+      return res.status(400).json({
+        success: false,
+        message:
+          "Cannot approve: hall name, contact, or license already exists in registered halls",
+      });
+    }
+
     const newHall = await Hall.create(
       {
         hall_name: application.hall_name,
@@ -317,10 +338,20 @@ const approveHallApplication = async (req, res) => {
     });
   } catch (err) {
     await tx.rollback();
+    console.error("approveHallApplication error:", err);
+    const details = Array.isArray(err?.errors)
+      ? err.errors.map((e) => ({
+          field: e.path,
+          message: e.message,
+          value: e.value,
+        }))
+      : null;
+
     return res.status(500).json({
       success: false,
       message: "Server failed while approving application",
       error: err.message,
+      details,
     });
   }
 };
