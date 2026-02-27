@@ -76,6 +76,23 @@ const options = {
             start_time: { type: "string", example: "18:30" },
           },
         },
+        HallApplicationRequest: {
+          type: "object",
+          required: ["hall_name", "hall_location", "hall_contact", "license"],
+          properties: {
+            hall_name: { type: "string" },
+            hall_location: { type: "string" },
+            hall_contact: { type: "string", example: "9800000000" },
+            license: { type: "string", example: "091-12345678" },
+            hallPoster: { type: "string", format: "binary" },
+          },
+        },
+        HallApplicationReviewRequest: {
+          type: "object",
+          properties: {
+            reviewNote: { type: "string" },
+          },
+        },
       },
     },
     paths: {
@@ -161,6 +178,22 @@ const options = {
             },
           ],
           responses: { 200: { description: "User deleted" } },
+        },
+      },
+      "/api/user/update-user/{id}": {
+        delete: {
+          tags: ["User"],
+          summary: "Update user details (currently defined as DELETE in backend)",
+          security: [{ bearerAuth: [] }],
+          parameters: [
+            {
+              name: "id",
+              in: "path",
+              required: true,
+              schema: { type: "integer" },
+            },
+          ],
+          responses: { 200: { description: "User updated" } },
         },
       },
       "/api/movie/register": {
@@ -344,6 +377,80 @@ const options = {
             },
           ],
           responses: { 200: { description: "Hall deleted" } },
+        },
+      },
+      "/api/hall/apply": {
+        post: {
+          tags: ["Hall Application"],
+          summary: "Submit hall staff application (user only)",
+          security: [{ bearerAuth: [] }],
+          requestBody: {
+            required: true,
+            content: {
+              "multipart/form-data": {
+                schema: { $ref: "#/components/schemas/HallApplicationRequest" },
+              },
+            },
+          },
+          responses: { 201: { description: "Application submitted" } },
+        },
+      },
+      "/api/hall/application/me": {
+        get: {
+          tags: ["Hall Application"],
+          summary: "Get current user's latest hall staff application",
+          security: [{ bearerAuth: [] }],
+          responses: { 200: { description: "Latest application" } },
+        },
+      },
+      "/api/hall/applications": {
+        get: {
+          tags: ["Hall Application"],
+          summary: "Get pending hall staff applications (admin only)",
+          security: [{ bearerAuth: [] }],
+          responses: { 200: { description: "Pending applications list" } },
+        },
+      },
+      "/api/hall/applications/{id}/approve": {
+        put: {
+          tags: ["Hall Application"],
+          summary: "Approve hall staff application (admin only)",
+          security: [{ bearerAuth: [] }],
+          parameters: [
+            {
+              name: "id",
+              in: "path",
+              required: true,
+              schema: { type: "integer" },
+            },
+          ],
+          responses: { 200: { description: "Application approved" } },
+        },
+      },
+      "/api/hall/applications/{id}/reject": {
+        put: {
+          tags: ["Hall Application"],
+          summary: "Reject hall staff application (admin only)",
+          security: [{ bearerAuth: [] }],
+          parameters: [
+            {
+              name: "id",
+              in: "path",
+              required: true,
+              schema: { type: "integer" },
+            },
+          ],
+          requestBody: {
+            required: false,
+            content: {
+              "application/json": {
+                schema: {
+                  $ref: "#/components/schemas/HallApplicationReviewRequest",
+                },
+              },
+            },
+          },
+          responses: { 200: { description: "Application rejected" } },
         },
       },
       "/api/hall-room/create-room/{hallId}": {

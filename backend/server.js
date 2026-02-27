@@ -17,6 +17,7 @@ import Seat from "./model/seat.model.js";
 import Showtime from "./model/showtime.model.js";
 import Hallroom from "./model/hallroom.model.js";
 import Hallclass from "./model/hallclass.model.js";
+import HallApplication from "./model/hallApplication.model.js";
 import swaggerSpec from "./swagger.js";
 
 dotenv.config({
