@@ -43,12 +43,17 @@ const options = {
         },
         HallRequest: {
           type: "object",
-          required: ["hallName", "location", "city"],
+          required: ["hall_name", "hall_location", "hall_contact", "license"],
           properties: {
-            hallName: { type: "string" },
-            location: { type: "string" },
-            city: { type: "string" },
-            is_active: { type: "boolean" },
+            hall_name: { type: "string" },
+            hall_location: { type: "string" },
+            hall_contact: { type: "string", example: "9800000000" },
+            license: { type: "string", example: "091-12345678" },
+            hallrooms: {
+              type: "string",
+              description:
+                "JSON string array of room configs. Example: [{\"roomName\":\"A\",\"rows\":5,\"seatsPerRow\":10,\"emptySeats\":[\"0-1\"]}]",
+            },
           },
         },
         HallRoomRequest: {
@@ -85,6 +90,12 @@ const options = {
             hall_contact: { type: "string", example: "9800000000" },
             license: { type: "string", example: "091-12345678" },
             hallPoster: { type: "string", format: "binary" },
+            hallrooms: {
+              type: "string",
+              description:
+                "JSON string array for room and seat layout configuration",
+            },
+            totalCapacity: { type: "integer", example: 120 },
           },
         },
         HallApplicationReviewRequest: {

@@ -3,13 +3,14 @@ import Seat from "../model/seat.model.js";
 
 const numberToAlphabet = (n) => {
   let result = "";
-  while (n > 0) {
-    n--;
-    result = String.fromCharCode(65 + (n % 26)) + result;
-    n = Math.floor(n / 26);
+  let num = n;
+  while (num > 0) {
+    num--;
+    result = String.fromCharCode(65 + (num % 26)) + result;
+    num = Math.floor(num / 26);
   }
   return result;
-}
+};
 
 const createSeat = async (req, res) => {
   try {
@@ -72,12 +73,15 @@ const createSeat = async (req, res) => {
         hallroom_id: intRoomId,
         type: "seat"
       }
-    })
+    });
 
-    const seatName = `${numberToAlphabet(row)}${seatNum + 1}`
+    const rowLabel = numberToAlphabet(rowInt);
+    const seatNumber = type === "gap" ? `G${rowInt}-${columnInt}` : `${rowLabel}${seatNum + 1}`;
 
     const seat = await Seat.create({
-        seatName: type === "gap"? null: seatName,
+        hall_id: hallRoom.hall_id,
+        seat_number: seatNumber,
+        row_label: rowLabel,
         row: rowInt,
         column: columnInt,
         hallroom_id: hallRoomId,

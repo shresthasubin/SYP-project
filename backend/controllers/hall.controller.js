@@ -1,10 +1,88 @@
 import Hall from "../model/hall.model.js";
+import Hallroom from "../model/hallroom.model.js";
+import Seat from "../model/seat.model.js";
+import { sequelize } from "../db/index.js";
+import { Op } from "sequelize";
+
+const rowToLabel = (rowNumber) => {
+  let result = "";
+  let n = rowNumber;
+  while (n > 0) {
+    n--;
+    result = String.fromCharCode(65 + (n % 26)) + result;
+    n = Math.floor(n / 26);
+  }
+  return result;
+};
+
+const parseHallroomsPayload = (hallroomsRaw) => {
+  if (!hallroomsRaw) return [];
+  if (Array.isArray(hallroomsRaw)) return hallroomsRaw;
+
+  try {
+    const parsed = JSON.parse(hallroomsRaw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
+let seatColumnsEnsured = false;
+const ensureSeatColumns = async () => {
+  if (seatColumnsEnsured) return;
+
+  const [rows] = await sequelize.query("SHOW COLUMNS FROM Seats");
+  const colSet = new Set(rows.map((r) => r.Field));
+  const queries = [];
+
+  if (!colSet.has("row")) {
+    queries.push("ALTER TABLE Seats ADD COLUMN `row` INT NOT NULL DEFAULT 1");
+  }
+  if (!colSet.has("column")) {
+    queries.push("ALTER TABLE Seats ADD COLUMN `column` INT NOT NULL DEFAULT 1");
+  }
+  if (!colSet.has("hallroom_id")) {
+    queries.push("ALTER TABLE Seats ADD COLUMN `hallroom_id` INT NULL");
+  }
+  if (!colSet.has("isSelected")) {
+    queries.push("ALTER TABLE Seats ADD COLUMN `isSelected` TINYINT(1) NOT NULL DEFAULT 0");
+  }
+  if (!colSet.has("status")) {
+    queries.push(
+      "ALTER TABLE Seats ADD COLUMN `status` ENUM('sold','pending','available') NOT NULL DEFAULT 'available'",
+    );
+  }
+  if (!colSet.has("type")) {
+    queries.push("ALTER TABLE Seats ADD COLUMN `type` ENUM('seat','gap') NOT NULL DEFAULT 'seat'");
+  }
+  if (!colSet.has("seatType")) {
+    queries.push("ALTER TABLE Seats ADD COLUMN `seatType` ENUM('regular','premium') NULL");
+  }
+  if (!colSet.has("createdAt")) {
+    queries.push(
+      "ALTER TABLE Seats ADD COLUMN `createdAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP",
+    );
+  }
+  if (!colSet.has("updatedAt")) {
+    queries.push(
+      "ALTER TABLE Seats ADD COLUMN `updatedAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
+    );
+  }
+
+  for (const sql of queries) {
+    await sequelize.query(sql);
+  }
+
+  seatColumnsEnsured = true;
+};
 
 const hallRegister = async (req, res) => {
+  let tx;
   try {
     const { hall_name, hall_location, hall_contact, license } =
       req.body;
     const registeredDate = new Date();
+    const hallrooms = parseHallroomsPayload(req.body.hallrooms);
 
     const hallPoster = req.file?.filename;
 
@@ -20,25 +98,122 @@ const hallRegister = async (req, res) => {
       });
     }
 
-    const hall = await Hall.create({
-      hall_name,
-      hall_location,
-      hall_contact,
-      license,
-      registeredDate: registeredDate,
-      hallPoster: hallPoster,
+    const existingHall = await Hall.findOne({
+      where: {
+        [Op.or]: [{ hall_name }, { hall_contact }, { license }],
+      },
     });
+
+    if (existingHall) {
+      let duplicateField = "hall";
+      if (existingHall.hall_name === hall_name) duplicateField = "hall_name";
+      else if (existingHall.hall_contact === hall_contact) duplicateField = "hall_contact";
+      else if (existingHall.license === license) duplicateField = "license";
+
+      return res.status(400).json({
+        success: false,
+        message: `Duplicate value for ${duplicateField}`,
+      });
+    }
+
+    await ensureSeatColumns();
+
+    tx = await sequelize.transaction();
+
+    const hall = await Hall.create(
+      {
+        hall_name,
+        hall_location,
+        hall_contact,
+        license,
+        registeredDate: registeredDate,
+        hallPoster: hallPoster,
+      },
+      { transaction: tx },
+    );
+
+    for (const room of hallrooms) {
+      const totalRows = Number(room.rows ?? room.totalRows);
+      const totalColumns = Number(room.seatsPerRow ?? room.totalColumns);
+      const roomName = (room.roomName || "").trim();
+
+      if (!roomName || totalRows <= 0 || totalColumns <= 0) {
+        await tx.rollback();
+        return res.status(400).json({
+          success: false,
+          message: "Invalid room configuration in hallrooms payload",
+        });
+      }
+
+      const emptySeats = Array.isArray(room.emptySeats) ? room.emptySeats : [];
+      const emptySet = new Set(emptySeats);
+      const availableSeats = totalRows * totalColumns - emptySet.size;
+
+      const createdRoom = await Hallroom.create(
+        {
+          roomName,
+          totalRows,
+          totalColumns,
+          capacity: availableSeats,
+          hall_id: hall.id,
+        },
+        { transaction: tx },
+      );
+
+      for (let rowIndex = 0; rowIndex < totalRows; rowIndex++) {
+        let seatCountInRow = 0;
+        for (let colIndex = 0; colIndex < totalColumns; colIndex++) {
+          const key = `${rowIndex}-${colIndex}`;
+          const isGap = emptySet.has(key);
+          const rowNumber = rowIndex + 1;
+          const colNumber = colIndex + 1;
+          const rowLabel = rowToLabel(rowNumber);
+
+          if (!isGap) seatCountInRow++;
+          const seatNumber = isGap ? `G${rowNumber}-${colNumber}` : `${rowLabel}${seatCountInRow}`;
+
+          await Seat.create(
+            {
+              hall_id: hall.id,
+              seat_number: seatNumber,
+              row_label: rowLabel,
+              row: rowNumber,
+              column: colNumber,
+              hallroom_id: createdRoom.id,
+              seatType: isGap ? null : "regular",
+              type: isGap ? "gap" : "seat",
+            },
+            { transaction: tx },
+          );
+        }
+      }
+    }
+
+    await tx.commit();
 
     return res.status(201).json({
       success: true,
-      message: "Hall has been further processed for approval",
+      message: "Hall and room layout registered successfully",
       data: hall,
     });
   } catch (err) {
+    if (tx && !tx.finished) {
+      await tx.rollback();
+    }
+    console.error("hallRegister error:", err);
+    const validationDetails = Array.isArray(err?.errors)
+      ? err.errors.map((e) => ({
+          field: e.path,
+          message: e.message,
+          value: e.value,
+        }))
+      : null;
+
     return res.status(500).json({
       success: false,
       message: "Server failed while registering hall",
       error: err.message,
+      details: validationDetails,
     });
   }
 };

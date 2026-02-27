@@ -46,6 +46,14 @@ const HallApplication = sequelize.define(
       type: DataTypes.TEXT,
       defaultValue: null,
     },
+    hallrooms: {
+      type: DataTypes.JSON,
+      allowNull: true,
+    },
+    totalCapacity: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+    },
     status: {
       type: DataTypes.ENUM("pending", "approved", "rejected"),
       defaultValue: "pending",

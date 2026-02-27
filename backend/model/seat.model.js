@@ -6,8 +6,17 @@ import Hallclass from "./hallclass.model.js";
 const Seat = sequelize.define(
   "Seat",
   {
-    seatName: {
-      type: DataTypes.STRING
+    hall_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    seat_number: {
+      type: DataTypes.STRING(10),
+      allowNull: false,
+    },
+    row_label: {
+      type: DataTypes.STRING(5),
+      allowNull: false,
     },
     row: {
       type: DataTypes.INTEGER,

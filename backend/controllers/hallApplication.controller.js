@@ -2,12 +2,90 @@ import { sequelize } from "../db/index.js";
 import HallApplication from "../model/hallApplication.model.js";
 import Hall from "../model/hall.model.js";
 import User from "../model/user.model.js";
+import Hallroom from "../model/hallroom.model.js";
+import Seat from "../model/seat.model.js";
+
+const rowToLabel = (rowNumber) => {
+  let result = "";
+  let n = rowNumber;
+  while (n > 0) {
+    n--;
+    result = String.fromCharCode(65 + (n % 26)) + result;
+    n = Math.floor(n / 26);
+  }
+  return result;
+};
+
+const parseHallroomsPayload = (hallroomsRaw) => {
+  if (!hallroomsRaw) return [];
+  if (Array.isArray(hallroomsRaw)) return hallroomsRaw;
+
+  try {
+    const parsed = JSON.parse(hallroomsRaw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
+let hallApplicationColumnsEnsured = false;
+const ensureHallApplicationColumns = async () => {
+  if (hallApplicationColumnsEnsured) return;
+
+  const [rows] = await sequelize.query("SHOW COLUMNS FROM HallApplications");
+  const colSet = new Set(rows.map((r) => r.Field));
+  const queries = [];
+
+  if (!colSet.has("hallrooms")) {
+    queries.push("ALTER TABLE HallApplications ADD COLUMN `hallrooms` JSON NULL");
+  }
+  if (!colSet.has("totalCapacity")) {
+    queries.push("ALTER TABLE HallApplications ADD COLUMN `totalCapacity` INT NOT NULL DEFAULT 0");
+  }
+
+  for (const sql of queries) {
+    await sequelize.query(sql);
+  }
+
+  hallApplicationColumnsEnsured = true;
+};
+
+let seatColumnsEnsured = false;
+const ensureSeatColumns = async () => {
+  if (seatColumnsEnsured) return;
+
+  const [rows] = await sequelize.query("SHOW COLUMNS FROM Seats");
+  const colSet = new Set(rows.map((r) => r.Field));
+  const queries = [];
+
+  if (!colSet.has("row")) queries.push("ALTER TABLE Seats ADD COLUMN `row` INT NOT NULL DEFAULT 1");
+  if (!colSet.has("column")) queries.push("ALTER TABLE Seats ADD COLUMN `column` INT NOT NULL DEFAULT 1");
+  if (!colSet.has("hallroom_id")) queries.push("ALTER TABLE Seats ADD COLUMN `hallroom_id` INT NULL");
+  if (!colSet.has("isSelected")) queries.push("ALTER TABLE Seats ADD COLUMN `isSelected` TINYINT(1) NOT NULL DEFAULT 0");
+  if (!colSet.has("status"))
+    queries.push("ALTER TABLE Seats ADD COLUMN `status` ENUM('sold','pending','available') NOT NULL DEFAULT 'available'");
+  if (!colSet.has("type")) queries.push("ALTER TABLE Seats ADD COLUMN `type` ENUM('seat','gap') NOT NULL DEFAULT 'seat'");
+  if (!colSet.has("seatType")) queries.push("ALTER TABLE Seats ADD COLUMN `seatType` ENUM('regular','premium') NULL");
+  if (!colSet.has("createdAt"))
+    queries.push("ALTER TABLE Seats ADD COLUMN `createdAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP");
+  if (!colSet.has("updatedAt"))
+    queries.push("ALTER TABLE Seats ADD COLUMN `updatedAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP");
+
+  for (const sql of queries) {
+    await sequelize.query(sql);
+  }
+
+  seatColumnsEnsured = true;
+};
 
 const createHallApplication = async (req, res) => {
   try {
+    await ensureHallApplicationColumns();
     const applicantId = req.user.id;
-    const { hall_name, hall_location, hall_contact, license } = req.body;
+    const { hall_name, hall_location, hall_contact, license, totalCapacity } =
+      req.body;
     const hallPoster = req.file?.filename || null;
+    const hallrooms = parseHallroomsPayload(req.body.hallrooms);
 
     if (!hall_name || !hall_location || !hall_contact || !license) {
       return res.status(400).json({
@@ -49,6 +127,8 @@ const createHallApplication = async (req, res) => {
       hall_contact,
       license,
       hallPoster,
+      hallrooms,
+      totalCapacity: Number(totalCapacity) || 0,
       status: "pending",
     });
 
@@ -110,6 +190,7 @@ const approveHallApplication = async (req, res) => {
   const tx = await sequelize.transaction();
 
   try {
+    await ensureSeatColumns();
     const { id } = req.params;
     const application = await HallApplication.findByPk(id, { transaction: tx });
 
@@ -153,6 +234,61 @@ const approveHallApplication = async (req, res) => {
       },
       { transaction: tx },
     );
+
+    const applicationRooms = Array.isArray(application.hallrooms)
+      ? application.hallrooms
+      : [];
+
+    for (const room of applicationRooms) {
+      const totalRows = Number(room.rows ?? room.totalRows);
+      const totalColumns = Number(room.seatsPerRow ?? room.totalColumns);
+      const roomName = (room.roomName || "").trim();
+
+      if (!roomName || totalRows <= 0 || totalColumns <= 0) continue;
+
+      const emptySeats = Array.isArray(room.emptySeats) ? room.emptySeats : [];
+      const emptySet = new Set(emptySeats);
+      const availableSeats = totalRows * totalColumns - emptySet.size;
+
+      const createdRoom = await Hallroom.create(
+        {
+          roomName,
+          totalRows,
+          totalColumns,
+          capacity: availableSeats,
+          hall_id: newHall.id,
+        },
+        { transaction: tx },
+      );
+
+      for (let rowIndex = 0; rowIndex < totalRows; rowIndex++) {
+        let seatCountInRow = 0;
+        for (let colIndex = 0; colIndex < totalColumns; colIndex++) {
+          const key = `${rowIndex}-${colIndex}`;
+          const isGap = emptySet.has(key);
+          const rowNumber = rowIndex + 1;
+          const colNumber = colIndex + 1;
+          const rowLabel = rowToLabel(rowNumber);
+
+          if (!isGap) seatCountInRow++;
+          const seatNumber = isGap ? `G${rowNumber}-${colNumber}` : `${rowLabel}${seatCountInRow}`;
+
+          await Seat.create(
+            {
+              hall_id: newHall.id,
+              seat_number: seatNumber,
+              row_label: rowLabel,
+              row: rowNumber,
+              column: colNumber,
+              hallroom_id: createdRoom.id,
+              seatType: isGap ? null : "regular",
+              type: isGap ? "gap" : "seat",
+            },
+            { transaction: tx },
+          );
+        }
+      }
+    }
 
     await applicant.update(
       {
