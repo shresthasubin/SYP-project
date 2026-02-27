@@ -75,6 +75,16 @@ const Navbar = () => {
               About
             </NavLink>
           </li>
+          <li>
+            <NavLink
+              to="/hall-staff/apply"
+              className={({ isActive }) =>
+                `font-medium transition-colors ${isActive ? "text-accent" : "text-text-primary hover:text-accent"}`
+              }
+            >
+            Apply As Hall Staff
+            </NavLink>
+          </li>
         </ul>
 
         <div className="flex items-center gap-6">
@@ -161,6 +171,15 @@ const Navbar = () => {
               }
             >
               Contact
+            </NavLink>
+            <NavLink
+              to="/hall-staff/apply"
+              onClick={() => setOpen(false)}
+              className={({ isActive }) =>
+                `${isActive ? "text-accent" : "text-text-primary"} text-lg`
+              }
+            >
+              Apply As Hall Staff
             </NavLink>
             <Link
               to="/login"
