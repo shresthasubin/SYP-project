@@ -47,7 +47,7 @@ const createRoom = async (req, res) => {
         if (existingRoom) {
             return res.status(400).json({
                 success: false,
-                message: "Room alreadu=y exist"
+                message: "Room already exist"
             })
         }
 
