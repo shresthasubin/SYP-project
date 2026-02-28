@@ -17,11 +17,13 @@ import FAQ from "./pages/FAQ.jsx";
 import NotFound from "./pages/NotFound.jsx";
 import HallStaffApply from "./pages/HallStaffApply.jsx";
 import AdminLayout from "./components/admin/AdminLayout.jsx";
+import HallAdminLayout from "./components/halladmin/HallAdminLayout.jsx";
 import Dashboard from "./pages/admin/Dashboard.jsx";
 import Movies from "./pages/admin/Movies.jsx";
 import Halls from "./pages/admin/Halls.jsx";
 import User from "./pages/admin/User.jsx";
 import FormApplications from "./pages/admin/FormApplications.jsx";
+import HallAdminDashboard from "./pages/halladmin/Dashboard.jsx";
 import SeatLayoutPreview from "../formpage/SeatLayoutPreview.jsx";
 import { AuthProvider } from "./context/AuthContext.jsx";
 import { ThemeProvider, useTheme } from "./context/ThemeContext.jsx";
@@ -84,6 +86,12 @@ const App = () => {
             <Route path="halls" element={<Halls />} />
             <Route path="users" element={<User />} />
             <Route path="form-applications" element={<FormApplications />} />
+          </Route>
+
+          <Route path="/halladmin" element={<HallAdminLayout />}>
+            <Route index element={<HallAdminDashboard />} />
+            <Route path="movies" element={<Movies />} />
+            <Route path="halls" element={<Halls />} />
           </Route>
 
           {/* auth is kept separate outside layout (simple) */}

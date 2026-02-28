@@ -40,7 +40,13 @@ const FormApplications = () => {
       toast.success("Application approved");
       fetchApplications();
     } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to approve application");
+      const detailMessage = error.response?.data?.details?.[0]?.message;
+      toast.error(
+        detailMessage ||
+          error.response?.data?.error ||
+          error.response?.data?.message ||
+          "Failed to approve application",
+      );
     }
   };
 
@@ -55,7 +61,13 @@ const FormApplications = () => {
       toast.success("Application rejected");
       fetchApplications();
     } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to reject application");
+      const detailMessage = error.response?.data?.details?.[0]?.message;
+      toast.error(
+        detailMessage ||
+          error.response?.data?.error ||
+          error.response?.data?.message ||
+          "Failed to reject application",
+      );
     }
   };
 
