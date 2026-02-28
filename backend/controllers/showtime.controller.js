@@ -70,7 +70,7 @@ const createShowtime = async (req, res) => {
       })
     } 
     
-    end_time = minuteToTime(timeToMinute(start_time) + movie.duration)
+    const end_time = minuteToTime(timeToMinute(start_time) + movie.duration)
       
     const showtime = await Showtime.create({
       show_date,
@@ -110,6 +110,12 @@ const updateShowTime = async (req, res) => {
     const movie = await Movie.findByPk(showtime.movie_id)
 
     const { show_date, start_time } = req.body
+    if (!show_date || !start_time) {
+      return res.status(400).json({
+        success: false,
+        message: "Show date and start time must be defined"
+      })
+    }
     
     const end_time = minuteToTime(timeToMinute(start_time) + movie.duration)
 
@@ -134,7 +140,12 @@ const updateShowTime = async (req, res) => {
 
 const getShowtimes = async (req, res) => {
   try {
-    const showtimes = await Showtime.findAll();
+    const showtimes = await Showtime.findAll({
+      include: [
+        { model: Movie, attributes: ["id", "movie_title", "duration"] },
+        { model: Hallroom, attributes: ["id", "hallName", "hall_id"] }
+      ]
+    });
     res.json({ success: true, data: showtimes });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -153,7 +164,10 @@ const getShowtimesByMovie = async (req, res) => {
       })
     }
 
-    const showtime = await Showtime.findAll({ where: { movie_id : movieId } })
+    const showtime = await Showtime.findAll({
+      where: { movie_id : movieId },
+      include: [{ model: Hallroom, attributes: ["id", "hallName", "hall_id"] }]
+    })
     
     return res.status(200).json({
       success: true,
@@ -170,7 +184,7 @@ const getShowtimesByMovie = async (req, res) => {
 const getShowtimesByHallroom = async (req, res) => {
   try {
     const { hallroomId } = req.params
-    const hallroom = await Hall.findByPk(hallroomId)
+    const hallroom = await Hallroom.findByPk(hallroomId)
 
     if (!hallroom) {
       return res.status(404).json({
@@ -179,7 +193,10 @@ const getShowtimesByHallroom = async (req, res) => {
       })
     }
 
-    const showtime = await Showtime.findAll({ where: { hallroom_id: hallroomId } })
+    const showtime = await Showtime.findAll({
+      where: { hallroom_id: hallroomId },
+      include: [{ model: Movie, attributes: ["id", "movie_title", "duration"] }]
+    })
 
     return res.status(200).json({
       success: true,

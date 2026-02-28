@@ -9,7 +9,6 @@ const NAV_ITEMS = [
   { to: "/", label: "Home", end: true },
   { to: "/movies", label: "Movies" },
   { to: "/locations", label: "Locations" },
-  { to: "/profile", label: "Profile" },
   { to: "/about", label: "About" },
   { to: "/contact", label: "Contact" },
   { to: "/hall-staff/apply", label: "Hall Staff" },
@@ -135,12 +134,7 @@ const Navbar = () => {
           >
             {isDark ? <Sun size={18} /> : <Moon size={18} />}
           </button>
-          <Link
-            to="/movies"
-            className="rounded-lg bg-accent px-4 py-2 text-sm font-bold text-white transition-transform hover:scale-[1.02]"
-          >
-            Book Now
-          </Link>
+         
           {loading ? (
             <span className={`rounded-lg border px-4 py-2 text-sm font-semibold text-text-secondary ${signInClass}`}>
               Loading...

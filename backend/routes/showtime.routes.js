@@ -4,16 +4,16 @@ import { createShowtime, deleteShowtime, getShowtimes, getShowtimesByHallroom, g
 
 const showtimeRoute = express.Router();
 
-showtimeRoute.post("/create-showtime/:movieId/:hallroomId", verifyJWT, roleCheck(["admin"]), createShowtime);
+showtimeRoute.post("/create-showtime/:movieId/:hallroomId", verifyJWT, roleCheck(["admin", "hall-admin"]), createShowtime);
 
-showtimeRoute.put("/update-showtime/:showtimeId", verifyJWT, roleCheck(["admin"]), updateShowTime);
+showtimeRoute.put("/update-showtime/:showtimeId", verifyJWT, roleCheck(["admin", "hall-admin"]), updateShowTime);
 
 showtimeRoute.get("/get", getShowtimes);
 
-showtimeRoute.get("/get/:hallroomId", getShowtimesByHallroom);
+showtimeRoute.get("/movie/:movieId", getShowtimesByMovie);
 
-showtimeRoute.get("/get/:movieId", getShowtimesByMovie);
+showtimeRoute.get("/hallroom/:hallroomId", getShowtimesByHallroom);
 
-showtimeRoute.get("/delete/:showtimeId", deleteShowtime);
+showtimeRoute.delete("/delete/:showtimeId", verifyJWT, roleCheck(["admin", "hall-admin"]), deleteShowtime);
 
 export default showtimeRoute;

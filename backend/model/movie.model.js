@@ -17,7 +17,7 @@ const Movie = sequelize.define(
       type: DataTypes.TEXT,
       set(value) {
         if (typeof value === "string") {
-          this.setDataValue("movie_title", value.trim());
+          this.setDataValue("description", value.trim());
         }
       },
     },

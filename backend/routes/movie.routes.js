@@ -1,4 +1,10 @@
-import { movieDelete, movieGet, movieRegister, movieUpdate } from "../controllers/movie.controller.js";
+import {
+    movieDelete,
+    movieGet,
+    movieGetById,
+    movieRegister,
+    movieUpdate
+} from "../controllers/movie.controller.js";
 import { verifyJWT, roleCheck } from "../middlewares/auth.middleware.js";
 import express from 'express';
 import { upload } from "../utils/multer.js";
@@ -19,10 +25,8 @@ movieRouter.delete('/delete/:id',
     movieDelete
 )
 
-movieRouter.get('/get', 
-    [verifyJWT, roleCheck(['hall-admin','admin'])], 
-    movieGet
-)
+movieRouter.get('/get', movieGet)
+movieRouter.get('/get/:id', movieGetById)
 
 movieRouter.put('/update/:id', 
     [verifyJWT, roleCheck(['hall-admin','admin'])], 

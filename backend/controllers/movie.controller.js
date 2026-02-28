@@ -1,7 +1,4 @@
 import Movie from "../model/movie.model.js";
-import fs from "fs";
-import path from "path";
-import { title } from "process";
 
 const movieRegister = async (req, res) => {
   try {
@@ -136,6 +133,32 @@ const movieGet = async (req, res) => {
   }
 };
 
+const movieGetById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const movie = await Movie.findByPk(id);
+
+    if (!movie) {
+      return res.status(404).json({
+        success: false,
+        message: "Movie not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Movie fetched successfully",
+      data: movie,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: "Server failed while fetching movie",
+      error: err.message,
+    });
+  }
+};
+
 const movieUpdate = async (req, res) => {
   try {
     const { id } = req.params;
@@ -156,8 +179,8 @@ const movieUpdate = async (req, res) => {
       releaseDate,
       isPlaying,
     } = req.body;
-    const moviePoster = req.files?.moviePoster?.[0].filename;
-    const movieTrailer = req.files?.movieTrailer?.[0].filename;
+    const moviePoster = req.files?.moviePoster?.[0]?.filename;
+    const movieTrailer = req.files?.movieTrailer?.[0]?.filename;
     let newEndDate = movie.playEndDate;
 
     if (releaseDate) {
@@ -165,14 +188,14 @@ const movieUpdate = async (req, res) => {
       newEndDate.setDate(newEndDate.getDate() + 7);
     }
     const updatedMovie = await movie.update({
-      movie_title,
-      description,
-      genre,
-      duration,
-      moviePoster,
-      movieTrailer,
-      releaseDate,
-      isPlaying,
+      movie_title: movie_title ?? movie.movie_title,
+      description: description ?? movie.description,
+      genre: genre ?? movie.genre,
+      duration: duration ?? movie.duration,
+      moviePoster: moviePoster ?? movie.moviePoster,
+      movieTrailer: movieTrailer ?? movie.movieTrailer,
+      releaseDate: releaseDate ?? movie.releaseDate,
+      isPlaying: isPlaying ?? movie.isPlaying,
       playEndDate: newEndDate,
     });
 
@@ -191,4 +214,4 @@ const movieUpdate = async (req, res) => {
   }
 };
 
-export { movieRegister, movieDelete, movieGet, movieUpdate };
+export { movieRegister, movieDelete, movieGet, movieGetById, movieUpdate };
