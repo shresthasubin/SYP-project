@@ -102,4 +102,54 @@ const deleteRoom = async (req, res) => {
     }
 }
 
-export { createRoom, deleteRoom }
+const getRooms = async (req, res) => {
+    try {
+        const hallId = req.query.hallId ? Number(req.query.hallId) : null;
+        const where = {};
+        const hallWhere = {};
+
+        if (hallId) {
+            if (!Number.isInteger(hallId) || hallId <= 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid hallId"
+                });
+            }
+            where.hall_id = hallId;
+        }
+
+        if (req.user?.role === "hall-admin") {
+            if (!req.user.license) {
+                return res.status(403).json({
+                    success: false,
+                    message: "Hall admin does not have an assigned license",
+                });
+            }
+            hallWhere.license = req.user.license;
+        }
+
+        const rooms = await Hallroom.findAll({
+            where,
+            include: [{
+                model: Hall,
+                attributes: ["id", "hall_name", "hall_location", "license"],
+                ...(Object.keys(hallWhere).length ? { where: hallWhere } : {}),
+            }],
+            order: [["createdAt", "DESC"]]
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: "Hall rooms fetched successfully",
+            data: rooms
+        });
+    } catch (err) {
+        return res.status(500).json({
+            success: false,
+            message: "Server Error: Cannot fetch hall rooms",
+            error: err.message
+        });
+    }
+}
+
+export { createRoom, deleteRoom, getRooms }

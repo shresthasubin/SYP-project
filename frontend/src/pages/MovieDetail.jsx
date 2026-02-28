@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { Star, Ticket } from "lucide-react";
+import { CalendarDays, Clock3, MapPin, Star, Ticket } from "lucide-react";
 import axios from "axios";
 import { API_BASE_URL, API_SERVER_URL } from "../config/api.js";
 
@@ -18,12 +18,27 @@ const getPosterUrl = (moviePoster) => {
   return `${API_SERVER_URL}/uploads/${moviePoster}`;
 };
 
+const toDateKey = (dateLike) => {
+  const d = new Date(dateLike);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toISOString().slice(0, 10);
+};
+
+const prettyDateChip = (dateKey) => {
+  const d = new Date(dateKey);
+  if (Number.isNaN(d.getTime())) return dateKey;
+  return d.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" });
+};
+
+const formatTime = (value) => String(value || "").slice(0, 5) || "--:--";
+
 export default function MovieDetail() {
   const { id } = useParams();
   const [movie, setMovie] = useState(null);
   const [showtimes, setShowtimes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [activeDate, setActiveDate] = useState("");
 
   useEffect(() => {
     let mounted = true;
@@ -45,8 +60,14 @@ export default function MovieDetail() {
           return;
         }
 
-        setMovie(movieRes.data.data);
-        setShowtimes(showtimeRes.data?.success ? showtimeRes.data.data || [] : []);
+        const fetchedMovie = movieRes.data.data;
+        const fetchedShowtimes = showtimeRes.data?.success ? showtimeRes.data.data || [] : [];
+
+        setMovie(fetchedMovie);
+        setShowtimes(fetchedShowtimes);
+
+        const firstDate = fetchedShowtimes.length > 0 ? toDateKey(fetchedShowtimes[0].show_date) : "";
+        setActiveDate(firstDate);
       } catch (err) {
         if (!mounted) return;
         setError(err.response?.data?.message || "Failed to load movie details.");
@@ -63,25 +84,59 @@ export default function MovieDetail() {
 
   const genreLabel = useMemo(() => {
     if (!movie?.genre) return "Unknown";
-    return Array.isArray(movie.genre) ? movie.genre.join(" / ") : String(movie.genre);
+    return Array.isArray(movie.genre) ? movie.genre.join(" | ") : String(movie.genre);
   }, [movie]);
+
+  const uniqueDates = useMemo(() => {
+    const keys = Array.from(new Set(showtimes.map((s) => toDateKey(s.show_date)).filter(Boolean)));
+    return keys.sort((a, b) => new Date(a) - new Date(b));
+  }, [showtimes]);
+
+  const groupedByHallroom = useMemo(() => {
+    const targetDate = activeDate || uniqueDates[0];
+    const filtered = showtimes.filter((s) => toDateKey(s.show_date) === targetDate);
+    const map = new Map();
+
+    filtered.forEach((s) => {
+      const hallName = s.Hallroom?.Hall?.hall_name || "Cinema Hall";
+      const hallLocation = s.Hallroom?.Hall?.hall_location || "Location unavailable";
+      const roomName = s.Hallroom?.roomName || "Main Room";
+      const key = `${hallName}::${roomName}`;
+
+      const existing = map.get(key) || {
+        hallName,
+        hallLocation,
+        roomName,
+        times: [],
+      };
+
+      existing.times.push({
+        id: s.id,
+        start: formatTime(s.start_time),
+        end: formatTime(s.end_time),
+      });
+      map.set(key, existing);
+    });
+
+    return Array.from(map.values());
+  }, [showtimes, activeDate, uniqueDates]);
 
   if (loading) {
     return (
-      <section className="min-h-[60vh] py-20 pt-24 bg-secondary/40">
-        <div className="container mx-auto px-6 text-text-secondary">Loading movie details...</div>
+      <section className="min-h-[60vh] bg-[#050812] py-20 pt-24">
+        <div className="container mx-auto px-6 text-slate-300">Loading movie details...</div>
       </section>
     );
   }
 
   if (error || !movie) {
     return (
-      <section className="min-h-[60vh] py-20 pt-24 bg-secondary/40">
+      <section className="min-h-[60vh] bg-[#050812] py-20 pt-24">
         <div className="container mx-auto px-6">
           <p className="text-red-400">{error || "Movie not found."}</p>
           <Link
             to="/movies"
-            className="mt-4 inline-block px-6 py-3 border border-white/10 rounded-md text-sm font-semibold hover:bg-white/5"
+            className="mt-4 inline-block rounded-md border border-white/10 px-6 py-3 text-sm font-semibold hover:bg-white/5"
           >
             Back to list
           </Link>
@@ -91,71 +146,119 @@ export default function MovieDetail() {
   }
 
   return (
-    <section className="min-h-[60vh] flex items-center py-20 pt-24 bg-secondary/40">
-      <div className="container mx-auto px-6">
-        <div className="grid md:grid-cols-3 gap-8 items-start">
-          <div className="md:col-span-1 bg-primary rounded-xl overflow-hidden shadow-xl">
-            <img
-              src={getPosterUrl(movie.moviePoster)}
-              alt={movie.movie_title}
-              className="w-full h-full object-cover"
-            />
+    <section className="min-h-screen bg-[#050812] pb-14 pt-24 text-white">
+      <div className="container mx-auto space-y-6 px-4 md:px-6">
+        <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#0c1220]">
+          <div className="absolute inset-0">
+            <img src={getPosterUrl(movie.moviePoster)} alt="" className="h-full w-full object-cover opacity-20" />
+            <div className="absolute inset-0 bg-gradient-to-r from-[#050812] via-[#050812]/92 to-[#050812]/60" />
           </div>
 
-          <div className="md:col-span-2">
-            <h2 className="text-4xl font-extrabold mb-4">{movie.movie_title}</h2>
-            <div className="flex items-center gap-4 text-text-secondary mb-6">
-              <div className="flex items-center gap-2 text-[#ffd700]">
-                <Star size={18} fill="#ffd700" strokeWidth={0} />
-                <strong className="text-white">{Number(movie.rating) || "N/A"}</strong>
-              </div>
-              <span className="px-3 py-1 border border-white/10 rounded text-sm">{genreLabel}</span>
-            </div>
-            <p className="text-text-secondary leading-relaxed mb-6">
-              {movie.description || "No description available."}
-            </p>
-
-            <div className="grid md:grid-cols-3 gap-4 mb-6">
-              <div className="bg-primary p-4 rounded-lg">
-                <h4 className="font-semibold mb-2">Showtimes</h4>
-                {showtimes.length === 0 ? (
-                  <p className="text-text-secondary text-sm">No showtimes listed yet.</p>
-                ) : (
-                  <ul className="text-text-secondary text-sm space-y-2">
-                    {showtimes.slice(0, 5).map((showtime) => (
-                      <li key={showtime.id}>
-                        {showtime.show_date} - {String(showtime.start_time).slice(0, 5)} to{" "}
-                        {String(showtime.end_time).slice(0, 5)}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-              <div className="bg-primary p-4 rounded-lg">
-                <h4 className="font-semibold mb-2">Duration</h4>
-                <p className="text-text-secondary text-sm">{formatDuration(movie.duration)}</p>
-              </div>
-              <div className="bg-primary p-4 rounded-lg">
-                <h4 className="font-semibold mb-2">Release</h4>
-                <p className="text-text-secondary text-sm">
-                  {movie.releaseDate ? new Date(movie.releaseDate).toLocaleDateString() : "Unknown"}
-                </p>
-              </div>
+          <div className="relative grid gap-5 p-5 md:grid-cols-[180px_1fr] md:p-8">
+            <div className="overflow-hidden rounded-xl border border-white/15 bg-black/30">
+              <img
+                src={getPosterUrl(movie.moviePoster)}
+                alt={movie.movie_title}
+                className="h-full w-full object-cover"
+              />
             </div>
 
-            <div className="flex gap-4 items-center">
-              <Link
-                to="/movies"
-                className="inline-block px-6 py-3 border border-white/10 rounded-md text-sm font-semibold hover:bg-white/5"
-              >
-                Back to list
-              </Link>
-              <button className="inline-flex items-center gap-2 px-6 py-3 bg-accent text-white rounded-md font-semibold hover:bg-accent-hover transition-all">
-                <Ticket size={16} />
-                Book Tickets
-              </button>
+            <div className="max-w-3xl">
+              <h1 className="text-3xl font-bold md:text-5xl">{movie.movie_title}</h1>
+              <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-slate-300">
+                <span className="inline-flex items-center gap-1">
+                  <Clock3 size={15} />
+                  {formatDuration(movie.duration)}
+                </span>
+                <span className="inline-flex items-center gap-1">
+                  <CalendarDays size={15} />
+                  {movie.releaseDate ? new Date(movie.releaseDate).toLocaleDateString() : "TBA"}
+                </span>
+                <span className="inline-flex items-center gap-2">
+                  <Star size={15} className="text-yellow-300" fill="currentColor" />
+                  {Number(movie.rating) || "N/A"}
+                </span>
+                <span className="rounded-full border border-white/20 px-2.5 py-1 text-xs">{genreLabel}</span>
+              </div>
+              <p className="mt-4 max-w-2xl text-sm leading-relaxed text-slate-300 md:text-base">
+                {movie.description || "No description available for this movie."}
+              </p>
             </div>
           </div>
+        </div>
+
+        <div className="rounded-2xl border border-white/10 bg-[#0b1020] p-4 md:p-5">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-lg font-semibold">Select Date & Showtime</h2>
+            <Link to="/movies" className="text-sm text-slate-300 hover:text-white">
+              Back to movies
+            </Link>
+          </div>
+
+          {uniqueDates.length === 0 ? (
+            <div className="rounded-xl border border-white/10 bg-black/20 p-5 text-sm text-slate-300">
+              No showtimes are listed for this movie yet.
+            </div>
+          ) : (
+            <>
+              <div className="mb-5 flex gap-2 overflow-x-auto pb-1">
+                {uniqueDates.map((dateKey) => (
+                  <button
+                    key={dateKey}
+                    onClick={() => setActiveDate(dateKey)}
+                    className={`whitespace-nowrap rounded-lg border px-3 py-2 text-sm transition-colors ${
+                      (activeDate || uniqueDates[0]) === dateKey
+                        ? "border-[#f4e451] bg-[#f4e451]/10 text-[#f4e451]"
+                        : "border-white/15 bg-black/30 text-slate-300 hover:border-white/35 hover:text-white"
+                    }`}
+                  >
+                    {prettyDateChip(dateKey)}
+                  </button>
+                ))}
+              </div>
+
+              <div className="space-y-4">
+                {groupedByHallroom.map((group) => (
+                  <article
+                    key={`${group.hallName}-${group.roomName}`}
+                    className="rounded-xl border border-white/10 bg-[#111827] p-4"
+                  >
+                    <div className="mb-3 flex items-start justify-between gap-3">
+                      <div>
+                        <h3 className="text-lg font-semibold">{group.hallName}</h3>
+                        <p className="mt-1 flex items-center gap-2 text-sm text-slate-400">
+                          <MapPin size={14} />
+                          {group.hallLocation}
+                        </p>
+                        <p className="mt-1 text-xs uppercase tracking-wide text-slate-500">{group.roomName}</p>
+                      </div>
+                      <button className="rounded-md bg-white/10 px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-white/15">
+                        Continue
+                      </button>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                      {group.times.map((time) => (
+                        <button
+                          key={time.id}
+                          className="rounded border border-white/20 bg-black/25 px-3 py-1.5 text-sm text-white hover:border-[#f4e451] hover:text-[#f4e451]"
+                        >
+                          {time.start}
+                        </button>
+                      ))}
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+
+        <div className="flex items-center gap-3">
+          <button className="inline-flex items-center gap-2 rounded-md bg-accent px-5 py-3 text-sm font-semibold text-white hover:bg-accent-hover">
+            <Ticket size={16} />
+            Book Tickets
+          </button>
         </div>
       </div>
     </section>

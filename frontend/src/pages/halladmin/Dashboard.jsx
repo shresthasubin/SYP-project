@@ -20,6 +20,7 @@ const StatCard = ({ title, value, icon: Icon, color }) => (
 const HallAdminDashboard = () => {
   const [hallsCount, setHallsCount] = useState(0);
   const [moviesCount, setMoviesCount] = useState(0);
+  const [showtimesCount, setShowtimesCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -28,9 +29,10 @@ const HallAdminDashboard = () => {
 
   const fetchData = async () => {
     try {
-      const [hallRes, movieRes] = await Promise.all([
+      const [hallRes, movieRes, showtimeRes] = await Promise.all([
         axios.get(`${API_BASE_URL}/hall/get`, { withCredentials: true }),
         axios.get(`${API_BASE_URL}/movie/get`, { withCredentials: true }),
+        axios.get(`${API_BASE_URL}/showtime/get`, { withCredentials: true }),
       ]);
 
       if (hallRes.data?.success) {
@@ -39,9 +41,13 @@ const HallAdminDashboard = () => {
       if (movieRes.data?.success) {
         setMoviesCount(movieRes.data.data?.length || 0);
       }
+      if (showtimeRes.data?.success) {
+        setShowtimesCount(showtimeRes.data.data?.length || 0);
+      }
     } catch {
       setHallsCount(0);
       setMoviesCount(0);
+      setShowtimesCount(0);
     } finally {
       setLoading(false);
     }
@@ -70,8 +76,8 @@ const HallAdminDashboard = () => {
           color="bg-blue-500/20"
         />
         <StatCard
-          title="Last Sync"
-          value={loading ? "..." : "Just now"}
+          title="Scheduled Shows"
+          value={loading ? "..." : showtimesCount}
           icon={Clock3}
           color="bg-amber-500/20"
         />

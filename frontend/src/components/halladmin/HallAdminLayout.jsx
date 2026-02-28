@@ -1,6 +1,6 @@
 import React, { useContext, useEffect } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Film, MapPin, LogOut } from "lucide-react";
+import { LayoutDashboard, Film, MapPin, LogOut, Clock3 } from "lucide-react";
 import { AuthContext } from "../../context/AuthContext.jsx";
 
 const HallAdminLayout = () => {
@@ -70,6 +70,15 @@ const HallAdminLayout = () => {
           >
             <MapPin size={20} />
             <span className="font-medium">Halls</span>
+          </Link>
+          <Link
+            to="/halladmin/showtimes"
+            className={`flex items-center gap-3 rounded-lg px-4 py-3 transition-colors ${isActive(
+              "/halladmin/showtimes",
+            )}`}
+          >
+            <Clock3 size={20} />
+            <span className="font-medium">Showtimes</span>
           </Link>
         </nav>
 
