@@ -16,6 +16,7 @@ import Cookie from "./pages/Cookie.jsx";
 import FAQ from "./pages/FAQ.jsx";
 import NotFound from "./pages/NotFound.jsx";
 import HallStaffApply from "./pages/HallStaffApply.jsx";
+import Profile from "./pages/Profile.jsx";
 import AdminLayout from "./components/admin/AdminLayout.jsx";
 import HallAdminLayout from "./components/halladmin/HallAdminLayout.jsx";
 import Dashboard from "./pages/admin/Dashboard.jsx";
@@ -76,6 +77,7 @@ const App = () => {
             <Route path="/legal/cookie" element={<Cookie />} />
             <Route path="/faq" element={<FAQ />} />
             <Route path="/hall-staff/apply" element={<HallStaffApply />} />
+            <Route path="/profile" element={<Profile />} />
             <Route path="/reg" element={<SeatLayoutPreview />} />
           </Route>
 

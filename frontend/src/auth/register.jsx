@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { Mail, Lock, Eye, EyeOff, Film } from "lucide-react";
 import { toast } from "react-hot-toast";
 import axios from "axios";
+import { API_BASE_URL } from "../config/api.js";
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -51,7 +52,7 @@ const Register = () => {
     setLoading(true);
     try {
       const response = await axios.post(
-        "http://localhost:3000/api/user/register",
+        `${API_BASE_URL}/user/register`,
         {
           fullname: formData.fullName,
           email: formData.email,

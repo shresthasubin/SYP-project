@@ -1,13 +1,15 @@
-import React, { useState, useEffect } from "react";
-import { Menu, X, Sun, Moon, Ticket } from "lucide-react";
-import { NavLink, Link } from "react-router-dom";
+import React, { useState, useEffect, useMemo, useRef } from "react";
+import { Menu, X, Sun, Moon, Ticket, ChevronDown, LogOut } from "lucide-react";
+import { NavLink, Link, useLocation } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext.jsx";
+import { useAuth } from "../hooks/useAuth.js";
 import "../index.css";
 
 const NAV_ITEMS = [
   { to: "/", label: "Home", end: true },
   { to: "/movies", label: "Movies" },
   { to: "/locations", label: "Locations" },
+  { to: "/profile", label: "Profile" },
   { to: "/about", label: "About" },
   { to: "/contact", label: "Contact" },
   { to: "/hall-staff/apply", label: "Hall Staff" },
@@ -16,7 +18,23 @@ const NAV_ITEMS = [
 const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const { isDark, toggleTheme } = useTheme();
+  const { user, isAuthenticated, loading, logout } = useAuth();
+  const location = useLocation();
+  const profileRef = useRef(null);
+
+  const displayName = useMemo(() => {
+    const fromUser = user?.fullname || user?.fullName || user?.name;
+    if (fromUser) return fromUser;
+    if (user?.email) return user.email.split("@")[0];
+    return "Profile";
+  }, [user]);
+
+  const profileInitial = useMemo(
+    () => (displayName?.trim()?.[0] || "P").toUpperCase(),
+    [displayName],
+  );
 
   const shellClass = isDark
     ? scrolled
@@ -42,6 +60,10 @@ const Navbar = () => {
     ? "border-white/10 bg-secondary/95"
     : "border-black/10 bg-white/95";
 
+  const profilePanelClass = isDark
+    ? "border-white/10 bg-secondary/95"
+    : "border-black/10 bg-white/95";
+
   const navInactiveClass = "nav-item text-text-secondary";
   const navActiveClass = "nav-item nav-item-active";
 
@@ -51,6 +73,22 @@ const Navbar = () => {
     };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  useEffect(() => {
+    setOpen(false);
+    setProfileOpen(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setProfileOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   return (
@@ -103,12 +141,58 @@ const Navbar = () => {
           >
             Book Now
           </Link>
-          <Link
-            to="/login"
-            className={`rounded-lg border px-4 py-2 text-sm font-semibold text-text-primary transition-colors ${signInClass}`}
-          >
-            Sign In
-          </Link>
+          {loading ? (
+            <span className={`rounded-lg border px-4 py-2 text-sm font-semibold text-text-secondary ${signInClass}`}>
+              Loading...
+            </span>
+          ) : isAuthenticated ? (
+            <div className="relative" ref={profileRef}>
+              <button
+                onClick={() => setProfileOpen((prev) => !prev)}
+                className={`flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-sm font-semibold text-text-primary transition-colors ${signInClass}`}
+              >
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-accent text-xs font-bold text-white">
+                  {profileInitial}
+                </span>
+                <span className="max-w-28 truncate">{displayName}</span>
+                <ChevronDown
+                  size={16}
+                  className={`transition-transform ${profileOpen ? "rotate-180" : ""}`}
+                />
+              </button>
+
+              {profileOpen && (
+                <div
+                  className={`absolute right-0 mt-2 w-64 rounded-xl border p-3 shadow-2xl ${profilePanelClass}`}
+                >
+                  <p className="text-sm font-semibold text-text-primary">{displayName}</p>
+                  <p className="mb-3 truncate text-xs text-text-secondary">
+                    {user?.email || "Signed in user"}
+                  </p>
+                  <Link
+                    to="/profile"
+                    className="block rounded-lg border border-transparent px-3 py-2 text-sm font-semibold text-text-primary transition-colors hover:bg-accent hover:text-white"
+                  >
+                    View Profile
+                  </Link>
+                  <button
+                    onClick={logout}
+                    className="mt-2 flex w-full items-center gap-2 rounded-lg border border-transparent px-3 py-2 text-sm font-semibold text-text-primary transition-colors hover:bg-accent hover:text-white"
+                  >
+                    <LogOut size={16} />
+                    Logout
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <Link
+              to="/login"
+              className={`rounded-lg border px-4 py-2 text-sm font-semibold text-text-primary transition-colors ${signInClass}`}
+            >
+              Sign In
+            </Link>
+          )}
         </div>
 
         <div className="ml-3 flex items-center gap-2 md:hidden">
@@ -154,13 +238,45 @@ const Navbar = () => {
             >
               Book Now
             </Link>
-            <Link
-              to="/login"
-              onClick={() => setOpen(false)}
-              className={`mt-1 rounded-lg border px-3 py-2 text-center text-sm font-semibold text-text-primary ${signInClass}`}
-            >
-              Sign In
-            </Link>
+            {loading ? (
+              <span className={`mt-1 rounded-lg border px-3 py-2 text-center text-sm font-semibold text-text-secondary ${signInClass}`}>
+                Loading...
+              </span>
+            ) : isAuthenticated ? (
+              <div className={`mt-1 rounded-lg border p-3 ${tabShellClass}`}>
+                <div className="mb-2 flex items-center gap-2">
+                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-accent text-xs font-bold text-white">
+                    {profileInitial}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-text-primary">{displayName}</p>
+                    <p className="truncate text-xs text-text-secondary">{user?.email || ""}</p>
+                  </div>
+                </div>
+                <Link
+                  to="/profile"
+                  onClick={() => setOpen(false)}
+                  className={`block rounded-lg border px-3 py-2 text-center text-sm font-semibold text-text-primary ${signInClass}`}
+                >
+                  View Profile
+                </Link>
+                <button
+                  onClick={logout}
+                  className={`mt-1 flex w-full items-center justify-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold text-text-primary ${signInClass}`}
+                >
+                  <LogOut size={15} />
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <Link
+                to="/login"
+                onClick={() => setOpen(false)}
+                className={`mt-1 rounded-lg border px-3 py-2 text-center text-sm font-semibold text-text-primary ${signInClass}`}
+              >
+                Sign In
+              </Link>
+            )}
           </div>
         </div>
       )}

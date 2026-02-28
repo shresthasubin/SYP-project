@@ -4,6 +4,7 @@ import { User, Lock, Eye, EyeOff, Film } from "lucide-react";
 import { toast } from "react-hot-toast";
 import axios from "axios";
 import { AuthContext } from "../context/AuthContext.jsx";
+import { API_BASE_URL } from "../config/api.js";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -25,7 +26,7 @@ const Login = () => {
     setLoading(true);
     try {
       const response = await axios.post(
-        "http://localhost:3000/api/user/login",
+        `${API_BASE_URL}/user/login`,
         {
           email,
           password,
@@ -49,6 +50,10 @@ const Login = () => {
         }
       }
     } catch (error) {
+      if (!error.response) {
+        toast.error("Server unreachable. Start backend and try again.");
+        return;
+      }
       if (error.response?.status === 401) {
         toast.error("Invalid credentials");
       } else {

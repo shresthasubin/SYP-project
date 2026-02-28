@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect, useCallback } from "react";
 import axios from "axios";
+import { API_BASE_URL } from "../config/api.js";
 
 export const AuthContext = createContext();
 
@@ -13,7 +14,7 @@ export const AuthProvider = ({ children }) => {
     try {
       setLoading(true);
       // Make a request with credentials to check if cookie is valid
-      const response = await axios.get("http://localhost:3000/api/user/me", {
+      const response = await axios.get(`${API_BASE_URL}/user/me`, {
         withCredentials: true,
       });
 
@@ -38,7 +39,7 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     try {
       await axios.post(
-        "http://localhost:3000/api/user/logout",
+        `${API_BASE_URL}/user/logout`,
         {},
         {
           withCredentials: true,
