@@ -15,7 +15,7 @@ const User = () => {
     email: "",
     phone: "",
     status: "active",
-    role:"role",
+    role: "user",
   });
 
   // Fetch users from API
@@ -52,7 +52,13 @@ const User = () => {
   const handleAddUser = () => {
     setEditingUser(null);
     setShowModal(true);
-    setFormData({ name: "", email: "", phone: "", status: "active" });
+    setFormData({
+      name: "",
+      email: "",
+      phone: "",
+      status: "active",
+      role: "user",
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -60,7 +66,7 @@ const User = () => {
     if (formData.name && formData.email && formData.phone) {
       try {
         if (editingUser) {
-          // Update user
+          // Update user role
           const response = await fetch(
             `${API_BASE_URL}/user/update/${editingUser.id}`,
             {
@@ -70,9 +76,7 @@ const User = () => {
               },
               credentials: "include",
               body: JSON.stringify({
-                fullname: formData.name,
-                email: formData.email,
-                phone: formData.phone,
+                role: formData.role,
               }),
             },
           );
@@ -98,7 +102,13 @@ const User = () => {
           }
         }
         setShowModal(false);
-        setFormData({ name: "", email: "", phone: "", status: "active" });
+        setFormData({
+          name: "",
+          email: "",
+          phone: "",
+          status: "active",
+          role: "user",
+        });
         await fetchUsers(); // Refresh user list
       } catch (err) {
         setError(err.message);
@@ -114,6 +124,7 @@ const User = () => {
       email: user.email || "",
       phone: user.phone || "",
       status: user.status || "active",
+      role: user.role || "user",
     });
     setShowModal(true);
   };
@@ -205,6 +216,9 @@ const User = () => {
                     STATUS
                   </th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">
+                    ROLE
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">
                     JOIN DATE
                   </th>
                   <th className="px-6 py-4 text-center text-sm font-semibold text-slate-300">
@@ -239,6 +253,11 @@ const User = () => {
                       >
                         {(user.status || "active").charAt(0).toUpperCase() +
                           (user.status || "active").slice(1)}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="inline-block rounded-full bg-blue-900/30 px-3 py-1 text-xs font-semibold text-blue-300">
+                        {user.role || "user"}
                       </span>
                     </td>
                     <td className="px-6 py-4">
@@ -355,6 +374,22 @@ const User = () => {
                     <option value="active">Active</option>
                     <option value="pending">Pending</option>
                     <option value="inactive">Inactive</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-slate-300">
+                    Role
+                  </label>
+                  <select
+                    value={formData.role}
+                    onChange={(e) =>
+                      setFormData({ ...formData, role: e.target.value })
+                    }
+                    className="w-full rounded-lg bg-black border border-white/10 p-3 text-white focus:border-[#D72626] focus:outline-none appearance-none cursor-pointer"
+                  >
+                    <option value="user">User</option>
+                    <option value="hall-admin">Hall Admin</option>
+                    <option value="admin">Admin</option>
                   </select>
                 </div>
               </div>

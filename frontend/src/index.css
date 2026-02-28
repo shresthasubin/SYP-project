@@ -31,8 +31,16 @@
     background-color: var(--color-primary);
     color: var(--color-text-primary);
     font-family: inherit;
+    transition: background-color 180ms ease, color 180ms ease;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+
+  input,
+  select,
+  textarea,
+  button {
+    color-scheme: light dark;
   }
 
   ::selection {

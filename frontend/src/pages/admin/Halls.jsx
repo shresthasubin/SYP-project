@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Plus, Search, Edit2, Trash2, X, Upload, MapPin, Phone, Users, Armchair } from "lucide-react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
+import LocationPickerMap from "../../components/LocationPickerMap.jsx";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api";
 const API_SERVER_URL = import.meta.env.VITE_API_SERVER_URL || "http://localhost:3000";
@@ -88,9 +89,9 @@ const Halls = () => {
 
   const canProceedDetails =
     formData.hall_name.trim() &&
-    formData.hall_location.trim() &&
     formData.hall_contact.trim() &&
     formData.license.trim();
+  const canProceedLocation = formData.hall_location.trim();
 
   const validateRooms = () => {
     if (!rooms.length) return false;
@@ -285,7 +286,7 @@ const Halls = () => {
                 <h2 className="text-2xl font-bold text-white">{editingHall ? "Edit Hall" : "Add New Hall"}</h2>
                 {!editingHall && (
                   <div className="mt-2 flex gap-2 text-xs">
-                    {[1, 2, 3].map((s) => (
+                    {[1, 2, 3, 4].map((s) => (
                       <span
                         key={s}
                         className={`rounded-full border px-3 py-1 ${
@@ -315,17 +316,6 @@ const Halls = () => {
                       type="text"
                       name="hall_name"
                       value={formData.hall_name}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full rounded-lg bg-black border border-white/10 p-3 text-white focus:border-[#D72626] focus:outline-none"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-300">Location</label>
-                    <input
-                      type="text"
-                      name="hall_location"
-                      value={formData.hall_location}
                       onChange={handleInputChange}
                       required
                       className="w-full rounded-lg bg-black border border-white/10 p-3 text-white focus:border-[#D72626] focus:outline-none"
@@ -373,10 +363,57 @@ const Halls = () => {
                       </label>
                     </div>
                   </div>
+                  {editingHall && (
+                    <>
+                      <div className="space-y-2 md:col-span-2">
+                        <label className="text-sm font-medium text-slate-300">Location</label>
+                        <input
+                          type="text"
+                          name="hall_location"
+                          value={formData.hall_location}
+                          onChange={handleInputChange}
+                          required
+                          className="w-full rounded-lg bg-black border border-white/10 p-3 text-white focus:border-[#D72626] focus:outline-none"
+                        />
+                      </div>
+                      <div className="space-y-2 md:col-span-2">
+                        <label className="text-sm font-medium text-slate-300">Pick Location On Map</label>
+                        <LocationPickerMap
+                          key={`${editingHall?.id || "edit"}-${showModal ? "open" : "closed"}`}
+                          locationValue={formData.hall_location}
+                          onLocationSelect={(nextLocation) =>
+                            setFormData((prev) => ({ ...prev, hall_location: nextLocation }))
+                          }
+                        />
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
 
               {!editingHall && step === 2 && (
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-white">Hall Location</h3>
+                  <input
+                    type="text"
+                    name="hall_location"
+                    value={formData.hall_location}
+                    onChange={handleInputChange}
+                    placeholder="Search or click the map to set hall location"
+                    required
+                    className="w-full rounded-lg bg-black border border-white/10 p-3 text-white focus:border-[#D72626] focus:outline-none"
+                  />
+                  <LocationPickerMap
+                    key={`create-location-${showModal ? "open" : "closed"}`}
+                    locationValue={formData.hall_location}
+                    onLocationSelect={(nextLocation) =>
+                      setFormData((prev) => ({ ...prev, hall_location: nextLocation }))
+                    }
+                  />
+                </div>
+              )}
+
+              {!editingHall && step === 3 && (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <h3 className="text-lg font-semibold text-white">Hall Rooms</h3>
@@ -433,7 +470,7 @@ const Halls = () => {
                 </div>
               )}
 
-              {!editingHall && step === 3 && (
+              {!editingHall && step === 4 && (
                 <div className="space-y-6">
                   <div className="rounded-lg border border-emerald-600/30 bg-emerald-900/20 p-3 text-sm text-emerald-200">
                     Calculated total capacity: {totalCapacity}
@@ -495,17 +532,21 @@ const Halls = () => {
                     Back
                   </button>
                 )}
-                {!editingHall && step < 3 && (
+                {!editingHall && step < 4 && (
                   <button
                     type="button"
                     onClick={() => setStep((s) => s + 1)}
-                    disabled={(step === 1 && !canProceedDetails) || (step === 2 && !validateRooms())}
+                    disabled={
+                      (step === 1 && !canProceedDetails) ||
+                      (step === 2 && !canProceedLocation) ||
+                      (step === 3 && !validateRooms())
+                    }
                     className="rounded-lg bg-[#D72626] px-6 py-2 font-semibold text-white disabled:opacity-50"
                   >
                     Next
                   </button>
                 )}
-                {(editingHall || step === 3) && (
+                {(editingHall || step === 4) && (
                   <button
                     type="submit"
                     className="rounded-lg bg-[#D72626] px-6 py-2 font-semibold text-white hover:bg-[#D72626]/90 transition-colors"

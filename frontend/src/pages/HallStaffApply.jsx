@@ -4,6 +4,7 @@ import axios from "axios";
 import { toast } from "react-hot-toast";
 import { API_BASE_URL } from "../config/api.js";
 import { useAuth } from "../hooks/useAuth.js";
+import LocationPickerMap from "../components/LocationPickerMap.jsx";
 
 const initialHall = {
   hall_name: "",
@@ -32,11 +33,12 @@ const HallStaffApply = () => {
   const canProceedStep1 = useMemo(() => {
     return (
       hall.hall_name.trim() &&
-      hall.hall_location.trim() &&
       hall.hall_contact.trim() &&
       hall.license.trim()
     );
   }, [hall]);
+
+  const canProceedStep2 = useMemo(() => hall.hall_location.trim(), [hall.hall_location]);
 
   const totalCapacity = useMemo(() => {
     return rooms.reduce((sum, room) => {
@@ -134,7 +136,7 @@ const HallStaffApply = () => {
       </p>
 
       <div className="mt-6 flex gap-2 text-xs">
-        {[1, 2, 3].map((s) => (
+        {[1, 2, 3, 4].map((s) => (
           <span
             key={s}
             className={`rounded-full border px-3 py-1 ${
@@ -155,12 +157,6 @@ const HallStaffApply = () => {
             value={hall.hall_name}
             onChange={(e) => setHall((p) => ({ ...p, hall_name: e.target.value }))}
             placeholder="Hall name"
-            className="w-full rounded-lg border border-white/15 bg-black/40 px-4 py-3"
-          />
-          <input
-            value={hall.hall_location}
-            onChange={(e) => setHall((p) => ({ ...p, hall_location: e.target.value }))}
-            placeholder="Hall location"
             className="w-full rounded-lg border border-white/15 bg-black/40 px-4 py-3"
           />
           <input
@@ -189,12 +185,46 @@ const HallStaffApply = () => {
             onClick={() => setStep(2)}
             className="rounded-lg bg-accent px-5 py-3 font-semibold text-white disabled:opacity-60"
           >
-            Next: Hallrooms
+            Next: Location
           </button>
         </div>
       )}
 
       {step === 2 && (
+        <div className="mt-6 space-y-4 rounded-2xl border border-white/10 bg-black/30 p-6">
+          <h2 className="text-xl font-semibold">Hall Location</h2>
+          <input
+            value={hall.hall_location}
+            onChange={(e) => setHall((p) => ({ ...p, hall_location: e.target.value }))}
+            placeholder="Search or click map to set hall location"
+            className="w-full rounded-lg border border-white/15 bg-black/40 px-4 py-3"
+          />
+          <LocationPickerMap
+            locationValue={hall.hall_location}
+            onLocationSelect={(nextLocation) =>
+              setHall((p) => ({ ...p, hall_location: nextLocation }))
+            }
+          />
+
+          <div className="mt-6 flex gap-3">
+            <button
+              onClick={() => setStep(1)}
+              className="rounded-lg border border-white/20 px-5 py-3"
+            >
+              Back
+            </button>
+            <button
+              disabled={!canProceedStep2}
+              onClick={() => setStep(3)}
+              className="rounded-lg bg-accent px-5 py-3 font-semibold text-white disabled:opacity-60"
+            >
+              Next: Hallrooms
+            </button>
+          </div>
+        </div>
+      )}
+
+      {step === 3 && (
         <div className="mt-6 rounded-2xl border border-white/10 bg-black/30 p-6">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold">Hall Rooms</h2>
@@ -257,14 +287,14 @@ const HallStaffApply = () => {
 
           <div className="mt-6 flex gap-3">
             <button
-              onClick={() => setStep(1)}
+              onClick={() => setStep(2)}
               className="rounded-lg border border-white/20 px-5 py-3"
             >
               Back
             </button>
             <button
               disabled={!validateRooms()}
-              onClick={() => setStep(3)}
+              onClick={() => setStep(4)}
               className="rounded-lg bg-accent px-5 py-3 font-semibold text-white disabled:opacity-60"
             >
               Next: Seat Layout
@@ -273,7 +303,7 @@ const HallStaffApply = () => {
         </div>
       )}
 
-      {step === 3 && (
+      {step === 4 && (
         <div className="mt-6 rounded-2xl border border-white/10 bg-black/30 p-6">
           <h2 className="text-xl font-semibold">Seat Layout Builder</h2>
           <p className="mt-1 text-sm text-slate-300">
@@ -338,7 +368,7 @@ const HallStaffApply = () => {
 
           <div className="mt-6 flex gap-3">
             <button
-              onClick={() => setStep(2)}
+              onClick={() => setStep(3)}
               className="rounded-lg border border-white/20 px-5 py-3"
             >
               Back
