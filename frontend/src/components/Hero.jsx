@@ -1,5 +1,5 @@
-import React, { useState, useEffect, use } from "react";
-import { Play, Ticket, Info, ChevronLeft, ChevronRight } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Play, TvMinimalPlay, Clock, Calendar, Star } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 import img1 from "../assets/Interstellar.jpg";
@@ -407,18 +407,19 @@ const Hero = () => {
                 transition={{ delay: 0.4 }}
                 className="flex flex-wrap gap-3 mb-6"
               >
-                <span className="text-sm text-white font-semibold bg-white/10 backdrop-blur px-3 py-1.5 rounded-full border border-white/20 flex items-center gap-2">
-                  📺{" "}
+                <span className="inline-flex items-center gap-2 text-sm text-white font-semibold bg-white/10 backdrop-blur px-3 py-1.5 rounded-full border border-white/20">
+                  <TvMinimalPlay size={14} className="text-accent" />
                   {Array.isArray(activeMovie.genre)
                     ? activeMovie.genre[0]
                     : activeMovie.genre}
                 </span>
-                <span className="text-sm text-white font-semibold bg-white/10 backdrop-blur px-3 py-1.5 rounded-full border border-white/20">
-                  ⏱️ {Math.floor(activeMovie.duration / 60)}h{" "}
+                <span className="inline-flex items-center gap-2 text-sm text-white font-semibold bg-white/10 backdrop-blur px-4 py-1.5 rounded-full border border-white/20">
+                  <Clock size={14} className="text-accent" />
+                  {Math.floor(activeMovie.duration / 60)}h{" "}
                   {activeMovie.duration % 60}m
                 </span>
-                <span className="text-sm text-white font-semibold bg-white/10 backdrop-blur px-3 py-1.5 rounded-full border border-white/20">
-                  📅{" "}
+                <span className="inline-flex items-center gap-2 text-sm text-white font-semibold bg-white/10 backdrop-blur px-3 py-1.5 rounded-full border border-white/20">
+                  <Calendar size={14} className="text-accent" />
                   {new Date(activeMovie.releaseDate).toLocaleDateString(
                     "en-US",
                     {
@@ -428,15 +429,14 @@ const Hero = () => {
                     },
                   )}
                 </span>
-                <span className="text-sm text-white font-semibold bg-white/10 backdrop-blur px-3 py-1.5 rounded-full border border-white/20">
+                <span className="inline-flex items-center text-sm text-white font-semibold bg-white/10 backdrop-blur px-3 py-1.5 rounded-full border border-white/20">
                   HD
                 </span>
-                <span className="text-sm text-white font-semibold bg-white/10 backdrop-blur px-3 py-1.5 rounded-full border border-white/20">
-                  ⭐ {Math.random().toFixed(1)}
+                <span className="inline-flex items-center gap-2 text-sm text-white font-semibold bg-white/10 backdrop-blur px-3 py-1.5 rounded-full border border-white/20">
+                  <Star size={14} className="text-amber-400" fill="currentColor" />
+                  {(activeMovie.duration / 20).toFixed(1)}
                 </span>
-                <span className="text-sm text-white font-semibold bg-white/10 backdrop-blur px-3 py-1.5 rounded-full border border-white/20">
-                  🔞 {activeMovie.rating}
-                </span>
+               
               </motion.div>
 
               {/* Description */}
@@ -476,7 +476,8 @@ const Hero = () => {
           </AnimatePresence>
         </div>
 
-        {/* Navigation Buttons */}
+        {/* Chevron navigation (left/right manual slide switching) is temporarily disabled.
+            Keep this block for later re-enable with the same wrap-around + autoplay pause logic.
         <motion.button
           onClick={() => {
             setActiveIndex(
@@ -503,6 +504,7 @@ const Hero = () => {
         >
           <ChevronRight size={28} />
         </motion.button>
+        */}
       </section>
 
       {/* ==================== CAROUSEL SECTION ==================== */}
