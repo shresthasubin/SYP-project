@@ -4,16 +4,16 @@
 /* 2️⃣ Theme tokens */
 :root {
   --color-primary: #ffffff;
-  --color-secondary: #f3f4f6;
+  --color-secondary: #ffffff;
   --color-accent: #e50914;
   --color-accent-hover: #b20710;
-  --color-text-primary: #000000;
-  --color-text-secondary: #6b7280;
+  --color-text-primary: #111111;
+  --color-text-secondary: #4b5563;
 }
 
 :root.dark {
-  --color-primary: #0a0b0f;
-  --color-secondary: #12141c;
+  --color-primary: #000000;
+  --color-secondary: #0a0a0a;
   --color-accent: #e50914;
   --color-accent-hover: #b20710;
   --color-text-primary: #ffffff;
@@ -67,4 +67,21 @@
   ::-webkit-scrollbar-thumb:hover {
     background-color: var(--color-accent);
   }
+}
+
+/* Navbar nav item states are explicit so hover/active remain reliable in all themes. */
+.nav-item {
+  transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease;
+}
+
+.nav-item:hover {
+  background-color: var(--color-accent) !important;
+  border-color: var(--color-accent) !important;
+  color: #ffffff !important;
+}
+
+.nav-item-active {
+  background-color: var(--color-accent) !important;
+  border-color: var(--color-accent) !important;
+  color: #ffffff !important;
 }
