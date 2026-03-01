@@ -37,6 +37,7 @@ const minuteToTime = (minutes) => {
 const createShowtime = async (req, res) => {
   try {
     const { movieId, hallroomId } = req.params
+    
     if (!movieId || !hallroomId) {
       return res.status(400).json({
         success: false,
@@ -44,14 +45,14 @@ const createShowtime = async (req, res) => {
       })
     }
 
-    const movie = await Movie.findOne({ where: { id: movieId } })
+    const movie = await Movie.findOne({ where: { id: parseInt(movieId) } })
     if (!movie) {
       return res.status(404).json({
         success: false,
         message: "No Movies Found"
       })
     }
-    const hallroom = await Hallroom.findOne({ where: { id: hallroomId } })
+    const hallroom = await Hallroom.findOne({ where: { id: parseInt(hallroomId) } })
     if (!hallroom) {
       return res.status(404).json({
         success: false,
@@ -70,7 +71,7 @@ const createShowtime = async (req, res) => {
       })
     } 
     
-    end_time = minuteToTime(timeToMinute(start_time) + movie.duration)
+    const end_time = minuteToTime(timeToMinute(start_time) + movie.duration)
       
     const showtime = await Showtime.create({
       show_date,
