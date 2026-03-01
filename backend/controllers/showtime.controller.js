@@ -57,25 +57,23 @@ const getRoleBasedHallroomFilter = (req) => {
 
 const createShowtime = async (req, res) => {
   try {
-    const movieId = Number(req.params.movieId);
-    const hallroomId = Number(req.params.hallroomId);
-
-    if (!Number.isInteger(movieId) || !Number.isInteger(hallroomId) || movieId <= 0 || hallroomId <= 0) {
+    const { movieId, hallroomId } = req.params
+    
+    if (!movieId || !hallroomId) {
       return res.status(400).json({
         success: false,
         message: "Valid movieId and hallroomId are required",
       });
     }
 
-    const movie = await Movie.findByPk(movieId);
+    const movie = await Movie.findOne({ where: { id: parseInt(movieId) } })
     if (!movie) {
       return res.status(404).json({
         success: false,
         message: "Movie not found",
       });
     }
-
-    const hallroom = await Hallroom.findByPk(hallroomId);
+    const hallroom = await Hallroom.findOne({ where: { id: parseInt(hallroomId) } })
     if (!hallroom) {
       return res.status(404).json({
         success: false,
@@ -102,51 +100,12 @@ const createShowtime = async (req, res) => {
     if (!show_date || !start_time) {
       return res.status(400).json({
         success: false,
-        message: "show_date and start_time are required",
-      });
-    }
-
-    if (!isValidDateOnly(show_date)) {
-      return res.status(400).json({
-        success: false,
-        message: "show_date must be in YYYY-MM-DD format",
-      });
-    }
-
-    const startMinute = timeToMinute(start_time);
-    const duration = Number(movie.duration);
-    if (!Number.isInteger(duration) || duration <= 0) {
-      return res.status(400).json({
-        success: false,
-        message: "Movie duration is invalid",
-      });
-    }
-
-    const endMinute = startMinute + duration;
-    if (endMinute > 24 * 60) {
-      return res.status(400).json({
-        success: false,
-        message: "Showtime cannot cross to next day",
-      });
-    }
-
-    const existingShowtimes = await Showtime.findAll({
-      where: { hallroom_id: hallroomId, show_date },
-    });
-
-    const conflict = existingShowtimes.find((s) => {
-      const sStart = timeToMinute(String(s.start_time));
-      const sEnd = timeToMinute(String(s.end_time));
-      return overlaps(startMinute, endMinute, sStart, sEnd);
-    });
-
-    if (conflict) {
-      return res.status(409).json({
-        success: false,
-        message: "Showtime overlaps with an existing show in this hallroom",
-      });
-    }
-
+        message: "Show date and start time must be defined"
+      })
+    } 
+    
+    const end_time = minuteToTime(timeToMinute(start_time) + movie.duration)
+      
     const showtime = await Showtime.create({
       show_date,
       start_time: minuteToTime(startMinute),

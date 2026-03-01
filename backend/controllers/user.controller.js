@@ -211,7 +211,7 @@ const userUpdate = async (req, res) => {
       });
     }
 
-    const { fullname, email, password, role } = req.body;
+    const { fullname, email, password, license } = req.body;
     const updates = {};
 
     if (typeof fullname === "string" && fullname.trim()) {
@@ -222,12 +222,12 @@ const userUpdate = async (req, res) => {
       updates.email = email.trim();
     }
 
-    if (typeof role === "string" && ["user", "hall-admin", "admin"].includes(role)) {
-      updates.role = role;
-    }
-
     if (typeof password === "string" && password.trim()) {
       updates.password = await bcrypt.hash(password.trim(), 10);
+    }
+
+    if (typeof license === "string" && license.trim()) {
+      updates.license = license.trim()
     }
 
     if (Object.keys(updates).length === 0) {
