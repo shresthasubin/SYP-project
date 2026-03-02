@@ -31,7 +31,7 @@ hallRouter.put(
   hallUpdate,
 );
 hallRouter.get("/get", [verifyJWT, roleCheck(["admin","hall-admin"])], hallGet);
-hallRouter.get("/get-active", [verifyJWT, roleCheck(["admin","hall-admin"])], hallGetActive);
+hallRouter.get("/get-active", hallGetActive);
 hallRouter.delete("/delete/:id", [verifyJWT, roleCheck(["admin"])], hallDelete);
 
 hallRouter.post(

@@ -114,3 +114,40 @@ export const getMessages = async (req, res) => {
     return res.status(500).json({ error: err.message });
   }
 };
+
+export const getConversations = async (req, res) => {
+  try {
+    const where =
+      req.user.role === "hall-admin"
+        ? { hall_admin_id: req.user.id }
+        : { user_id: req.user.id };
+
+    const conversations = await Conversation.findAll({
+      where,
+      include: [
+        {
+          model: User,
+          as: "user",
+          attributes: ["id", "fullname", "email"],
+        },
+        {
+          model: User,
+          as: "hallAdmin",
+          attributes: ["id", "fullname", "email"],
+        },
+        {
+          model: Hall,
+          attributes: ["id", "hall_name", "hall_location"],
+        },
+      ],
+      order: [
+        ["lastMessageAt", "DESC"],
+        ["updatedAt", "DESC"],
+      ],
+    });
+
+    return res.json(conversations);
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+};

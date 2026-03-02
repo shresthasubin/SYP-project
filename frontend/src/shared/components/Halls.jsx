@@ -2,8 +2,6 @@ import React, { useEffect, useState } from "react";
 import { MapPin, Phone, Users } from "lucide-react";
 import { motion } from "framer-motion";
 import axios from "axios";
-import { MapContainer, TileLayer, CircleMarker, Popup } from "react-leaflet";
-import "leaflet/dist/leaflet.css";
 import { API_BASE_URL, API_SERVER_URL } from "../config/api";
 
 const FALLBACK_HALL_IMAGE =
@@ -15,139 +13,6 @@ const getHallPosterUrl = (poster) => {
   return `${API_SERVER_URL}/uploads/${poster}`;
 };
 
-const isValidCoordinate = (value, min, max) =>
-  Number.isFinite(value) && value >= min && value <= max;
-
-const parseCoordinatesFromHall = (hall) => {
-  const latCandidates = [hall.latitude, hall.lat, hall.hall_latitude];
-  const lngCandidates = [hall.longitude, hall.lng, hall.lon, hall.hall_longitude];
-
-  const latitude = latCandidates
-    .map((value) => Number(value))
-    .find((value) => isValidCoordinate(value, -90, 90));
-  const longitude = lngCandidates
-    .map((value) => Number(value))
-    .find((value) => isValidCoordinate(value, -180, 180));
-
-  if (latitude !== undefined && longitude !== undefined) {
-    return [latitude, longitude];
-  }
-
-  return null;
-};
-
-const HallLocationMap = ({ hall }) => {
-  const [position, setPosition] = useState(() => parseCoordinatesFromHall(hall));
-  const [isResolving, setIsResolving] = useState(false);
-
-  useEffect(() => {
-    const directCoordinates = parseCoordinatesFromHall(hall);
-    if (directCoordinates) {
-      setPosition(directCoordinates);
-      setIsResolving(false);
-      return;
-    }
-
-    const locationText = hall.hall_location?.trim();
-    if (!locationText) {
-      setPosition(null);
-      setIsResolving(false);
-      return;
-    }
-
-    const controller = new AbortController();
-
-    const resolveLocation = async () => {
-      setIsResolving(true);
-      try {
-        const query = encodeURIComponent(locationText);
-        const response = await fetch(
-          `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${query}`,
-          {
-            signal: controller.signal,
-            headers: {
-              Accept: "application/json",
-            },
-          },
-        );
-
-        if (!response.ok) {
-          throw new Error(`Geocoding failed with status ${response.status}`);
-        }
-
-        const results = await response.json();
-        const bestMatch = results?.[0];
-
-        if (bestMatch?.lat && bestMatch?.lon) {
-          const latitude = Number(bestMatch.lat);
-          const longitude = Number(bestMatch.lon);
-
-          if (
-            isValidCoordinate(latitude, -90, 90) &&
-            isValidCoordinate(longitude, -180, 180)
-          ) {
-            setPosition([latitude, longitude]);
-            return;
-          }
-        }
-
-        setPosition(null);
-      } catch (error) {
-        if (error.name !== "AbortError") {
-          console.error("Unable to resolve hall coordinates", error);
-          setPosition(null);
-        }
-      } finally {
-        if (!controller.signal.aborted) {
-          setIsResolving(false);
-        }
-      }
-    };
-
-    resolveLocation();
-    return () => controller.abort();
-  }, [hall]);
-
-  if (isResolving) {
-    return (
-      <div className="h-48 w-full rounded-lg border border-white/10 bg-secondary/70 text-sm text-text-secondary flex items-center justify-center">
-        Loading map...
-      </div>
-    );
-  }
-
-  if (!position) {
-    return (
-      <div className="h-48 w-full rounded-lg border border-white/10 bg-secondary/70 text-sm text-text-secondary text-center px-4 flex items-center justify-center">
-        Map unavailable for this hall location.
-      </div>
-    );
-  }
-
-  return (
-    <div className="h-48 w-full overflow-hidden rounded-lg border border-white/10">
-      <MapContainer
-        center={position}
-        zoom={14}
-        scrollWheelZoom={false}
-        style={{ height: "100%", width: "100%" }}
-      >
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-        <CircleMarker
-          center={position}
-          radius={10}
-          pathOptions={{ color: "#e50914", fillColor: "#e50914", fillOpacity: 0.9 }}
-        >
-          <Popup>{hall.hall_name || hall.hall_location || "Hall location"}</Popup>
-        </CircleMarker>
-      </MapContainer>
-    </div>
-  );
-};
-
 const Halls = () => {
   const [halls, setHalls] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -155,9 +20,7 @@ const Halls = () => {
   useEffect(() => {
     const fetchHalls = async () => {
       try {
-        const response = await axios.get(`${API_BASE_URL}/hall/get`, {
-          withCredentials: true,
-        });
+        const response = await axios.get(`${API_BASE_URL}/hall/get-active`);
         if (response.data?.success && Array.isArray(response.data.data)) {
           setHalls(response.data.data);
         } else {
@@ -180,7 +43,7 @@ const Halls = () => {
         <div className="mb-8 flex items-end justify-between">
           <div>
             <h2 className="text-2xl font-bold text-text-primary">Cinema Locations</h2>
-            <p className="text-sm text-text-secondary">Explore halls, facilities, and map directions.</p>
+            <p className="text-sm text-text-secondary">Explore halls and key details.</p>
           </div>
           <span className="rounded-full border border-white/15 bg-secondary px-3 py-1 text-xs font-semibold text-text-secondary">
             {halls.length} halls
@@ -244,7 +107,7 @@ const Halls = () => {
                       </span>
                     </div>
 
-                    <HallLocationMap hall={hall} />
+                  
 
                     <button
                       type="button"

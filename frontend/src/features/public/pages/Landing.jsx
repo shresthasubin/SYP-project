@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import Hero from "../components/Hero.jsx";
 import MovieCalendar from "../components/MovieCalendar.jsx";
+import Halls from "../components/Halls.jsx";
 
 import heroPoster from "../assets/Batman.png";
 import card1 from "../assets/Dune.jpg";
@@ -110,6 +111,8 @@ export default function Landing() {
         subtitle="Get ready for upcoming releases and advanced bookings."
         movies={COMING_SOON}
       />
+
+      <Halls />
 
       <section className="py-10">
         <div className="container mx-auto grid gap-6 px-6 lg:grid-cols-2">

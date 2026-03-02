@@ -26,6 +26,7 @@ import User from "./pages/admin/User.jsx";
 import FormApplications from "./pages/admin/FormApplications.jsx";
 import Showtimes from "./pages/admin/Showtimes.jsx";
 import HallAdminDashboard from "./pages/halladmin/Dashboard.jsx";
+import HallAdminMessages from "./pages/halladmin/Messages.jsx";
 import SeatLayoutPreview from "../formpage/SeatLayoutPreview.jsx";
 import { AuthProvider } from "./context/AuthContext.jsx";
 import { ThemeProvider, useTheme } from "./context/ThemeContext.jsx";
@@ -97,6 +98,7 @@ const App = () => {
             <Route path="movies" element={<Movies />} />
             <Route path="halls" element={<Halls />} />
             <Route path="showtimes" element={<Showtimes />} />
+            <Route path="messages" element={<HallAdminMessages />} />
           </Route>
 
           {/* auth is kept separate outside layout (simple) */}

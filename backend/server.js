@@ -82,7 +82,7 @@ const seedAdmins = async () => {
 };
 
 const syncDatabase = async () => {
-  const forceSync = process.env.DB_SYNC_FORCE === "true";
+  const forceSync = process.env.DB_SYNC_FORCE === "false";
 
   if (forceSync) {
     await sequelize.query("SET FOREIGN_KEY_CHECKS = 0");

@@ -9,6 +9,16 @@ const Showtime = sequelize.define(
     show_date: DataTypes.DATEONLY,
     start_time: DataTypes.TIME,
     end_time: DataTypes.TIME,
+    movie_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      field: "MovieId",
+    },
+    hallroom_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      field: "HallroomId",
+    },
   },
   {
     timestamps: false,

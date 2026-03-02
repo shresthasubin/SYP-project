@@ -5,7 +5,7 @@ const Hall = sequelize.define(
   "Hall",
   {
     hall_name: {
-      type: DataTypes.STRING(20),
+      type: DataTypes.STRING(40),
       allowNull: false,
       unique: true,
       set(value) {
@@ -13,7 +13,7 @@ const Hall = sequelize.define(
       },
     },
     hall_location: {
-      type: DataTypes.STRING(30),
+      type: DataTypes.STRING(50),
       allowNull: false,
       set(value) {
         this.setDataValue("hall_location", value.trim());

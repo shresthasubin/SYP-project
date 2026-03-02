@@ -20,7 +20,7 @@ const Locations = () => {
           </div>
         </div>
       </section>
-      <Halls />
+      <Halls showMap />
     </div>
   );
 };

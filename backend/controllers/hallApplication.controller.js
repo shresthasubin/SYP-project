@@ -76,7 +76,44 @@ const ensureSeatColumns = async () => {
     await sequelize.query(sql);
   }
 
+  const [seatIndexes] = await sequelize.query("SHOW INDEX FROM Seats");
+  const invalidUniqueSeatIndexes = [
+    ...new Set(
+      seatIndexes
+        .filter(
+          (idx) =>
+            Number(idx.Non_unique) === 0 &&
+            idx.Key_name !== "PRIMARY" &&
+            (idx.Column_name === "hall_id" || idx.Column_name === "seat_number"),
+        )
+        .map((idx) => idx.Key_name),
+    ),
+  ];
+
+  for (const keyName of invalidUniqueSeatIndexes) {
+    await sequelize.query(`ALTER TABLE Seats DROP INDEX \`${keyName}\``);
+  }
+
   seatColumnsEnsured = true;
+};
+
+let hallroomIndexesEnsured = false;
+const ensureHallroomIndexes = async () => {
+  if (hallroomIndexesEnsured) return;
+
+  const [indexes] = await sequelize.query("SHOW INDEX FROM Hallrooms");
+  const uniqueHallIdIndexes = indexes.filter(
+    (idx) =>
+      idx.Column_name === "hall_id" &&
+      Number(idx.Non_unique) === 0 &&
+      idx.Key_name !== "PRIMARY",
+  );
+
+  for (const idx of uniqueHallIdIndexes) {
+    await sequelize.query(`ALTER TABLE Hallrooms DROP INDEX \`${idx.Key_name}\``);
+  }
+
+  hallroomIndexesEnsured = true;
 };
 
 const createHallApplication = async (req, res) => {
@@ -139,6 +176,21 @@ const createHallApplication = async (req, res) => {
       data: application,
     });
   } catch (err) {
+    if (err?.name === "SequelizeValidationError" || err?.name === "SequelizeUniqueConstraintError") {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid application data",
+        error: err.message,
+        details: Array.isArray(err.errors)
+          ? err.errors.map((e) => ({
+              field: e.path,
+              message: e.message,
+              value: e.value,
+            }))
+          : [],
+      });
+    }
+
     return res.status(500).json({
       success: false,
       message: "Server failed while submitting application",
@@ -192,6 +244,7 @@ const approveHallApplication = async (req, res) => {
 
   try {
     await ensureSeatColumns();
+    await ensureHallroomIndexes();
     const { id } = req.params;
     const application = await HallApplication.findByPk(id, { transaction: tx });
 

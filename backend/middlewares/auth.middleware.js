@@ -1,4 +1,3 @@
-import { where } from "sequelize";
 import User from "../model/user.model.js";
 import jwt from 'jsonwebtoken'
 
@@ -7,9 +6,9 @@ const verifyJWT = async (req, res, next) => {
         const token = req.header('Authorization')?.replace('Bearer ', '') || req.cookies?.token
 
         if (!token) {
-            return res.status(404).json({
+            return res.status(401).json({
                 success: false,
-                message: 'Token does not found'
+                message: 'Authentication token not found'
             })
         }
 
@@ -30,7 +29,7 @@ const verifyJWT = async (req, res, next) => {
     } catch (err) {
         return res.status(400).json({
             success: false,
-            message: 'Token expired or not valid'
+            message: 'Token expired or invalid'
         })
     }
 }

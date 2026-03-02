@@ -54,7 +54,7 @@ const Login = () => {
         toast.error("Server unreachable. Start backend and try again.");
         return;
       }
-      if (error.response?.status === 401) {
+      if (error.response?.status === 400 || error.response?.status === 401) {
         toast.error("Invalid credentials");
       } else {
         toast.error(error.response?.data?.message || "Login failed");

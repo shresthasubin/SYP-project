@@ -16,7 +16,7 @@ const HallApplication = sequelize.define(
       },
     },
     hall_location: {
-      type: DataTypes.STRING(30),
+      type: DataTypes.STRING(250),
       allowNull: false,
       set(value) {
         this.setDataValue("hall_location", value.trim());

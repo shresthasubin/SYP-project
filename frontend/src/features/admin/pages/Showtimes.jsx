@@ -3,6 +3,7 @@ import axios from "axios";
 import { toast } from "react-hot-toast";
 import { CalendarDays, Clock3, Edit2, Plus, Search, Trash2, X } from "lucide-react";
 import { API_BASE_URL } from "../../config/api.js";
+import { useAuth } from "../../hooks/useAuth.js";
 
 const toInputDate = (value) => {
   if (!value) return "";
@@ -19,10 +20,12 @@ const toInputTime = (value) => {
 const formatTime = (value) => (value ? String(value).slice(0, 5) : "--:--");
 
 const Showtimes = () => {
+  const { isAuthenticated, loading: authLoading } = useAuth();
   const [movies, setMovies] = useState([]);
   const [rooms, setRooms] = useState([]);
   const [showtimes, setShowtimes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [initialized, setInitialized] = useState(false);
   const [saving, setSaving] = useState(false);
   const [query, setQuery] = useState("");
   const [filterMovieId, setFilterMovieId] = useState("");
@@ -82,25 +85,32 @@ const Showtimes = () => {
         setShowtimes(response.data.data || []);
       }
     } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to fetch showtimes");
+      const apiMessage = error.response?.data?.message || error.response?.data?.error;
+      toast.error(apiMessage || "Failed to fetch showtimes");
     }
   };
 
   useEffect(() => {
     const init = async () => {
+      if (authLoading) return;
+      if (!isAuthenticated) {
+        setLoading(false);
+        return;
+      }
       setLoading(true);
       await fetchBaseData();
-      await fetchShowtimes();
+      setInitialized(true);
       setLoading(false);
     };
     init();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [authLoading, isAuthenticated]);
 
   useEffect(() => {
+    if (!initialized || !isAuthenticated) return;
     fetchShowtimes();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filterMovieId, filterHallroomId, filterDate]);
+  }, [initialized, isAuthenticated, filterMovieId, filterHallroomId, filterDate]);
 
   const openEditModal = (showtime) => {
     setEditingShowtime(showtime);
