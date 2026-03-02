@@ -1,8 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { CalendarDays, Clock3, MapPin, Star, Ticket } from "lucide-react";
+import { CalendarDays, Clock3, MapPin, MessageCircle, Star, Ticket } from "lucide-react";
 import axios from "axios";
 import { API_BASE_URL, API_SERVER_URL } from "../config/api.js";
+import { useAuth } from "../hooks/useAuth.js";
+import LiveChatModal from "../components/chat/LiveChatModal.jsx";
 
 const formatDuration = (value) => {
   const minutes = Number(value);
@@ -34,11 +36,14 @@ const formatTime = (value) => String(value || "").slice(0, 5) || "--:--";
 
 export default function MovieDetail() {
   const { id } = useParams();
+  const { user, isAuthenticated } = useAuth();
   const [movie, setMovie] = useState(null);
   const [showtimes, setShowtimes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [activeDate, setActiveDate] = useState("");
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatHall, setChatHall] = useState(null);
 
   useEffect(() => {
     let mounted = true;
@@ -104,6 +109,7 @@ export default function MovieDetail() {
       const key = `${hallName}::${roomName}`;
 
       const existing = map.get(key) || {
+        hallId: s.Hallroom?.Hall?.id,
         hallName,
         hallLocation,
         roomName,
@@ -232,9 +238,27 @@ export default function MovieDetail() {
                         </p>
                         <p className="mt-1 text-xs uppercase tracking-wide text-slate-500">{group.roomName}</p>
                       </div>
-                      <button className="rounded-md bg-white/10 px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-white/15">
-                        Continue
-                      </button>
+                      <div className="flex gap-2">
+                        <button className="rounded-md bg-white/10 px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-white/15">
+                          Continue
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (!group.hallId) return;
+                            if (!isAuthenticated) {
+                              window.location.href = "/login";
+                              return;
+                            }
+                            setChatHall({ id: group.hallId, name: group.hallName });
+                            setChatOpen(true);
+                          }}
+                          disabled={!group.hallId}
+                          className="inline-flex items-center gap-1 rounded-md border border-[#f4e451]/40 bg-[#f4e451]/10 px-3 py-2 text-xs font-semibold text-[#f4e451] hover:bg-[#f4e451]/20"
+                        >
+                          <MessageCircle size={14} />
+                          Chat with Hall
+                        </button>
+                      </div>
                     </div>
 
                     <div className="flex flex-wrap gap-2">
@@ -261,6 +285,14 @@ export default function MovieDetail() {
           </button>
         </div>
       </div>
+
+      <LiveChatModal
+        isOpen={chatOpen}
+        onClose={() => setChatOpen(false)}
+        hallId={chatHall?.id}
+        hallName={chatHall?.name}
+        currentUserId={user?.id}
+      />
     </section>
   );
 }

@@ -113,6 +113,20 @@ const options = {
             reviewNote: { type: "string" },
           },
         },
+        ChatStartRequest: {
+          type: "object",
+          required: ["hall_id"],
+          properties: {
+            hall_id: { type: "integer" },
+          },
+        },
+        ChatMessageRequest: {
+          type: "object",
+          required: ["message"],
+          properties: {
+            message: { type: "string" },
+          },
+        },
       },
     },
     paths: {
@@ -646,6 +660,75 @@ const options = {
             },
           ],
           responses: { 200: { description: "Showtime deleted" } },
+        },
+      },
+      "/api/chat/start": {
+        post: {
+          tags: ["Chat"],
+          summary: "Start conversation with a hall admin by hall id",
+          security: [{ bearerAuth: [] }],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/ChatStartRequest" },
+              },
+            },
+          },
+          responses: {
+            200: { description: "Conversation created or returned" },
+            404: { description: "Hall or hall admin not found" },
+          },
+        },
+      },
+      "/api/chat/{conversationId}/message": {
+        post: {
+          tags: ["Chat"],
+          summary: "Send message in a conversation",
+          security: [{ bearerAuth: [] }],
+          parameters: [
+            {
+              name: "conversationId",
+              in: "path",
+              required: true,
+              schema: { type: "integer" },
+            },
+          ],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/ChatMessageRequest" },
+              },
+            },
+          },
+          responses: {
+            200: { description: "Message sent" },
+            403: { description: "Not authorized for this conversation" },
+            404: { description: "Conversation not found" },
+          },
+        },
+      },
+      "/api/chat/{conversationId}/messages": {
+        get: {
+          tags: ["Chat"],
+          summary: "Get paginated messages for a conversation",
+          security: [{ bearerAuth: [] }],
+          parameters: [
+            {
+              name: "conversationId",
+              in: "path",
+              required: true,
+              schema: { type: "integer" },
+            },
+            {
+              name: "page",
+              in: "query",
+              required: false,
+              schema: { type: "integer", minimum: 1, default: 1 },
+            },
+          ],
+          responses: { 200: { description: "Messages fetched" } },
         },
       },
     },
