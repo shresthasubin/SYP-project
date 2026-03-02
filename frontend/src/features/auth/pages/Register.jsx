@@ -3,7 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { Mail, Lock, Eye, EyeOff, Film } from "lucide-react";
 import { toast } from "react-hot-toast";
 import axios from "axios";
-import { API_BASE_URL } from "../config/api.js";
+import { API_BASE_URL } from "../../../shared/config/api.js";
 
 const Register = () => {
   const [formData, setFormData] = useState({

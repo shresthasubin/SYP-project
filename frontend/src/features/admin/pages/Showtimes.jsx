@@ -2,8 +2,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import { CalendarDays, Clock3, Edit2, Plus, Search, Trash2, X } from "lucide-react";
-import { API_BASE_URL } from "../../config/api.js";
-import { useAuth } from "../../hooks/useAuth.js";
+import { API_BASE_URL } from "../../../shared/config/api.js";
+import { useAuth } from "../../../shared/hooks/useAuth.js";
 
 const toInputDate = (value) => {
   if (!value) return "";

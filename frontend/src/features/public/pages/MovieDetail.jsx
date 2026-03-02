@@ -2,9 +2,9 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { CalendarDays, Clock3, MapPin, MessageCircle, Star, Ticket } from "lucide-react";
 import axios from "axios";
-import { API_BASE_URL, API_SERVER_URL } from "../config/api.js";
-import { useAuth } from "../hooks/useAuth.js";
-import LiveChatModal from "../components/chat/LiveChatModal.jsx";
+import { API_BASE_URL, API_SERVER_URL } from "../../../shared/config/api.js";
+import { useAuth } from "../../../shared/hooks/useAuth.js";
+import LiveChatModal from "../../chat/components/LiveChatModal.jsx";
 
 const formatDuration = (value) => {
   const minutes = Number(value);

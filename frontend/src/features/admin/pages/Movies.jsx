@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
-import { API_BASE_URL, API_SERVER_URL } from "../../config/api";
+import { API_BASE_URL, API_SERVER_URL } from "../../../shared/config/api";
 
 const Movies = () => {
   const [movies, setMovies] = useState([]);

@@ -3,8 +3,8 @@ import { useNavigate, Link } from "react-router-dom";
 import { User, Lock, Eye, EyeOff, Film } from "lucide-react";
 import { toast } from "react-hot-toast";
 import axios from "axios";
-import { AuthContext } from "../context/AuthContext.jsx";
-import { API_BASE_URL } from "../config/api.js";
+import { AuthContext } from "../../../shared/context/AuthContext.jsx";
+import { API_BASE_URL } from "../../../shared/config/api.js";
 
 const Login = () => {
   const [email, setEmail] = useState("");

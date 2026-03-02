@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Plus, Search, Edit2, Trash2, X, Upload, MapPin, Phone, Users, Armchair } from "lucide-react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
-import LocationPickerMap from "../../components/LocationPickerMap.jsx";
+import LocationPickerMap from "../../../shared/components/LocationPickerMap.jsx";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api";
 const API_SERVER_URL = import.meta.env.VITE_API_SERVER_URL || "http://localhost:3000";

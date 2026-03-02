@@ -5,18 +5,18 @@ import {
   ChevronDown,
   CalendarClock,
 } from "lucide-react";
-import Hero from "../components/Hero.jsx";
-import MovieCalendar from "../components/MovieCalendar.jsx";
-import Halls from "../components/Halls.jsx";
+import Hero from "../../../shared/components/Hero.jsx";
+import MovieCalendar from "../../../shared/components/MovieCalendar.jsx";
+import Halls from "../../../shared/components/Halls.jsx";
 
-import heroPoster from "../assets/Batman.png";
-import card1 from "../assets/Dune.jpg";
-import card2 from "../assets/interstellar.jpg";
-import card3 from "../assets/Oppenheimer.jpg";
-import card4 from "../assets/avatar.png";
-import card5 from "../assets/RoadToNinja.png";
-import card6 from "../assets/purnaBahadur.png";
-import card7 from "../assets/unkoSweater.png";
+import heroPoster from "../../../assets/Batman.png";
+import card1 from "../../../assets/Dune.jpg";
+import card2 from "../../../assets/interstellar.jpg";
+import card3 from "../../../assets/Oppenheimer.jpg";
+import card4 from "../../../assets/avatar.png";
+import card5 from "../../../assets/RoadToNinja.png";
+import card6 from "../../../assets/purnaBahadur.png";
+import card7 from "../../../assets/unkoSweater.png";
 
 const NOW_SHOWING = [
   { title: "Dune: Part Two", genre: "Sci-Fi", image: card1, rating: 8.6 },

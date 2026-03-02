@@ -2,9 +2,9 @@ import React, { useMemo, useState } from "react";
 import { Armchair, CheckCircle2, AlertCircle } from "lucide-react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
-import { API_BASE_URL } from "../config/api.js";
-import { useAuth } from "../hooks/useAuth.js";
-import LocationPickerMap from "../components/LocationPickerMap.jsx";
+import { API_BASE_URL } from "../../../shared/config/api.js";
+import { useAuth } from "../../../shared/hooks/useAuth.js";
+import LocationPickerMap from "../../../shared/components/LocationPickerMap.jsx";
 
 const initialHall = {
   hall_name: "",

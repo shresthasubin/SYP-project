@@ -1,5 +1,5 @@
 import React from "react";
-import Halls from "../components/Halls.jsx";
+import Halls from "../../../shared/components/Halls.jsx";
 
 const Locations = () => {
   return (

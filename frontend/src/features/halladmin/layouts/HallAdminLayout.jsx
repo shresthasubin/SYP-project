@@ -1,7 +1,7 @@
 import React, { useContext, useEffect } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { LayoutDashboard, Film, MapPin, LogOut, Clock3, MessageSquare } from "lucide-react";
-import { AuthContext } from "../../context/AuthContext.jsx";
+import { AuthContext } from "../../../shared/context/AuthContext.jsx";
 
 const HallAdminLayout = () => {
   const location = useLocation();

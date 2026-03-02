@@ -3,7 +3,7 @@ import { Menu, X, Sun, Moon, Ticket, ChevronDown, LogOut } from "lucide-react";
 import { NavLink, Link, useLocation } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext.jsx";
 import { useAuth } from "../hooks/useAuth.js";
-import "../index.css";
+import "../../index.css";
 
 const NAV_ITEMS = [
   { to: "/", label: "Home", end: true },

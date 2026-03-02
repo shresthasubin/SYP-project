@@ -1,7 +1,7 @@
 import React from "react";
 import { Facebook, Twitter, Instagram, Youtube, Mail } from "lucide-react";
 import { Link } from "react-router-dom";
-import "../index.css";
+import "../../index.css";
 const Footer = () => {
   return (
     <footer className="bg-secondary pt-16 pb-8 mt-16 border-t border-white/5">

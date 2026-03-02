@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Edit2, Trash2, Search, Plus, X } from "lucide-react";
-import { API_BASE_URL } from "../../config/api";
+import { API_BASE_URL } from "../../../shared/config/api";
 
 const User = () => {
   const [searchTerm, setSearchTerm] = useState("");

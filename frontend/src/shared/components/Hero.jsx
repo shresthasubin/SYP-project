@@ -2,16 +2,16 @@ import React, { useState, useEffect } from "react";
 import { Play, TvMinimalPlay, Clock, Calendar, Star } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-import img1 from "../assets/Interstellar.jpg";
-import img2 from "../assets/Oppenheimer.jpg";
-import img3 from "../assets/Dune.jpg";
-import img4 from "../assets/avatar.png";
-import img5 from "../assets/purnaBahadur.png";
-import img6 from "../assets/RoadToNinja.png";
-import img7 from "../assets/Batman.png";
-import img8 from "../assets/unkoSweater.png";
+import img1 from "../../assets/interstellar.jpg";
+import img2 from "../../assets/Oppenheimer.jpg";
+import img3 from "../../assets/Dune.jpg";
+import img4 from "../../assets/avatar.png";
+import img5 from "../../assets/purnaBahadur.png";
+import img6 from "../../assets/RoadToNinja.png";
+import img7 from "../../assets/Batman.png";
+import img8 from "../../assets/unkoSweater.png";
 
-import "../index.css";
+import "../../index.css";
 
 const HERO_SLIDES = [
   {

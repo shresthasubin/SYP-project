@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
 import { io } from "socket.io-client";
-import { API_BASE_URL, API_SERVER_URL } from "../../config/api.js";
+import { API_BASE_URL, API_SERVER_URL } from "../../../shared/config/api.js";
 
 const sortMessagesAsc = (list) =>
   [...list].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
@@ -211,4 +211,3 @@ export default function LiveChatModal({
     </div>
   );
 }
-

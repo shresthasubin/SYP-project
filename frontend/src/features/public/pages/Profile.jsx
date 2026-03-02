@@ -11,11 +11,11 @@ import {
   CalendarClock,
   ChevronRight,
 } from "lucide-react";
-import avatar from "../assets/avatar.png";
-import dunePoster from "../assets/Dune.jpg";
-import oppenheimerPoster from "../assets/Oppenheimer.jpg";
-import interstellarPoster from "../assets/interstellar.jpg";
-import batmanPoster from "../assets/Batman.png";
+import avatar from "../../../assets/avatar.png";
+import dunePoster from "../../../assets/Dune.jpg";
+import oppenheimerPoster from "../../../assets/Oppenheimer.jpg";
+import interstellarPoster from "../../../assets/interstellar.jpg";
+import batmanPoster from "../../../assets/Batman.png";
 
 const MENU_ITEMS = [
   { label: "My Account", icon: CircleUserRound },

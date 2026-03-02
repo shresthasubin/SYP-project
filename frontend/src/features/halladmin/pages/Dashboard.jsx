@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Building2, Film, Clock3 } from "lucide-react";
 import axios from "axios";
-import { API_BASE_URL } from "../../config/api.js";
+import { API_BASE_URL } from "../../../shared/config/api.js";
 
 const StatCard = ({ title, value, icon: Icon, color }) => (
   <div className="rounded-xl bg-black border border-white/10 p-6">
