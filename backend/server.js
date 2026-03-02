@@ -4,27 +4,10 @@ import dotenv from "dotenv";
 import cors from "cors";
 import router from "./routes/index.js";
 import cookieParser from "cookie-parser";
-import swaggerUi from "swagger-ui-express";
 import bcrypt from "bcryptjs";
 import User from "./model/user.model.js";
-import Booking from "./model/booking.model.js";
-import BookingSeat from "./model/bookingSeat.model.js";
-import Hall from "./model/hall.model.js";
-import Movie from "./model/movie.model.js";
-import Payment from "./model/payment.model.js";
-import Seat from "./model/seat.model.js";
-import Showtime from "./model/showtime.model.js";
-import Hallroom from "./model/hallroom.model.js";
-import Hallclass from "./model/hallclass.model.js";
-import HallApplication from "./model/hallApplication.model.js";
 import swaggerSpec from "./swagger.js";
-import Conversation from "./model/conversation.model.js";
-import Message from "./model/message.model.js";
-
-import http from "http";
-import { Server } from "socket.io";
-import { setupSocket } from "./sockets/chat.socket.js";
-
+import swaggerUi from "swagger-ui-express";
 dotenv.config({
   path: "./.env",
 });
@@ -39,11 +22,11 @@ app.use(
     credentials: true,
   }),
 );
-app.use(express.urlencoded({ extended: true }));
+
+app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 
 app.use("/uploads", express.static("uploads"));
-
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use("/api", router);
 
@@ -71,29 +54,28 @@ const seedAdmin = async () => {
   }
 };
 
+const syncDatabase = async () => {
+  const forceSync = process.env.DB_SYNC_FORCE === "true";
 
-const server = http.createServer(app);
+  if (forceSync) {
+    await sequelize.query("SET FOREIGN_KEY_CHECKS = 0");
+  }
 
-const io = new Server(server, {
-  cors: {
-    origin: "*",
-  },
-});
-
-app.set("io", io);
-
-setupSocket(io);
+  try {
+    await sequelize.sync({ force: forceSync });
+  } finally {
+    if (forceSync) {
+      await sequelize.query("SET FOREIGN_KEY_CHECKS = 1");
+    }
+  }
+};
 
 const startServer = async () => {
   await conenctDB();
-
-  await sequelize.sync({ force: false });
+  await syncDatabase();
   await seedAdmin();
 
-  await Hallclass.findOrCreate({ where: { seatType: 'regular' }, defaults: { price: 10 } });
-  await Hallclass.findOrCreate({ where: { seatType: 'premium' }, defaults: { price: 20 } });
-
-  server.listen(port, () => {
+  app.listen(port, () => {
     console.log(`App is listening at PORT: [${port}]`);
     app.get("/", (req, res) => {
       res.send("Backend is running...");
