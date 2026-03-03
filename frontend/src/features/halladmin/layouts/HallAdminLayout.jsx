@@ -1,6 +1,6 @@
 import React, { useContext, useEffect } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Film, MapPin, LogOut, Clock3, MessageSquare } from "lucide-react";
+import { LayoutDashboard, Film, MapPin, LogOut, Clock3, MessageSquare, CircleUserRound } from "lucide-react";
 import { AuthContext } from "../../../shared/context/AuthContext.jsx";
 
 const HallAdminLayout = () => {
@@ -104,6 +104,15 @@ const HallAdminLayout = () => {
 
       <main className="flex-1 overflow-y-auto bg-secondary">
         <div className="container mx-auto p-8">
+          <div className="mb-6 flex justify-end">
+            <div className="flex items-center gap-3 rounded-lg border border-white/10 bg-black/30 px-4 py-2">
+              <CircleUserRound size={20} className="text-[#D72626]" />
+              <div className="text-right leading-tight">
+                <p className="text-sm font-semibold text-white">{user?.fullname || "Hall Admin"}</p>
+                <p className="text-xs text-slate-400">{user?.role || "hall-admin"}</p>
+              </div>
+            </div>
+          </div>
           <Outlet />
         </div>
       </main>
