@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import { Clapperboard, ShieldCheck, Users, TrendingUp, Globe2, Star } from "lucide-react";
 
 const stats = [
@@ -121,6 +122,24 @@ const About = () => {
               </div>
             </article>
           ))}
+        </div>
+      </section>
+
+      <section className="container mx-auto px-6 py-4">
+        <div className="rounded-2xl border border-accent/30 bg-accent/10 p-6 md:p-8">
+          <p className="text-xs font-semibold uppercase tracking-wider text-accent">Join Us</p>
+          <h2 className="mt-2 text-3xl font-extrabold text-text-primary">Use Our System With Your Hall</h2>
+          <p className="mt-3 max-w-3xl text-sm text-text-secondary md:text-base">
+            Join our system with your hall and manage your cinema operations on Cinema Hub.
+          </p>
+          <div className="mt-5">
+            <Link
+              to="/hall-staff/apply"
+              className="inline-flex items-center rounded-lg bg-accent px-5 py-2.5 text-sm font-semibold text-white hover:bg-accent-hover"
+            >
+              Join With Your Hall
+            </Link>
+          </div>
         </div>
       </section>
     </main>
