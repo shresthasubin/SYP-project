@@ -21,7 +21,20 @@ import { NavLink, Link, useLocation } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext.jsx";
 import { useAuth } from "../hooks/useAuth.js";
 import "../../index.css";
-
+import biratnagarImg from "../../assets/location/biratnagar.png";
+import butwalImg from "../../assets/location/butwal.png";
+import chitwanImg from "../../assets/location/chitwan.png";
+import dharanImg from "../../assets/location/dharan.png";
+import inaruwaImg from "../../assets/location/inaruwa.png";
+import itahariImg from "../../assets/location/itahari.png";
+import janakpurImg from "../../assets/location/janakpur.png";
+import kathmanduImg from "../../assets/location/kathmandu.png";
+import lalitpurImg from "../../assets/location/lalitpur.png";
+import pokharaImg from "../../assets/location/pokhara.png";
+import dhankutaImg from "../../assets/location/dhankuta.png";
+import damakImg from "../../assets/location/damak.png";
+import lumbiniImg from "../../assets/location/lumbini.png";
+import birgunjImg from "../../assets/location/birgunj.png";
 const NAV_ITEMS = [
   { to: "/", label: "Home", end: true },
   { to: "/movies", label: "Movies" },
@@ -31,16 +44,20 @@ const NAV_ITEMS = [
 ];
 
 const NEPALI_CITIES = [
-  { name: "Kathmandu", icon: Landmark, lat: 27.7172, lon: 85.324 },
-  { name: "Pokhara", icon: Mountain, lat: 28.2096, lon: 83.9856 },
-  { name: "Lalitpur", icon: Building2, lat: 27.6644, lon: 85.3188 },
-  { name: "Bhaktapur", icon: Castle, lat: 27.671, lon: 85.4298 },
-  { name: "Biratnagar", icon: Home, lat: 26.4525, lon: 87.2718 },
-  { name: "Birgunj", icon: Building2, lat: 27.0104, lon: 84.8774 },
-  { name: "Butwal", icon: Home, lat: 27.6866, lon: 83.4323 },
-  { name: "Chitwan", icon: Tent, lat: 27.5291, lon: 84.3542 },
-  { name: "Dharan", icon: Building2, lat: 26.8142, lon: 87.2797 },
-  { name: "Janakpur", icon: Landmark, lat: 26.7288, lon: 85.926 },
+  { name: "Kathmandu", icon: Landmark, lat: 27.7172, lon: 85.324, image: kathmanduImg },
+  { name: "Pokhara", icon: Mountain, lat: 28.2096, lon: 83.9856, image: pokharaImg },
+  { name: "Lalitpur", icon: Building2, lat: 27.6644, lon: 85.3188, image: lalitpurImg },
+  { name: "Biratnagar", icon: Home, lat: 26.4525, lon: 87.2718, image: biratnagarImg },
+  {name:"Dhankuta", icon: Castle, lat: 26.9833, lon: 87.3333, image: dhankutaImg},
+ {name:"Lumbini", icon: Landmark, lat: 27.4844, lon: 83.2761, image: lumbiniImg},
+ { name: "Damak", icon: Home, lat: 26.75, lon: 87.2833, image: damakImg },
+ { name: "Butwal", icon: Home, lat: 27.6866, lon: 83.4323, image: butwalImg },
+ { name: "Chitwan", icon: Tent, lat: 27.5291, lon: 84.3542, image: chitwanImg },
+ { name: "Dharan", icon: Building2, lat: 26.8142, lon: 87.2797, image: dharanImg },
+ {name:"Birgunj", icon: Home, lat: 27.0000, lon: 84.8667, image: birgunjImg},
+  { name: "Inaruwa", icon: Home, lat: 26.6068, lon: 87.1478, image: inaruwaImg },
+  { name: "Itahari", icon: Home, lat: 26.663, lon: 87.274, image: itahariImg },
+  { name: "Janakpur", icon: Landmark, lat: 26.7288, lon: 85.926, image: janakpurImg },
 ];
 
 const toRad = (v) => (v * Math.PI) / 180;
@@ -240,7 +257,7 @@ const Navbar = () => {
             </button>
 
             {locationOpen && (
-              <div className={`absolute right-0 mt-2 w-[620px] max-w-[85vw] rounded-2xl border p-4 shadow-2xl ${locationPanelClass}`}>
+              <div className={`absolute -right-45 mt-8 w-[1200px] max-w-[85vw] rounded-2xl border p-5 shadow-2xl ${locationPanelClass}`}>
                 <div className="relative">
                   <Search
                     size={16}
@@ -257,7 +274,7 @@ const Navbar = () => {
                   type="button"
                   onClick={detectCurrentLocation}
                   disabled={detectingLocation}
-                  className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-accent hover:underline"
+                  className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-accent hover:underline "
                 >
                   <Crosshair size={14} />
                   {detectingLocation ? "Detecting..." : "Detect my location"}
@@ -268,7 +285,7 @@ const Navbar = () => {
                 <p className="mt-4 text-center text-sm font-semibold text-text-secondary">
                   Popular Cities in Nepal
                 </p>
-                <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-5">
+                <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-7">
                   {filteredCities.map((city) => {
                     const Icon = city.icon;
                     return (
@@ -279,11 +296,20 @@ const Navbar = () => {
                           setSelectedCity(city.name);
                           setLocationOpen(false);
                         }}
-                        className="flex flex-col items-center gap-1 rounded-lg border border-transparent px-2 py-2 text-center text-xs text-text-secondary transition hover:border-white/20 hover:bg-white/5 hover:text-text-primary"
+                        className="flex flex-col items-center gap-0.5 rounded-lg border border-transparent px-1 py-1 text-center text-xs text-text-secondary transition hover:border-white/20 hover:bg-white/5 hover:text-text-primary"
                       >
-                        <span className="rounded-lg bg-black/20 p-2">
-                          <Icon size={20} className={city.name === selectedCity ? "text-accent" : ""} />
-                        </span>
+                        {city.image ? (
+                          <img
+                            src={city.image}
+                            alt={`${city.name} location`}
+                            className="h-20 w-24 rounded-lg object-contain"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <span className="rounded-lg bg-black/20 p-2">
+                            <Icon size={24} className={city.name === selectedCity ? "text-accent" : ""} />
+                          </span>
+                        )}
                         <span className="line-clamp-1">{city.name}</span>
                       </button>
                     );
@@ -496,9 +522,23 @@ const Navbar = () => {
                     setSelectedCity(city.name);
                     setLocationOpen(false);
                   }}
-                  className="flex items-center gap-2 rounded-lg border border-white/10 px-3 py-2 text-sm"
+                  className="flex items-center gap-2 rounded-lg border border-white/10 px-2 py-2 text-sm transition"
                 >
-                  <Icon size={16} className={city.name === selectedCity ? "text-accent" : "text-text-secondary"} />
+                  {city.image ? (
+                    <img
+                      src={city.image}
+                      alt={`${city.name} location`}
+                      className="h-12 w-16 rounded-md object-contain"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <Icon
+                      size={18}
+                      className={`${
+                        city.name === selectedCity ? "text-accent" : "text-text-secondary"
+                      }`}
+                    />
+                  )}
                   <span>{city.name}</span>
                 </button>
               );
