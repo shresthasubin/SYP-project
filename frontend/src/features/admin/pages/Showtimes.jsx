@@ -18,9 +18,18 @@ const toInputTime = (value) => {
 };
 
 const formatTime = (value) => (value ? String(value).slice(0, 5) : "--:--");
+const todayString = () => new Date().toISOString().slice(0, 10);
+
+const defaultStartTime = () => {
+  const now = new Date();
+  now.setMinutes(now.getMinutes() + 30);
+  const hour = String(now.getHours()).padStart(2, "0");
+  const minute = String(Math.ceil(now.getMinutes() / 5) * 5).padStart(2, "0");
+  return `${hour}:${minute === "60" ? "00" : minute}`;
+};
 
 const Showtimes = () => {
-  const { isAuthenticated, loading: authLoading } = useAuth();
+  const { isAuthenticated, loading: authLoading, user } = useAuth();
   const [movies, setMovies] = useState([]);
   const [rooms, setRooms] = useState([]);
   const [showtimes, setShowtimes] = useState([]);
@@ -45,6 +54,7 @@ const Showtimes = () => {
     show_date: "",
     start_time: "",
   });
+  const hasActiveFilters = Boolean(filterMovieId || filterHallroomId || filterDate || query.trim());
 
   const fetchBaseData = async () => {
     try {
@@ -123,6 +133,22 @@ const Showtimes = () => {
   const closeEditModal = () => {
     setEditingShowtime(null);
     setEditForm({ show_date: "", start_time: "" });
+  };
+
+  const openCreateModal = () => {
+    setCreateForm((prev) => ({
+      ...prev,
+      show_date: prev.show_date || todayString(),
+      start_time: prev.start_time || defaultStartTime(),
+    }));
+    setShowCreateModal(true);
+  };
+
+  const clearFilters = () => {
+    setQuery("");
+    setFilterMovieId("");
+    setFilterHallroomId("");
+    setFilterDate("");
   };
 
   const handleCreate = async (e) => {
@@ -204,15 +230,28 @@ const Showtimes = () => {
     });
   }, [query, showtimes]);
 
+  const upcomingCount = useMemo(() => {
+    const today = todayString();
+    return showtimes.filter((item) => (item.show_date || "") >= today).length;
+  }, [showtimes]);
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-white">Showtime Management</h1>
-          <p className="mt-1 text-slate-400">Create, update, and remove movie schedules by hallroom.</p>
+          <p className="mt-1 text-slate-400">
+            {user?.role === "hall-admin"
+              ? "Manage schedules for your hallrooms."
+              : "Create, update, and remove movie schedules by hallroom."}
+          </p>
+          <p className="mt-2 text-xs text-slate-500">
+            Total: {showtimes.length} | Upcoming: {upcomingCount}
+          </p>
         </div>
         <button
-          onClick={() => setShowCreateModal(true)}
+          onClick={openCreateModal}
+          disabled={movies.length === 0 || rooms.length === 0}
           className="flex items-center gap-2 rounded-lg bg-[#D72626] px-4 py-2 font-semibold text-white hover:bg-[#D72626]/90"
         >
           <Plus size={18} />
@@ -220,7 +259,7 @@ const Showtimes = () => {
         </button>
       </div>
 
-      <div className="grid gap-3 md:grid-cols-4">
+      <div className="grid gap-3 md:grid-cols-5">
         <div className="relative md:col-span-2">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={17} />
           <input
@@ -261,6 +300,23 @@ const Showtimes = () => {
           onChange={(e) => setFilterDate(e.target.value)}
           className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white outline-none focus:border-[#D72626]"
         />
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setFilterDate(todayString())}
+            className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-xs font-semibold text-slate-200 hover:border-[#D72626]"
+          >
+            Today
+          </button>
+          <button
+            type="button"
+            onClick={clearFilters}
+            disabled={!hasActiveFilters}
+            className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-xs font-semibold text-slate-200 disabled:opacity-40 hover:border-[#D72626]"
+          >
+            Reset
+          </button>
+        </div>
       </div>
 
       <div className="overflow-x-auto rounded-lg border border-slate-700 bg-slate-950">
@@ -363,6 +419,7 @@ const Showtimes = () => {
                       type="date"
                       value={createForm.show_date}
                       onChange={(e) => setCreateForm((p) => ({ ...p, show_date: e.target.value }))}
+                      min={todayString()}
                       className="w-full rounded-lg border border-slate-700 bg-slate-950 py-2 pl-9 pr-3 text-sm text-white outline-none focus:border-[#D72626]"
                     />
                   </div>
