@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { CalendarDays, Clock3, MapPin, MessageCircle, Star, Ticket } from "lucide-react";
+import { CalendarDays, Clock3, MapPin, MessageCircle, Star, Ticket, X } from "lucide-react";
 import axios from "axios";
+import { toast } from "react-hot-toast";
 import { API_BASE_URL, API_SERVER_URL } from "../../../shared/config/api.js";
 import { useAuth } from "../../../shared/hooks/useAuth.js";
 import LiveChatModal from "../../chat/components/LiveChatModal.jsx";
@@ -33,6 +34,17 @@ const prettyDateChip = (dateKey) => {
 };
 
 const formatTime = (value) => String(value || "").slice(0, 5) || "--:--";
+const sortSeats = (a, b) => {
+  const rowA = Number(a.row) || 0;
+  const rowB = Number(b.row) || 0;
+  if (rowA !== rowB) return rowA - rowB;
+  return (Number(a.column) || 0) - (Number(b.column) || 0);
+};
+const rowToLabel = (rowNumber) => {
+  const n = Number(rowNumber);
+  if (!Number.isFinite(n) || n <= 0) return "?";
+  return String.fromCharCode(64 + n);
+};
 
 export default function MovieDetail() {
   const { id } = useParams();
@@ -44,6 +56,12 @@ export default function MovieDetail() {
   const [activeDate, setActiveDate] = useState("");
   const [chatOpen, setChatOpen] = useState(false);
   const [chatHall, setChatHall] = useState(null);
+  const [bookingOpen, setBookingOpen] = useState(false);
+  const [bookingLoading, setBookingLoading] = useState(false);
+  const [bookingSubmitting, setBookingSubmitting] = useState(false);
+  const [selectedShowtime, setSelectedShowtime] = useState(null);
+  const [availableSeats, setAvailableSeats] = useState([]);
+  const [selectedSeatIds, setSelectedSeatIds] = useState([]);
 
   useEffect(() => {
     let mounted = true;
@@ -127,6 +145,108 @@ export default function MovieDetail() {
     return Array.from(map.values());
   }, [showtimes, activeDate, uniqueDates]);
 
+  const toggleSeatSelection = (seat) => {
+    if (!seat || seat.type !== "seat" || seat.isBooked) return;
+    setSelectedSeatIds((prev) =>
+      prev.includes(seat.id) ? prev.filter((id) => id !== seat.id) : [...prev, seat.id],
+    );
+  };
+
+  const openBookingModal = async (showtimeId) => {
+    const showtime = showtimes.find((item) => item.id === showtimeId);
+    if (!showtime) return;
+
+    if (!isAuthenticated) {
+      window.location.href = "/login";
+      return;
+    }
+
+    try {
+      setBookingLoading(true);
+      setSelectedShowtime(showtime);
+      setSelectedSeatIds([]);
+      setBookingOpen(true);
+
+      const availabilityRes = await axios.get(`${API_BASE_URL}/ticket/availability/${showtimeId}`);
+      const seats = availabilityRes.data?.success ? availabilityRes.data?.data?.seats || [] : [];
+      setAvailableSeats(seats.sort(sortSeats));
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to load seat availability");
+      setBookingOpen(false);
+      setSelectedShowtime(null);
+      setAvailableSeats([]);
+    } finally {
+      setBookingLoading(false);
+    }
+  };
+
+  const closeBookingModal = () => {
+    setBookingOpen(false);
+    setSelectedShowtime(null);
+    setAvailableSeats([]);
+    setSelectedSeatIds([]);
+    setBookingSubmitting(false);
+  };
+
+  const handleBookTickets = async () => {
+    if (!selectedShowtime?.id) return;
+    if (selectedSeatIds.length === 0) {
+      toast.error("Please select at least one seat");
+      return;
+    }
+
+    try {
+      setBookingSubmitting(true);
+      const response = await axios.post(
+        `${API_BASE_URL}/ticket/book/${selectedShowtime.id}`,
+        { seatIds: selectedSeatIds },
+        { withCredentials: true },
+      );
+
+      if (response.data?.success) {
+        toast.success("Tickets booked successfully");
+        closeBookingModal();
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to book tickets");
+    } finally {
+      setBookingSubmitting(false);
+    }
+  };
+
+  const seatRows = useMemo(() => {
+    const rows = new Map();
+    availableSeats.forEach((seat) => {
+      const rowNumber = Number(seat.row) || 0;
+      if (!rows.has(rowNumber)) rows.set(rowNumber, []);
+      rows.get(rowNumber).push(seat);
+    });
+    return Array.from(rows.entries())
+      .sort((a, b) => a[0] - b[0])
+      .map(([rowNumber, seats]) => ({
+        rowNumber,
+        rowLabel: rowToLabel(rowNumber),
+        seats: seats.sort((a, b) => (Number(a.column) || 0) - (Number(b.column) || 0)),
+      }));
+  }, [availableSeats]);
+
+  const selectedSeatObjects = useMemo(
+    () =>
+      availableSeats.filter(
+        (seat) => seat.type === "seat" && selectedSeatIds.includes(seat.id),
+      ),
+    [availableSeats, selectedSeatIds],
+  );
+
+  const estimatedTotal = useMemo(
+    () =>
+      selectedSeatObjects.reduce(
+        (sum, seat) => sum + (seat.seatType === "premium" ? 500 : 300),
+        0,
+      ),
+    [selectedSeatObjects],
+  );
+
   if (loading) {
     return (
       <section className="min-h-[60vh] bg-[#050812] py-20 pt-24">
@@ -181,7 +301,7 @@ export default function MovieDetail() {
                   {movie.releaseDate ? new Date(movie.releaseDate).toLocaleDateString() : "TBA"}
                 </span>
                 <span className="inline-flex items-center gap-2">
-                  <Star size={15} className="text-yellow-300" fill="currentColor" />
+                  <Star size={15} className="text-accent" fill="currentColor" />
                   {Number(movie.rating) || "N/A"}
                 </span>
                 <span className="rounded-full border border-white/20 px-2.5 py-1 text-xs">{genreLabel}</span>
@@ -214,7 +334,7 @@ export default function MovieDetail() {
                     onClick={() => setActiveDate(dateKey)}
                     className={`whitespace-nowrap rounded-lg border px-3 py-2 text-sm transition-colors ${
                       (activeDate || uniqueDates[0]) === dateKey
-                        ? "border-[#f4e451] bg-[#f4e451]/10 text-[#f4e451]"
+                        ? "border-accent bg-accent/10 text-accent"
                         : "border-white/15 bg-black/30 text-slate-300 hover:border-white/35 hover:text-white"
                     }`}
                   >
@@ -253,7 +373,7 @@ export default function MovieDetail() {
                             setChatOpen(true);
                           }}
                           disabled={!group.hallId}
-                          className="inline-flex items-center gap-1 rounded-md border border-[#f4e451]/40 bg-[#f4e451]/10 px-3 py-2 text-xs font-semibold text-[#f4e451] hover:bg-[#f4e451]/20"
+                          className="inline-flex items-center gap-1 rounded-md border border-accent/40 bg-accent/10 px-3 py-2 text-xs font-semibold text-accent hover:bg-accent/20"
                         >
                           <MessageCircle size={14} />
                           Chat with Hall
@@ -265,7 +385,8 @@ export default function MovieDetail() {
                       {group.times.map((time) => (
                         <button
                           key={time.id}
-                          className="rounded border border-white/20 bg-black/25 px-3 py-1.5 text-sm text-white hover:border-[#f4e451] hover:text-[#f4e451]"
+                          onClick={() => openBookingModal(time.id)}
+                          className="rounded border border-white/20 bg-black/25 px-3 py-1.5 text-sm text-white hover:border-accent hover:text-accent"
                         >
                           {time.start}
                         </button>
@@ -278,13 +399,184 @@ export default function MovieDetail() {
           )}
         </div>
 
-        <div className="flex items-center gap-3">
-          <button className="inline-flex items-center gap-2 rounded-md bg-accent px-5 py-3 text-sm font-semibold text-white hover:bg-accent-hover">
-            <Ticket size={16} />
-            Book Tickets
-          </button>
+        <div className="rounded-lg border border-white/10 bg-black/20 p-3 text-sm text-slate-300">
+          Choose any showtime above to select seats and book tickets.
         </div>
       </div>
+
+      {bookingOpen && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-[#040712]/95 pb-8">
+          <div className="mx-auto max-w-7xl px-4 pt-8 md:px-6">
+            <div className="mb-5 overflow-hidden rounded-2xl border border-white/10 bg-[#0a0f20]">
+              <div className="grid gap-4 p-5 md:grid-cols-[1fr_auto] md:items-center">
+                <div>
+                  <h3 className="text-4xl font-bold text-white">{movie?.movie_title || "Movie"}</h3>
+                  <p className="mt-2 text-sm text-slate-300">
+                    {formatDuration(movie?.duration)} | {movie?.genre || "Genre"} | Rating {Number(movie?.rating) || "N/A"}
+                  </p>
+                </div>
+                <div className="flex items-center gap-5 text-sm text-slate-300">
+                  <span className="font-semibold text-accent">Seat</span>
+                  <span>Payment</span>
+                  <span>Ticket</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid gap-5 lg:grid-cols-[320px_1fr_300px]">
+              <aside className="rounded-2xl border border-white/10 bg-[#0a0f20] p-4">
+                <img
+                  src={getPosterUrl(movie?.moviePoster)}
+                  alt={movie?.movie_title || "Movie"}
+                  className="h-[420px] w-full rounded-xl object-cover"
+                />
+                <p className="mt-4 text-lg font-semibold text-white">
+                  {selectedShowtime?.Hallroom?.Hall?.hall_name || "Cinema Hall"}
+                </p>
+                <p className="text-sm text-cyan-300">
+                  {selectedShowtime?.Hallroom?.Hall?.hall_location || "Location unavailable"}
+                </p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <span className="rounded border border-white/20 px-3 py-1 text-xs text-slate-200">
+                    {selectedShowtime?.show_date
+                      ? new Date(selectedShowtime.show_date).toLocaleDateString()
+                      : "--"}
+                  </span>
+                  <span className="rounded border border-white/20 px-3 py-1 text-xs text-slate-200">
+                    {formatTime(selectedShowtime?.start_time)}
+                  </span>
+                </div>
+              </aside>
+
+              <section className="rounded-2xl border border-white/10 bg-[#0a0f20] p-4">
+                <div className="mx-auto mb-6 w-full max-w-2xl rounded-t-[40px] border border-white/20 bg-slate-500/20 py-5 text-center text-lg text-slate-300">
+                  Stage
+                </div>
+
+                {bookingLoading ? (
+                  <div className="rounded-lg border border-white/10 bg-black/20 p-6 text-sm text-slate-300">
+                    Loading seats...
+                  </div>
+                ) : (
+                  <>
+                    <div className="space-y-2 overflow-x-auto pb-2">
+                      {seatRows.map((row) => (
+                        <div key={row.rowNumber} className="flex min-w-max items-center gap-2">
+                          <span className="w-6 text-center text-sm font-semibold text-slate-300">
+                            {row.rowLabel}
+                          </span>
+                          <div className="flex items-center gap-1">
+                            {row.seats.map((seat) => {
+                              if (seat.type === "gap") {
+                                return (
+                                  <span key={seat.id} className="h-6 w-6 rounded-sm border border-transparent" />
+                                );
+                              }
+
+                              const isSelected = selectedSeatIds.includes(seat.id);
+                              const isBooked = Boolean(seat.isBooked);
+                              const seatClass = isBooked
+                                ? "border-slate-600 bg-slate-600/40"
+                                : isSelected
+                                  ? "border-accent bg-accent/90"
+                                  : "border-white/40 bg-white/95";
+
+                              return (
+                                <button
+                                  key={seat.id}
+                                  type="button"
+                                  onClick={() => toggleSeatSelection(seat)}
+                                  disabled={isBooked}
+                                  title={seat.seat_number}
+                                  className={`h-6 w-6 rounded-sm border transition ${seatClass}`}
+                                />
+                              );
+                            })}
+                          </div>
+                          <span className="w-6 text-center text-sm font-semibold text-slate-300">
+                            {row.rowLabel}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="mt-5 flex flex-wrap items-center gap-4 text-xs text-slate-300">
+                      <span className="inline-flex items-center gap-2">
+                        <span className="h-3 w-3 rounded-sm border border-white/40 bg-white/95" />
+                        Available
+                      </span>
+                      <span className="inline-flex items-center gap-2">
+                        <span className="h-3 w-3 rounded-sm border border-slate-600 bg-slate-600/40" />
+                        Reserved
+                      </span>
+                      <span className="inline-flex items-center gap-2">
+                        <span className="h-3 w-3 rounded-sm border border-accent bg-accent" />
+                        Selected
+                      </span>
+                    </div>
+                    <p className="mt-3 text-sm text-cyan-300">
+                      {selectedSeatObjects.length} selected seat
+                      {selectedSeatObjects.length === 1 ? "" : "s"}:{" "}
+                      {selectedSeatObjects.map((seat) => seat.seat_number).join(", ") || "None"}
+                    </p>
+                  </>
+                )}
+              </section>
+
+              <aside className="rounded-2xl border border-white/10 bg-[#0a0f20] p-4">
+                <div className="mb-4 flex items-center justify-between">
+                  <h4 className="text-lg font-semibold text-white">Selected Seats</h4>
+                  <button
+                    onClick={closeBookingModal}
+                    className="rounded-md border border-white/20 p-1.5 text-slate-300 hover:bg-white/10"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+
+                <div className="space-y-2">
+                  {selectedSeatObjects.map((seat) => (
+                    <div
+                      key={seat.id}
+                      className="flex items-center justify-between rounded-lg border border-white/15 px-3 py-2 text-sm text-slate-200"
+                    >
+                      <span>{seat.seat_number}</span>
+                      <span>Rs. {seat.seatType === "premium" ? 500 : 300}</span>
+                    </div>
+                  ))}
+                  {selectedSeatObjects.length === 0 && (
+                    <div className="rounded-lg border border-white/10 px-3 py-2 text-sm text-slate-400">
+                      No seats selected
+                    </div>
+                  )}
+                </div>
+
+                <div className="mt-5 flex items-center justify-between text-base text-white">
+                  <span>Total Payment</span>
+                  <span className="font-bold text-accent">Rs. {estimatedTotal}</span>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleBookTickets}
+                  disabled={bookingSubmitting || selectedSeatIds.length === 0}
+                  className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-md bg-accent px-4 py-3 text-sm font-semibold text-white hover:bg-accent-hover disabled:opacity-60"
+                >
+                  <Ticket size={15} />
+                  {bookingSubmitting ? "Booking..." : "Add to Cart"}
+                </button>
+                <button
+                  type="button"
+                  onClick={closeBookingModal}
+                  className="mt-2 w-full rounded-md border border-white/20 px-4 py-3 text-sm text-slate-200 hover:bg-white/10"
+                >
+                  Cancel
+                </button>
+              </aside>
+            </div>
+          </div>
+        </div>
+      )}
 
       <LiveChatModal
         isOpen={chatOpen}

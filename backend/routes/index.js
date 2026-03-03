@@ -6,6 +6,7 @@ import hallRoomRoute from './hallroom.routes.js'
 import seatRoute from './seat.routes.js'
 import showtimeRoute from './showtime.routes.js'
 import chatRoutes from './chat.routes.js'
+import ticketRoute from './ticket.route.js'
 
 const router = express.Router()
 
@@ -16,5 +17,6 @@ router.use('/hall-room', hallRoomRoute)
 router.use('/seat', seatRoute)
 router.use('/showtime', showtimeRoute)
 router.use('/chat', chatRoutes)
+router.use('/ticket', ticketRoute)
 
 export default router
