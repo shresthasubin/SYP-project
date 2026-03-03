@@ -60,6 +60,374 @@ const NEPALI_CITIES = [
   { name: "Janakpur", icon: Landmark, lat: 26.7288, lon: 85.926, image: janakpurImg },
 ];
 
+const ALL_NEPAL_CITIES = [
+  "Kathmandu",
+  "Lalitpur",
+  "Bharatpur",
+  "Pokhara",
+  "Biratnagar",
+  "Birgunj",
+  "Dharan",
+  "Itahari",
+  "Janakpurdham",
+  "Jitpur Simara",
+  "Kalaiya",
+  "Hetauda",
+  "Butwal",
+  "Ghorahi",
+  "Tulsipur",
+  "Nepalgunj",
+  "Dhangadhi",
+  "Anbu Khaireni",
+  "Baglung",
+  "Baisi",
+  "Bajhang",
+  "Bandipur",
+  "Banepa",
+  "Bangad Kupinde",
+  "Barahathawa",
+  "Barbardiya",
+  "Barhabise",
+  "Barhathawa",
+  "Belauri",
+  "Belbari",
+  "Belkotgadhi",
+  "Belkotgadi",
+  "Beni",
+  "Besisahar",
+  "Bhadrapur",
+  "Bhagawatimai",
+  "Bhajani",
+  "Bhaktapur",
+  "Bhangaha",
+  "Bheri",
+  "Bhimad",
+  "Bhimeshwar",
+  "Bhimsen Thapa",
+  "Bhirkot",
+  "Bhojpur",
+  "Bhojpur M",
+  "Bhumikasthan",
+  "Bideha",
+  "Bidur",
+  "Binayi Triveni",
+  "Birendranagar",
+  "Birgunj M",
+  "Birtamod",
+  "Bodebarsain",
+  "Budhanilkantha",
+  "Budhiganga",
+  "Bungal",
+  "Bungamati",
+  "Byas",
+  "Chainpur",
+  "Chandannath",
+  "Chandragiri",
+  "Chapakot",
+  "Chaurjahari",
+  "Chautara Sangachokgadhi",
+  "Dahachok",
+  "Dakshinkali",
+  "Damak",
+  "Dapcha",
+  "Dasharathchand",
+  "Deumai",
+  "Dhangadhimai",
+  "Dhangadhi M",
+  "Dharan Sub M",
+  "Dhulikhel",
+  "Dhunibeshi",
+  "Diktel Rupakot Majhuwagadhi",
+  "Dipayal Silgadhi",
+  "Dudhouli",
+  "Duhabi",
+  "Dullu",
+  "Gadhimai",
+  "Galkot",
+  "Gaindakot",
+  "Gaur",
+  "Gauradaha",
+  "Ghorahi Sub M",
+  "Godaita",
+  "Godavari",
+  "Gokarneshwar",
+  "Golbazar",
+  "Gorkha",
+  "Gosaikunda",
+  "Gujara",
+  "Gulmi Durbar",
+  "Hanumannagar Kankalini",
+  "Haripur",
+  "Haripurwa",
+  "Hariwan",
+  "Helambu",
+  "Hetauda Sub M",
+  "Ilam",
+  "Inaruwa",
+  "Ishnath",
+  "Jaleshwar",
+  "Janaki",
+  "Jaya Prithvi",
+  "Jiri",
+  "Kabilas",
+  "Kageshwori Manohara",
+  "Kailali",
+  "Kakarbhitta",
+  "Kaligandaki",
+  "Kalika",
+  "Kamalamai",
+  "Kanchanrup",
+  "Kankai",
+  "Kapilvastu",
+  "Karjanha",
+  "Katahariya",
+  "Katari",
+  "Kawasoti",
+  "Khadak",
+  "Khalanga",
+  "Khandachakra",
+  "Khairhani",
+  "Kirtipur",
+  "Kohalpur",
+  "Kolhabi",
+  "Krishnanagar",
+  "Kshireshwarnath",
+  "Kusma",
+  "Lahan",
+  "Lalbandi",
+  "Lamahi",
+  "Lekam",
+  "Lekbeshi",
+  "Loharpatti",
+  "Madhav Narayan",
+  "Madhyapur Thimi",
+  "Madhyabindu",
+  "Madhyanepal",
+  "Madhuwan",
+  "Malarani",
+  "Malangwa",
+  "Mangalsen",
+  "Manthali",
+  "Mayadevi",
+  "Mechinagar",
+  "Melamchi",
+  "Mithila",
+  "Mithila Bihari",
+  "Musikot, Western Rukum",
+  "Musikot, Gulmi",
+  "Muzhila",
+  "Nagarjun",
+  "Nalgad",
+  "Namobuddha",
+  "Narayan",
+  "Narayani",
+  "Narayangarh",
+  "Narayani M",
+  "Nawadurga",
+  "Nepa",
+  "Nepalgunj Sub M",
+  "Nijgadh",
+  "Nilkantha",
+  "Pakhribas",
+  "Palungtar",
+  "Panauti",
+  "Parashuram",
+  "Paroha",
+  "Phidim",
+  "Phungling",
+  "Pokhariya",
+  "Prithvi Narayan",
+  "Pyuthan",
+  "Rajbiraj",
+  "Rajdevi",
+  "Rajpur",
+  "Ramdhuni",
+  "Ramechhap",
+  "Ramgram",
+  "Rapti",
+  "Ratnanagar",
+  "Ratuwamai",
+  "Resunga",
+  "Rolpa",
+  "Ruru",
+  "Sainamaina",
+  "Sandhikharka",
+  "Sankharapur",
+  "Shahidnagar",
+  "Shikhar",
+  "Shivaraj",
+  "Shuklagandaki",
+  "Shuklaphanta",
+  "Simraungadh",
+  "Siraha",
+  "Sitganga",
+  "Sundar Haraicha",
+  "Suryabinayak",
+  "Suryodaya",
+  "Swargadwari",
+  "Tansen",
+  "Tarakeshwar",
+  "Thaha",
+  "Thakurbaba",
+  "Tilottama",
+  "Tokha",
+  "Tribenimunicipality",
+  "Tripura Sundari",
+  "Triveni",
+  "Tulsipur Sub M",
+  "Urlabari",
+  "Waling",
+  "Bhanu",
+  "Bidur M",
+  "Dudhauli",
+  "Aathbiskot",
+  "Balarampur",
+  "Bagchaur",
+  "Bahudarmai",
+  "Bannigadhi Jayagadh",
+  "Barahachhetra",
+  "Belauri M",
+  "Bungal M",
+  "Champadevi",
+  "Chandrapur",
+  "Duhabi M",
+  "Ghodaghodi",
+  "Jaleshwar M",
+  "Jumla",
+  "Kamal",
+  "Khandbari",
+  "Kirtipur M",
+  "Mahakali",
+  "Madhyabindu M",
+  "Mahalaxmi",
+  "Mayadevi M",
+  "Mechinagar M",
+  "Mirchaiya",
+  "Pakriwas",
+  "Phungling (Taplejung)",
+  "Putalibazar",
+  "Rajarani",
+  "Ramnagar",
+  "Rampur",
+  "Shankharapur",
+  "Siddharthanagar",
+  "Siddharthanagar M",
+  "Sitganga M",
+  "Sukhadh",
+  "Surunga",
+  "Tansen M",
+  "Thakurdwara",
+  "Triyuga",
+  "Vyas",
+  "Aathabis",
+  "Aathrai Tribeni",
+  "Agyauli",
+  "Anarmani",
+  "Arghakhanchi",
+  "Arjundhara",
+  "Badimalika",
+  "Bagchaur M",
+  "Baitadi",
+  "Balara",
+  "Bardaghat",
+  "Bardaghat M",
+  "Bardibas",
+  "Barhabise M",
+  "Belaka",
+  "Bhagwati",
+  "Bharatpur M",
+  "Bhimad M",
+  "Bhimdatta",
+  "Bhojpur M (new)",
+  "Birtamod M",
+  "Bode Barsain",
+  "Bodebarsain M",
+  "Buddhabhumi",
+  "Chandannath M",
+  "Damak M",
+  "Devchuli",
+  "Dhangadhi",
+  "Dhulikhel M",
+  "Dhunibeshi M",
+  "Dipayal Silgadhi M",
+  "Gadhawa",
+  "Gaindakot M",
+  "Galkot M",
+  "Ghodaghodi M",
+  "Godawari",
+  "Harion",
+  "Inaruwa M",
+  "Ishwarpur",
+  "Jiri M",
+  "Kamalbazar",
+  "Kanchanpur",
+  "Kankai M",
+  "Kapilvastu M",
+  "Katari M",
+  "Kawasoti M",
+  "Kohalpur M",
+  "Laligurans",
+  "Lamki Chuha",
+  "Mahagadhimai",
+  "Maharajgunj",
+  "Mithila Bihari M",
+  "Nagarjun M",
+  "Nalgad M",
+  "Naugad",
+  "Neelkantha",
+  "Padampur",
+  "Panchkhal",
+  "Paroha M",
+  "Pokhariya M",
+  "Punarbas",
+  "Pyuthan M",
+  "Rajapur",
+  "Rajarani M",
+  "Shadanand",
+  "Shahid Lakhan",
+  "Shikhar M",
+  "Shuklagandaki M",
+  "Siddhakali",
+  "Siddharthanagar Sub M",
+  "Sirijangha",
+  "Sukhad",
+  "Surunga M",
+  "Taplejung",
+  "Thimi",
+  "Tikapur",
+  "Tribeni",
+  "Triveni M",
+  "Tulsipur",
+  "Waling M",
+];
+
+const normalizeCityName = (name) =>
+  name
+    .toLowerCase()
+    .replace(/\(.*?\)/g, " ")
+    .replace(/\bsub\s*m\b/g, " ")
+    .replace(/\bm\b/g, " ")
+    .replace(/municipality/g, " ")
+    .replace(/,/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+const toTitleCase = (name) =>
+  name.replace(/\w\S*/g, (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase());
+
+const PRIMARY_CITY_NAMES = new Set(NEPALI_CITIES.map((city) => normalizeCityName(city.name)));
+const OTHER_NEPALI_CITIES = (() => {
+  const seen = new Set();
+  const list = [];
+  for (const rawCity of ALL_NEPAL_CITIES) {
+    const normalized = normalizeCityName(rawCity);
+    if (!normalized || PRIMARY_CITY_NAMES.has(normalized) || seen.has(normalized)) continue;
+    seen.add(normalized);
+    list.push({ value: toTitleCase(normalized), label: toTitleCase(normalized) });
+  }
+  return list.sort((a, b) => a.label.localeCompare(b.label));
+})();
+
 const toRad = (v) => (v * Math.PI) / 180;
 const haversineKm = (lat1, lon1, lat2, lon2) => {
   const R = 6371;
@@ -71,13 +439,23 @@ const haversineKm = (lat1, lon1, lat2, lon2) => {
   return 2 * R * Math.asin(Math.sqrt(a));
 };
 
+const LOCATION_CITY_STORAGE_KEY = "selected_city";
+const LOCATION_CITY_EVENT = "city-changed";
+const ALL_NEPAL_CITY = "All Nepal";
+
 const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [locationOpen, setLocationOpen] = useState(false);
   const [citySearch, setCitySearch] = useState("");
-  const [selectedCity, setSelectedCity] = useState("Kathmandu");
+  const [selectedCity, setSelectedCity] = useState(() => {
+    try {
+      return localStorage.getItem(LOCATION_CITY_STORAGE_KEY) || "Kathmandu";
+    } catch {
+      return "Kathmandu";
+    }
+  });
   const [detectingLocation, setDetectingLocation] = useState(false);
   const [locationError, setLocationError] = useState("");
   const { isDark, toggleTheme } = useTheme();
@@ -102,6 +480,12 @@ const Navbar = () => {
     const q = citySearch.trim().toLowerCase();
     if (!q) return NEPALI_CITIES;
     return NEPALI_CITIES.filter((city) => city.name.toLowerCase().includes(q));
+  }, [citySearch]);
+
+  const filteredOtherCities = useMemo(() => {
+    const q = citySearch.trim().toLowerCase();
+    if (!q) return OTHER_NEPALI_CITIES;
+    return OTHER_NEPALI_CITIES.filter((city) => city.label.toLowerCase().includes(q));
   }, [citySearch]);
 
   const shellClass = isDark
@@ -168,6 +552,16 @@ const Navbar = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const applySelectedCity = (cityName) => {
+    setSelectedCity(cityName);
+    try {
+      localStorage.setItem(LOCATION_CITY_STORAGE_KEY, cityName);
+      window.dispatchEvent(new CustomEvent(LOCATION_CITY_EVENT, { detail: { city: cityName } }));
+    } catch {
+      // no-op if storage/events are unavailable
+    }
+  };
+
   const detectCurrentLocation = () => {
     setLocationError("");
     if (!navigator.geolocation) {
@@ -190,7 +584,7 @@ const Navbar = () => {
           }
         }
 
-        setSelectedCity(nearest.name);
+        applySelectedCity(nearest.name);
         setLocationOpen(false);
         setDetectingLocation(false);
       },
@@ -257,7 +651,7 @@ const Navbar = () => {
             </button>
 
             {locationOpen && (
-              <div className={`absolute -right-45 mt-8 w-[1200px] max-w-[85vw] rounded-2xl border p-5 shadow-2xl ${locationPanelClass}`}>
+              <div className={`absolute -right-55 mt-8 w-[1280px] max-w-[92vw] rounded-2xl border p-4 shadow-2xl ${locationPanelClass}`}>
                 <div className="relative">
                   <Search
                     size={16}
@@ -279,6 +673,17 @@ const Navbar = () => {
                   <Crosshair size={14} />
                   {detectingLocation ? "Detecting..." : "Detect my location"}
                 </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    applySelectedCity(ALL_NEPAL_CITY);
+                    setLocationOpen(false);
+                  }}
+                  className="ml-4 mt-3 inline-flex items-center gap-2 text-sm font-semibold text-accent hover:underline"
+                >
+                  <MapPin size={14} />
+                  Show halls all over Nepal
+                </button>
                 {locationError ? (
                   <p className="mt-2 text-xs text-rose-400">{locationError}</p>
                 ) : null}
@@ -293,7 +698,7 @@ const Navbar = () => {
                         key={city.name}
                         type="button"
                         onClick={() => {
-                          setSelectedCity(city.name);
+                          applySelectedCity(city.name);
                           setLocationOpen(false);
                         }}
                         className="flex flex-col items-center gap-0.5 rounded-lg border border-transparent px-1 py-1 text-center text-xs text-text-secondary transition hover:border-white/20 hover:bg-white/5 hover:text-text-primary"
@@ -315,6 +720,27 @@ const Navbar = () => {
                     );
                   })}
                 </div>
+                <p className="mt-4 text-center text-sm font-semibold text-text-secondary">
+                  Other Cities in Nepal
+                </p>
+                <div className="mt-2 max-h-36 overflow-y-auto rounded-lg border border-white/10 p-2">
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
+                    {filteredOtherCities.map((city) => (
+                    <button
+                      key={city.value}
+                      type="button"
+                      onClick={() => {
+                        applySelectedCity(city.value);
+                        setLocationOpen(false);
+                      }}
+                      className="rounded-md border border-white/20 px-2 py-1 text-left text-xs font-medium text-text-secondary transition hover:border-accent hover:text-text-primary"
+                    >
+                      {city.label}
+                    </button>
+                    ))}
+                  </div>
+                </div>
+               
               </div>
             )}
           </div>
@@ -508,6 +934,17 @@ const Navbar = () => {
             <Crosshair size={14} />
             {detectingLocation ? "Detecting..." : "Detect my location"}
           </button>
+          <button
+            type="button"
+            onClick={() => {
+              applySelectedCity(ALL_NEPAL_CITY);
+              setLocationOpen(false);
+            }}
+            className="ml-4 mt-3 inline-flex items-center gap-2 text-sm font-semibold text-accent hover:underline"
+          >
+            <MapPin size={14} />
+            Show halls all over Nepal
+          </button>
           {locationError ? (
             <p className="mt-2 text-xs text-rose-400">{locationError}</p>
           ) : null}
@@ -519,7 +956,7 @@ const Navbar = () => {
                   key={city.name}
                   type="button"
                   onClick={() => {
-                    setSelectedCity(city.name);
+                    applySelectedCity(city.name);
                     setLocationOpen(false);
                   }}
                   className="flex items-center gap-2 rounded-lg border border-white/10 px-2 py-2 text-sm transition"
@@ -543,6 +980,29 @@ const Navbar = () => {
                 </button>
               );
             })}
+          </div>
+          <p className="mt-4 text-center text-sm font-semibold text-text-secondary">
+            Other Cities in Nepal
+          </p>
+          <div className="mt-2 max-h-40 overflow-y-auto rounded-lg border border-white/10 p-2">
+            <div className="grid grid-cols-2 gap-2">
+              {filteredOtherCities.map((city) => (
+              <button
+                key={city.value}
+                type="button"
+                onClick={() => {
+                  applySelectedCity(city.value);
+                  setLocationOpen(false);
+                }}
+                className="rounded-md border border-white/20 px-2 py-1 text-left text-xs font-medium text-text-secondary transition hover:border-accent hover:text-text-primary"
+              >
+                {city.label}
+              </button>
+              ))}
+            </div>
+          </div>
+          <div className="mt-3 flex justify-center">
+          
           </div>
         </div>
       )}

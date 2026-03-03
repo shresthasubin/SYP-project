@@ -9,6 +9,9 @@ import LiveChatModal from "../../features/chat/components/LiveChatModal.jsx";
 
 const FALLBACK_HALL_IMAGE =
   "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=1400&auto=format&fit=crop";
+const LOCATION_CITY_STORAGE_KEY = "selected_city";
+const LOCATION_CITY_EVENT = "city-changed";
+const ALL_NEPAL_CITY = "All Nepal";
 
 const getHallPosterUrl = (poster) => {
   if (!poster) return FALLBACK_HALL_IMAGE;
@@ -23,6 +26,13 @@ const Halls = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [chatHall, setChatHall] = useState(null);
+  const [selectedCity, setSelectedCity] = useState(() => {
+    try {
+      return localStorage.getItem(LOCATION_CITY_STORAGE_KEY) || "Kathmandu";
+    } catch {
+      return "Kathmandu";
+    }
+  });
 
   useEffect(() => {
     const fetchHalls = async () => {
@@ -44,17 +54,51 @@ const Halls = () => {
     fetchHalls();
   }, []);
 
+  useEffect(() => {
+    const syncFromStorage = () => {
+      try {
+        setSelectedCity(localStorage.getItem(LOCATION_CITY_STORAGE_KEY) || "Kathmandu");
+      } catch {
+        setSelectedCity("Kathmandu");
+      }
+    };
+
+    const handleCityChange = (event) => {
+      const nextCity = event?.detail?.city;
+      if (typeof nextCity === "string" && nextCity.trim()) {
+        setSelectedCity(nextCity);
+        return;
+      }
+      syncFromStorage();
+    };
+
+    window.addEventListener("storage", syncFromStorage);
+    window.addEventListener(LOCATION_CITY_EVENT, handleCityChange);
+    return () => {
+      window.removeEventListener("storage", syncFromStorage);
+      window.removeEventListener(LOCATION_CITY_EVENT, handleCityChange);
+    };
+  }, []);
+
   const filteredHalls = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return halls;
-    return halls.filter((hall) =>
-      [hall.hall_name, hall.hall_location, hall.hall_contact]
+    const selectedCityQuery = selectedCity.trim().toLowerCase();
+    const isAllNepal = selectedCityQuery === ALL_NEPAL_CITY.toLowerCase();
+
+    return halls.filter((hall) => {
+      const hallLocation = (hall.hall_location || "").toLowerCase();
+      const matchesSelectedCity = isAllNepal || !selectedCityQuery || hallLocation.includes(selectedCityQuery);
+
+      if (!matchesSelectedCity) return false;
+      if (!q) return true;
+
+      return [hall.hall_name, hall.hall_location, hall.hall_contact]
         .filter(Boolean)
         .join(" ")
         .toLowerCase()
-        .includes(q),
-    );
-  }, [halls, search]);
+        .includes(q);
+    });
+  }, [halls, search, selectedCity]);
 
   const openHallChat = (hall) => {
     if (!isAuthenticated) {
@@ -87,6 +131,9 @@ const Halls = () => {
               className="w-full rounded-xl border border-white/10 bg-secondary py-2.5 pl-9 pr-3 text-sm text-text-primary outline-none focus:border-accent"
             />
           </div>
+          <p className="mt-2 text-xs text-text-secondary">
+            Showing halls in: <span className="font-semibold text-text-primary">{selectedCity}</span>
+          </p>
         </div>
 
         {loading ? (
