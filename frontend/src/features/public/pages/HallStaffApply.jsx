@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { Armchair, CheckCircle2, AlertCircle } from "lucide-react";
+import { Armchair, CheckCircle2, AlertCircle, Building2, MapPin, LayoutGrid, Upload } from "lucide-react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import { API_BASE_URL } from "../../../shared/config/api.js";
@@ -295,10 +295,25 @@ const HallStaffApply = () => {
 
   return (
     <section className="container mx-auto max-w-6xl px-6 py-10 text-text-primary">
-      <h1 className="text-3xl font-bold">Hall Staff Application</h1>
-      <p className="mt-2 text-sm text-slate-300">
-        Complete all phases with validation checks before submission.
-      </p>
+      <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-secondary p-6 md:p-8">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(229,9,20,0.18),transparent_45%)]" />
+        <div className="relative flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p className="mb-2 inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-accent">
+              <Building2 size={14} />
+              Partner Onboarding
+            </p>
+            <h1 className="text-3xl font-bold md:text-4xl">Hall Staff Application</h1>
+            <p className="mt-2 text-sm text-slate-300">
+              Join our system with your hall. Complete all phases with validation checks before submission.
+            </p>
+          </div>
+          <div className="rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm">
+            <p className="text-slate-400">Applying as</p>
+            <p className="font-semibold text-white">{user?.fullname || user?.email || "User"}</p>
+          </div>
+        </div>
+      </div>
 
       <div className="mt-6 rounded-xl border border-white/10 bg-black/30 p-4">
         <div className="mb-2 flex items-center justify-between text-xs">
@@ -311,12 +326,14 @@ const HallStaffApply = () => {
             style={{ width: `${progress}%` }}
           />
         </div>
-        <div className="mt-3 flex gap-2 text-xs">
+        <div className="mt-3 flex flex-wrap gap-2 text-xs">
           {stepMeta.map((s) => (
             <span
               key={s.id}
               className={`rounded-full border px-3 py-1 ${
-                s.id === step
+                s.id < step
+                  ? "border-emerald-500/30 bg-emerald-500/15 text-emerald-300"
+                  : s.id === step
                   ? "border-accent bg-accent/20 text-accent"
                   : "border-white/15 text-slate-300"
               }`}
@@ -330,6 +347,8 @@ const HallStaffApply = () => {
       {step === 1 && (
         <div className="mt-6 space-y-4 rounded-2xl border border-white/10 bg-black/30 p-6">
           <h2 className="text-xl font-semibold">Phase 1: Hall Details</h2>
+          <div>
+            <label className="mb-1 block text-sm text-slate-300">Hall Name</label>
           <input
             value={hall.hall_name}
             onChange={(e) => setHall((p) => ({ ...p, hall_name: e.target.value }))}
@@ -339,7 +358,10 @@ const HallStaffApply = () => {
           {step1Errors.hall_name ? (
             <p className="text-xs text-rose-300">{step1Errors.hall_name}</p>
           ) : null}
+          </div>
 
+          <div>
+            <label className="mb-1 block text-sm text-slate-300">Hall Contact</label>
           <input
             value={hall.hall_contact}
             onChange={(e) => setHall((p) => ({ ...p, hall_contact: e.target.value }))}
@@ -350,7 +372,10 @@ const HallStaffApply = () => {
           {step1Errors.hall_contact ? (
             <p className="text-xs text-rose-300">{step1Errors.hall_contact}</p>
           ) : null}
+          </div>
 
+          <div>
+            <label className="mb-1 block text-sm text-slate-300">License Number</label>
           <input
             value={hall.license}
             onChange={(e) => setHall((p) => ({ ...p, license: e.target.value }))}
@@ -361,15 +386,28 @@ const HallStaffApply = () => {
           {step1Errors.license ? (
             <p className="text-xs text-rose-300">{step1Errors.license}</p>
           ) : null}
+          </div>
 
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) =>
-              setHall((p) => ({ ...p, hallPoster: e.target.files?.[0] || null }))
-            }
-            className="w-full rounded-lg border border-white/15 bg-black/40 px-4 py-3 file:mr-3 file:rounded file:border-0 file:bg-accent file:px-3 file:py-1 file:text-white"
-          />
+          <div>
+            <label className="mb-1 block text-sm text-slate-300">Hall Poster (Optional)</label>
+            <div className="rounded-lg border border-white/15 bg-black/40 px-4 py-3">
+              <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-accent/40 bg-accent/10 px-3 py-1.5 text-xs font-semibold text-accent">
+                <Upload size={14} />
+                Upload Image
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) =>
+                    setHall((p) => ({ ...p, hallPoster: e.target.files?.[0] || null }))
+                  }
+                  className="hidden"
+                />
+              </label>
+              <p className="mt-2 text-xs text-slate-400">
+                {hall.hallPoster ? `Selected: ${hall.hallPoster.name}` : "No image selected"}
+              </p>
+            </div>
+          </div>
 
           <button
             onClick={goToStep2}
@@ -382,7 +420,10 @@ const HallStaffApply = () => {
 
       {step === 2 && (
         <div className="mt-6 space-y-4 rounded-2xl border border-white/10 bg-black/30 p-6">
-          <h2 className="text-xl font-semibold">Phase 2: Hall Location</h2>
+          <h2 className="inline-flex items-center gap-2 text-xl font-semibold">
+            <MapPin size={18} className="text-accent" />
+            Phase 2: Hall Location
+          </h2>
           <input
             value={hall.hall_location}
             onChange={(e) => setHall((p) => ({ ...p, hall_location: e.target.value }))}
@@ -420,7 +461,10 @@ const HallStaffApply = () => {
       {step === 3 && (
         <div className="mt-6 rounded-2xl border border-white/10 bg-black/30 p-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold">Phase 3: Hall Rooms</h2>
+            <h2 className="inline-flex items-center gap-2 text-xl font-semibold">
+              <LayoutGrid size={18} className="text-accent" />
+              Phase 3: Hall Rooms
+            </h2>
             <button
               onClick={addRoom}
               className="rounded-md border border-accent px-3 py-2 text-sm text-accent"
@@ -440,6 +484,9 @@ const HallStaffApply = () => {
               const errors = step3Errors[idx] || {};
               return (
                 <div key={idx} className="rounded-lg border border-white/10 p-4">
+                  <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                    Room {idx + 1}
+                  </p>
                   <div className="grid gap-3 md:grid-cols-3">
                     <div>
                       <input
@@ -525,6 +572,14 @@ const HallStaffApply = () => {
           <p className="mt-1 text-sm text-slate-300">
             Click a seat to mark it blocked/empty.
           </p>
+          <div className="mt-3 flex flex-wrap gap-3 text-xs">
+            <span className="inline-flex items-center gap-1 rounded-full border border-pink-400/30 bg-pink-400/10 px-3 py-1 text-pink-300">
+              <Armchair size={12} /> Available
+            </span>
+            <span className="inline-flex items-center gap-1 rounded-full border border-slate-500/30 bg-slate-500/10 px-3 py-1 text-slate-300">
+              <Armchair size={12} /> Blocked
+            </span>
+          </div>
 
           {step4Error ? (
             <div className="mt-4 rounded-lg border border-rose-500/40 bg-rose-500/10 p-3 text-sm text-rose-200">
