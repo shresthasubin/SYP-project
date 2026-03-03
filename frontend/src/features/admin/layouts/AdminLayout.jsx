@@ -17,8 +17,13 @@ const AdminLayout = () => {
   useEffect(() => {
     if (!loading && !isAuthenticated) {
       navigate("/login");
+      return;
     }
-  }, [isAuthenticated, loading, navigate]);
+
+    if (!loading && isAuthenticated && user?.role !== "admin") {
+      navigate(user?.role === "hall-admin" ? "/halladmin" : "/");
+    }
+  }, [isAuthenticated, loading, navigate, user]);
 
   if (loading) {
     return (
@@ -28,7 +33,7 @@ const AdminLayout = () => {
     );
   }
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || user?.role !== "admin") {
     return null;
   }
 

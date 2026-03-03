@@ -98,6 +98,13 @@ const hallRegister = async (req, res) => {
       });
     }
 
+    if (req.user?.role === "hall-admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Hall admins cannot register new halls",
+      });
+    }
+
     const existingHall = await Hall.findOne({
       where: {
         [Op.or]: [{ hall_name }, { hall_contact }, { license }],
@@ -231,6 +238,22 @@ const hallUpdate = async (req, res) => {
       });
     }
 
+    if (req.user?.role === "hall-admin") {
+      if (!req.user.license) {
+        return res.status(403).json({
+          success: false,
+          message: "Hall admin does not have an assigned license",
+        });
+      }
+
+      if (hall.license !== req.user.license) {
+        return res.status(403).json({
+          success: false,
+          message: "Not authorized to update this hall",
+        });
+      }
+    }
+
     const {
       hall_name,
       hall_location,
@@ -268,7 +291,19 @@ const hallUpdate = async (req, res) => {
 
 const hallGet = async (req, res) => {
   try {
-    const halls = await Hall.findAll();
+    const where = {};
+
+    if (req.user?.role === "hall-admin") {
+      if (!req.user.license) {
+        return res.status(403).json({
+          success: false,
+          message: "Hall admin does not have an assigned license",
+        });
+      }
+      where.license = req.user.license;
+    }
+
+    const halls = await Hall.findAll({ where });
 
     res.status(200).json({
       success: true,

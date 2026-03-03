@@ -101,11 +101,7 @@ export default function Landing() {
       <Hero />
       <MovieCalendar />
 
-      <MovieRail
-        title="Currently In Cinemas"
-        subtitle="Discover what is playing near your location today."
-        movies={NOW_SHOWING}
-      />
+      
       <MovieRail
         title="Coming Soon"
         subtitle="Get ready for upcoming releases and advanced bookings."

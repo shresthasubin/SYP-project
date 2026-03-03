@@ -3,6 +3,19 @@ import Hallroom from "../model/hallroom.model.js";
 import Movie from "../model/movie.model.js";
 import Showtime from "../model/showtime.model.js";
 
+const logShowtimeError = (scope, req, err) => {
+  console.error(`[showtime:${scope}]`, {
+    message: err?.message,
+    stack: err?.stack,
+    params: req?.params,
+    query: req?.query,
+    body: req?.body,
+    user: req?.user
+      ? { id: req.user.id, role: req.user.role, license: req.user.license }
+      : null,
+  });
+};
+
 const timeToMinute = (timeString) => {
   if (!timeString || typeof timeString !== "string") return null;
   const [hourStr, minuteStr] = timeString.split(":");
@@ -102,9 +115,42 @@ const createShowtime = async (req, res) => {
         success: false,
         message: "Show date and start time must be defined"
       })
-    } 
-    
-    const end_time = minuteToTime(timeToMinute(start_time) + movie.duration)
+    }
+
+    if (!isValidDateOnly(show_date)) {
+      return res.status(400).json({
+        success: false,
+        message: "show_date must be in YYYY-MM-DD format",
+      });
+    }
+
+    const startMinute = timeToMinute(start_time);
+    const duration = Number(movie.duration);
+    const endMinute = startMinute + duration;
+
+    if (endMinute > 24 * 60) {
+      return res.status(400).json({
+        success: false,
+        message: "Showtime cannot cross to next day",
+      });
+    }
+
+    const existingShowtimes = await Showtime.findAll({
+      where: { hallroom_id: hallroomId, show_date },
+    });
+
+    const conflict = existingShowtimes.find((s) => {
+      const sStart = timeToMinute(String(s.start_time));
+      const sEnd = timeToMinute(String(s.end_time));
+      return overlaps(startMinute, endMinute, sStart, sEnd);
+    });
+
+    if (conflict) {
+      return res.status(409).json({
+        success: false,
+        message: "Showtime overlaps with another showtime in this hallroom",
+      });
+    }
       
     const showtime = await Showtime.create({
       show_date,
@@ -124,6 +170,7 @@ const createShowtime = async (req, res) => {
       data: populated,
     });
   } catch (err) {
+    logShowtimeError("create", req, err);
     return res.status(500).json({
       success: false,
       error: err.message,
@@ -231,6 +278,7 @@ const updateShowTime = async (req, res) => {
       data: updated,
     });
   } catch (err) {
+    logShowtimeError("update", req, err);
     return res.status(500).json({
       success: false,
       error: err.message,
@@ -260,6 +308,7 @@ const getShowtimes = async (req, res) => {
 
     return res.status(200).json({ success: true, data: showtimes });
   } catch (err) {
+    logShowtimeError("getAll", req, err);
     return res.status(500).json({ success: false, error: err.message });
   }
 };
@@ -293,6 +342,7 @@ const getShowtimesByMovie = async (req, res) => {
       data: showtime,
     });
   } catch (err) {
+    logShowtimeError("getByMovie", req, err);
     return res.status(500).json({
       success: false,
       error: err.message,
@@ -332,6 +382,7 @@ const getShowtimesByHallroom = async (req, res) => {
       data: showtime,
     });
   } catch (err) {
+    logShowtimeError("getByHallroom", req, err);
     return res.status(500).json({
       success: false,
       error: err.message,
@@ -369,6 +420,7 @@ const getShowtimeById = async (req, res) => {
       data: showtime,
     });
   } catch (err) {
+    logShowtimeError("getById", req, err);
     return res.status(500).json({
       success: false,
       error: err.message,
@@ -414,6 +466,7 @@ const deleteShowtime = async (req, res) => {
       data: { id: showtimeId },
     });
   } catch (err) {
+    logShowtimeError("delete", req, err);
     return res.status(500).json({
       success: false,
       error: err.message,

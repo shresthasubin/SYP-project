@@ -572,7 +572,7 @@ const options = {
       "/api/showtime/create-showtime/{movieId}/{hallroomId}": {
         post: {
           tags: ["Showtime"],
-          summary: "Create showtime (admin only)",
+          summary: "Create showtime (admin/hall-admin)",
           security: [{ bearerAuth: [] }],
           parameters: [
             {
@@ -596,13 +596,18 @@ const options = {
               },
             },
           },
-          responses: { 201: { description: "Showtime created" } },
+          responses: {
+            201: { description: "Showtime created" },
+            400: { description: "Validation error" },
+            403: { description: "Forbidden for hall-admin outside own hall" },
+            409: { description: "Showtime overlap conflict" },
+          },
         },
       },
       "/api/showtime/update-showtime/{showtimeId}": {
         put: {
           tags: ["Showtime"],
-          summary: "Update showtime (admin only)",
+          summary: "Update showtime (admin/hall-admin)",
           security: [{ bearerAuth: [] }],
           parameters: [
             {
@@ -620,37 +625,48 @@ const options = {
               },
             },
           },
-          responses: { 200: { description: "Showtime updated" } },
+          responses: {
+            200: { description: "Showtime updated" },
+            400: { description: "Validation error" },
+            403: { description: "Forbidden for hall-admin outside own hall" },
+            404: { description: "Showtime not found" },
+            409: { description: "Showtime overlap conflict" },
+          },
         },
       },
       "/api/showtime/get": {
         get: {
           tags: ["Showtime"],
-          summary: "Get all showtimes",
+          summary: "Get showtimes (admin/hall-admin)",
+          security: [{ bearerAuth: [] }],
+          parameters: [
+            {
+              name: "movieId",
+              in: "query",
+              required: false,
+              schema: { type: "integer" },
+            },
+            {
+              name: "hallroomId",
+              in: "query",
+              required: false,
+              schema: { type: "integer" },
+            },
+            {
+              name: "showDate",
+              in: "query",
+              required: false,
+              schema: { type: "string", format: "date" },
+            },
+          ],
           responses: { 200: { description: "Showtimes list" } },
         },
       },
-      "/api/showtime/get/{id}": {
+      "/api/showtime/get/{showtimeId}": {
         get: {
           tags: ["Showtime"],
-          summary: "Get showtimes by hallroom or movie id",
-          description:
-            "Current backend defines both `/get/:hallroomId` and `/get/:movieId`, which overlap. This endpoint represents that current behavior.",
-          parameters: [
-            {
-              name: "id",
-              in: "path",
-              required: true,
-              schema: { type: "integer" },
-            },
-          ],
-          responses: { 200: { description: "Showtimes list by id" } },
-        },
-      },
-      "/api/showtime/delete/{showtimeId}": {
-        get: {
-          tags: ["Showtime"],
-          summary: "Delete showtime",
+          summary: "Get showtime by id (admin/hall-admin)",
+          security: [{ bearerAuth: [] }],
           parameters: [
             {
               name: "showtimeId",
@@ -659,7 +675,61 @@ const options = {
               schema: { type: "integer" },
             },
           ],
-          responses: { 200: { description: "Showtime deleted" } },
+          responses: {
+            200: { description: "Showtime details" },
+            404: { description: "Showtime not found" },
+          },
+        },
+      },
+      "/api/showtime/movie/{movieId}": {
+        get: {
+          tags: ["Showtime"],
+          summary: "Get showtimes by movie id",
+          parameters: [
+            {
+              name: "movieId",
+              in: "path",
+              required: true,
+              schema: { type: "integer" },
+            },
+          ],
+          responses: { 200: { description: "Showtimes list for movie" } },
+        },
+      },
+      "/api/showtime/hallroom/{hallroomId}": {
+        get: {
+          tags: ["Showtime"],
+          summary: "Get showtimes by hallroom id (admin/hall-admin)",
+          security: [{ bearerAuth: [] }],
+          parameters: [
+            {
+              name: "hallroomId",
+              in: "path",
+              required: true,
+              schema: { type: "integer" },
+            },
+          ],
+          responses: { 200: { description: "Showtimes list for hallroom" } },
+        },
+      },
+      "/api/showtime/delete/{showtimeId}": {
+        delete: {
+          tags: ["Showtime"],
+          summary: "Delete showtime (admin/hall-admin)",
+          security: [{ bearerAuth: [] }],
+          parameters: [
+            {
+              name: "showtimeId",
+              in: "path",
+              required: true,
+              schema: { type: "integer" },
+            },
+          ],
+          responses: {
+            200: { description: "Showtime deleted" },
+            403: { description: "Forbidden for hall-admin outside own hall" },
+            404: { description: "Showtime not found" },
+          },
         },
       },
       "/api/chat/start": {

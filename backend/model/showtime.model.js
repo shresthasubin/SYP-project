@@ -12,17 +12,15 @@ const Showtime = sequelize.define(
     movie_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      field: "MovieId",
     },
     hallroom_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      field: "HallroomId",
     },
   },
   {
     timestamps: false,
-  }
+  },
 );
 
 Movie.hasMany(Showtime, { foreignKey: "movie_id" });
