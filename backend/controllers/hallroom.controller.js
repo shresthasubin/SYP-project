@@ -53,9 +53,9 @@ const createRoom = async (req, res) => {
 
         const room = await Hallroom.create({
             roomName,
-            totalRows: rows,
-            totalColumns: columns,
-            capacity: rows * columns,
+            totalRows: rowsInt,
+            totalColumns: columnsInt,
+            capacity: rowsInt * columnsInt,
             hall_id: hallId
         })
 
