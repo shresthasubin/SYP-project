@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { CalendarDays, Clock3, Heart, MapPin, MessageCircle, Play, Star, Ticket } from "lucide-react";
 import { toast } from "react-hot-toast";
@@ -14,8 +14,19 @@ export default function MovieDetailPanel({
   onOpenChat,
   formatDuration,
   getPosterUrl,
+  getCastImageUrl,
+  getTrailerUrl,
   prettyDateChip,
 }) {
+  const [isTrailerOpen, setIsTrailerOpen] = useState(false);
+  const castNames = Array.isArray(movie.casts)
+    ? movie.casts
+    : typeof movie.casts === "string"
+      ? movie.casts.split(",").map((item) => item.trim()).filter(Boolean)
+      : [];
+  const castImages = Array.isArray(movie.castImages) ? movie.castImages : [];
+  const trailerUrl = getTrailerUrl(movie.movieTrailer);
+
   return (
     <>
       <div className="relative h-[500px] overflow-hidden border-b border-white/10">
@@ -49,7 +60,17 @@ export default function MovieDetailPanel({
             <div className="relative h-48 w-80 overflow-hidden rounded border-2 border-white/10 bg-black">
               <img src={getPosterUrl(movie.moviePoster)} alt="Trailer cover" className="h-full w-full object-cover opacity-60" />
               <div className="absolute inset-0 flex items-center justify-center">
-                <button type="button" className="rounded-full bg-[#e8001c] p-4 text-white shadow-[0_0_24px_rgba(232,0,28,0.35)]">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!trailerUrl) {
+                      toast.error("Trailer is not available");
+                      return;
+                    }
+                    setIsTrailerOpen(true);
+                  }}
+                  className="rounded-full bg-[#e8001c] p-4 text-white shadow-[0_0_24px_rgba(232,0,28,0.35)]"
+                >
                   <Play size={20} fill="currentColor" />
                 </button>
               </div>
@@ -58,6 +79,27 @@ export default function MovieDetailPanel({
           </div>
         </div>
       </div>
+
+      {isTrailerOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4">
+          <div className="relative w-full max-w-4xl rounded-lg border border-white/10 bg-black p-3">
+            <button
+              type="button"
+              onClick={() => setIsTrailerOpen(false)}
+              className="mb-3 rounded border border-white/20 px-3 py-1 text-xs text-white hover:bg-white/10"
+            >
+              Close
+            </button>
+            <video
+              key={trailerUrl}
+              controls
+              autoPlay
+              className="h-full max-h-[70vh] w-full rounded bg-black"
+              src={trailerUrl}
+            />
+          </div>
+        </div>
+      )}
 
       <div className="border-b border-white/10 bg-[#111111]">
         <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 md:px-6 lg:grid-cols-[1fr_260px]">
@@ -77,9 +119,22 @@ export default function MovieDetailPanel({
               </div>
               <div>
                 <p className="text-[11px] uppercase tracking-[0.16em] text-gray-500">Casts</p>
-                <p className="mt-1 text-gray-300">
-                  {Array.isArray(movie.casts) ? movie.casts.join(", ") : movie.casts || "Not available"}
-                </p>
+                {castNames.length === 0 ? (
+                  <p className="mt-1 text-gray-300">Not available</p>
+                ) : (
+                  <div className="mt-2 flex flex-wrap gap-3">
+                    {castNames.map((name, index) => (
+                      <div key={`${name}-${index}`} className="flex items-center gap-2 rounded border border-white/10 bg-black/30 px-2 py-1">
+                        <img
+                          src={getCastImageUrl(castImages[index])}
+                          alt={name}
+                          className="h-8 w-8 rounded-full object-cover"
+                        />
+                        <span className="text-xs text-gray-300">{name}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>

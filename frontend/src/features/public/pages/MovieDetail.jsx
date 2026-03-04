@@ -24,6 +24,18 @@ const getPosterUrl = (moviePoster) => {
   return `${API_SERVER_URL}/uploads/${moviePoster}`;
 };
 
+const getCastImageUrl = (castImage) => {
+  if (!castImage) return "https://placehold.co/120x120?text=Cast";
+  if (String(castImage).startsWith("http")) return castImage;
+  return `${API_SERVER_URL}/uploads/${castImage}`;
+};
+
+const getTrailerUrl = (movieTrailer) => {
+  if (!movieTrailer) return "";
+  if (String(movieTrailer).startsWith("http")) return movieTrailer;
+  return `${API_SERVER_URL}/uploads/${movieTrailer}`;
+};
+
 const toDateKey = (dateLike) => {
   const d = new Date(dateLike);
   if (Number.isNaN(d.getTime())) return "";
@@ -386,6 +398,8 @@ export default function MovieDetail() {
         onOpenChat={handleOpenChat}
         formatDuration={formatDuration}
         getPosterUrl={getPosterUrl}
+        getCastImageUrl={getCastImageUrl}
+        getTrailerUrl={getTrailerUrl}
         prettyDateChip={prettyDateChip}
       />
 
