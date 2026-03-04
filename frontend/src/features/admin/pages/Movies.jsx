@@ -25,6 +25,9 @@ const Movies = () => {
   const [formData, setFormData] = useState({
     movie_title: "",
     description: "",
+    director: "",
+    writer: "",
+    casts: "",
     genre: "",
     duration: "",
     moviePoster: null,
@@ -67,6 +70,9 @@ const Movies = () => {
     const data = new FormData();
     data.append("movie_title", formData.movie_title);
     data.append("description", formData.description);
+    data.append("director", formData.director);
+    data.append("writer", formData.writer);
+    data.append("casts", formData.casts);
     data.append("genre", formData.genre);
     data.append("duration", formData.duration);
     if (formData.moviePoster) data.append("moviePoster", formData.moviePoster);
@@ -117,7 +123,10 @@ const Movies = () => {
     setFormData({
       movie_title: movie.movie_title,
       description: movie.description,
-      genre: movie.genre,
+      director: movie.director || "",
+      writer: movie.writer || "",
+      casts: Array.isArray(movie.casts) ? movie.casts.join(", ") : movie.casts || "",
+      genre: Array.isArray(movie.genre) ? movie.genre.join(", ") : movie.genre || "",
       duration: movie.duration,
       moviePoster: null, // Reset files on edit
       movieTrailer: null,
@@ -129,6 +138,9 @@ const Movies = () => {
     setFormData({
       movie_title: "",
       description: "",
+      director: "",
+      writer: "",
+      casts: "",
       genre: "",
       duration: "",
       moviePoster: null,
@@ -236,9 +248,10 @@ const Movies = () => {
                         <div>
                           <p className="font-medium text-white">
                             {movie.movie_title}
-                            
                           </p>
-                          
+                          <p className="text-xs text-slate-400">
+                            Director: {movie.director || "N/A"}
+                          </p>
                         </div>
                       </div>
                     </td>
@@ -353,6 +366,43 @@ const Movies = () => {
                     value={formData.genre}
                     onChange={handleInputChange}
                     required
+                    className="w-full rounded-lg bg-black border border-white/10 p-3 text-white focus:border-[#D72626] focus:outline-none"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-slate-300">
+                    Director
+                  </label>
+                  <input
+                    type="text"
+                    name="director"
+                    value={formData.director}
+                    onChange={handleInputChange}
+                    className="w-full rounded-lg bg-black border border-white/10 p-3 text-white focus:border-[#D72626] focus:outline-none"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-slate-300">
+                    Writer
+                  </label>
+                  <input
+                    type="text"
+                    name="writer"
+                    value={formData.writer}
+                    onChange={handleInputChange}
+                    className="w-full rounded-lg bg-black border border-white/10 p-3 text-white focus:border-[#D72626] focus:outline-none"
+                  />
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                  <label className="text-sm font-medium text-slate-300">
+                    Casts (comma separated)
+                  </label>
+                  <input
+                    type="text"
+                    name="casts"
+                    value={formData.casts}
+                    onChange={handleInputChange}
+                    placeholder="Actor 1, Actor 2"
                     className="w-full rounded-lg bg-black border border-white/10 p-3 text-white focus:border-[#D72626] focus:outline-none"
                   />
                 </div>

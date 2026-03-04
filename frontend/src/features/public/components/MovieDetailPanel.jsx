@@ -75,6 +75,12 @@ export default function MovieDetailPanel({
                 <p className="text-[11px] uppercase tracking-[0.16em] text-gray-500">Writers</p>
                 <p className="mt-1 text-gray-300">{movie.writer || "Not available"}</p>
               </div>
+              <div>
+                <p className="text-[11px] uppercase tracking-[0.16em] text-gray-500">Casts</p>
+                <p className="mt-1 text-gray-300">
+                  {Array.isArray(movie.casts) ? movie.casts.join(", ") : movie.casts || "Not available"}
+                </p>
+              </div>
             </div>
           </div>
 
