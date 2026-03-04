@@ -250,6 +250,20 @@ const options = {
                       description: "Comma-separated or space-separated genres",
                     },
                     duration: { type: "integer" },
+                    casts: {
+                      type: "string",
+                      description: "Comma-separated cast names",
+                    },
+                    castImages: {
+                      type: "array",
+                      items: { type: "string", format: "binary" },
+                      description: "Optional cast images (same order as casts)",
+                    },
+                    castProfiles: {
+                      type: "string",
+                      description:
+                        "JSON array mapping cast names to images. Example: [{\"name\":\"Actor 1\",\"imageFileIndex\":0}]",
+                    },
                     moviePoster: { type: "string", format: "binary" },
                     movieTrailer: { type: "string", format: "binary" },
                   },
@@ -293,6 +307,16 @@ const options = {
                     description: { type: "string" },
                     genre: { type: "string" },
                     duration: { type: "integer" },
+                    casts: { type: "string" },
+                    castImages: {
+                      type: "array",
+                      items: { type: "string", format: "binary" },
+                    },
+                    castProfiles: {
+                      type: "string",
+                      description:
+                        "JSON array mapping cast names to either uploaded images via imageFileIndex or existing image filename via image",
+                    },
                     isPlaying: { type: "boolean" },
                     moviePoster: { type: "string", format: "binary" },
                     movieTrailer: { type: "string", format: "binary" },

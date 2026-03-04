@@ -54,6 +54,23 @@ const Movie = sequelize.define(
         }
       },
     },
+    castImages: {
+      type: DataTypes.JSON,
+      defaultValue: [],
+      set(value) {
+        if (Array.isArray(value)) {
+          this.setDataValue("castImages", value);
+          return;
+        }
+        if (typeof value === "string") {
+          const normalized = value
+            .split(",")
+            .map((item) => item.trim())
+            .filter(Boolean);
+          this.setDataValue("castImages", normalized);
+        }
+      },
+    },
     genre: {
       type: DataTypes.JSON,
       allowNull: false,

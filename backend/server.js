@@ -52,7 +52,7 @@ const seedAdmins = async () => {
         fullname: "Admin",
         email: process.env.seed_admin,
         password: process.env.seed_admin_pass,
-      }
+      },
     ];
 
     for (const admin of admins) {

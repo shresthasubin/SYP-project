@@ -11,6 +11,59 @@ const parseListField = (value) => {
     .filter(Boolean);
 };
 
+const parseCastProfilesField = (value) => {
+  if (!value) return [];
+  if (Array.isArray(value)) return value;
+  if (typeof value !== "string") return [];
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
+const resolveCastPayload = ({ body, files, fallbackCasts = [], fallbackCastImages = [] }) => {
+  const castProfiles = parseCastProfilesField(body?.castProfiles);
+  const uploadedCastImages = files?.castImages ?? [];
+
+  if (castProfiles.length > 0) {
+    const casts = [];
+    const castImages = [];
+
+    for (const profile of castProfiles) {
+      const castName =
+        typeof profile?.name === "string" ? profile.name.trim() : "";
+      if (!castName) continue;
+
+      let castImage = null;
+      const fileIndex = Number(profile?.imageFileIndex);
+      if (
+        Number.isInteger(fileIndex) &&
+        fileIndex >= 0 &&
+        fileIndex < uploadedCastImages.length
+      ) {
+        castImage = uploadedCastImages[fileIndex]?.filename ?? null;
+      } else if (typeof profile?.image === "string" && profile.image.trim()) {
+        castImage = profile.image.trim();
+      }
+
+      casts.push(castName);
+      castImages.push(castImage);
+    }
+
+    return { casts, castImages };
+  }
+
+  const casts = body?.casts === undefined ? fallbackCasts : parseListField(body.casts);
+  const castImagesFromBody = body?.castImages === undefined ? fallbackCastImages : parseListField(body.castImages);
+  const castImagesFromFiles =
+    uploadedCastImages.map((file) => file.filename).filter(Boolean) ?? [];
+  const castImages = castImagesFromFiles.length > 0 ? castImagesFromFiles : castImagesFromBody;
+
+  return { casts, castImages };
+};
+
 const movieRegister = async (req, res) => {
   try {
     const {
@@ -20,7 +73,6 @@ const movieRegister = async (req, res) => {
       duration,
       director,
       writer,
-      casts,
     } = req.body;
     if (!movie_title || !description || !genre || !duration) {
       return res.status(400).json({
@@ -30,7 +82,10 @@ const movieRegister = async (req, res) => {
     }
 
     const genreArr = parseListField(genre);
-    const castsArr = parseListField(casts);
+    const { casts: castsArr, castImages: castImagesArr } = resolveCastPayload({
+      body: req.body,
+      files: req.files,
+    });
 
     if (!req.user) {
       return res.status(404).json({
@@ -68,6 +123,7 @@ const movieRegister = async (req, res) => {
       director: typeof director === "string" ? director.trim() : null,
       writer: typeof writer === "string" ? writer.trim() : null,
       casts: castsArr,
+      castImages: castImagesArr,
       releaseDate: date.toISOString().split("T")[0],
       isPlaying: true,
       playEndDate: endDate.toISOString().split("T")[0],
@@ -194,7 +250,6 @@ const movieUpdate = async (req, res) => {
       duration,
       director,
       writer,
-      casts,
       releaseDate,
       isPlaying,
     } = req.body;
@@ -208,7 +263,12 @@ const movieUpdate = async (req, res) => {
     }
 
     const parsedGenre = genre === undefined ? movie.genre : parseListField(genre);
-    const parsedCasts = casts === undefined ? movie.casts : parseListField(casts);
+    const { casts: parsedCasts, castImages: parsedCastImages } = resolveCastPayload({
+      body: req.body,
+      files: req.files,
+      fallbackCasts: movie.casts,
+      fallbackCastImages: movie.castImages,
+    });
 
     const updatedMovie = await movie.update({
       movie_title: movie_title ?? movie.movie_title,
@@ -220,6 +280,7 @@ const movieUpdate = async (req, res) => {
       writer:
         writer === undefined ? movie.writer : typeof writer === "string" ? writer.trim() : movie.writer,
       casts: parsedCasts,
+      castImages: parsedCastImages,
       moviePoster: moviePoster ?? movie.moviePoster,
       movieTrailer: movieTrailer ?? movie.movieTrailer,
       releaseDate: releaseDate ?? movie.releaseDate,

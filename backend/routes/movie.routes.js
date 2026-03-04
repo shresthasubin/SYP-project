@@ -15,7 +15,8 @@ movieRouter.post('/register',
     [verifyJWT, roleCheck(['hall-admin','admin'])], 
     upload.fields([
         { name: "moviePoster", maxCount: 1 },
-        { name: "movieTrailer", maxCount: 1 }
+        { name: "movieTrailer", maxCount: 1 },
+        { name: "castImages", maxCount: 20 }
     ]), 
     movieRegister
 )
@@ -32,7 +33,8 @@ movieRouter.put('/update/:id',
     [verifyJWT, roleCheck(['hall-admin','admin'])], 
     upload.fields([
         { name: "moviePoster", maxCount: 1 },
-        { name: "movieTrailer", maxCount: 1 }
+        { name: "movieTrailer", maxCount: 1 },
+        { name: "castImages", maxCount: 20 }
     ]), 
     movieUpdate
 )
