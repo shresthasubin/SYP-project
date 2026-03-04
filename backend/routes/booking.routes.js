@@ -1,9 +1,10 @@
+// routes/booking.routes.js
 import express from "express";
-import { createBooking } from "../controller/booking.controller.js";
-import auth from "../middleware/auth.js";
+import { bookSeat } from "../controllers/booking.controller.js";
+import { roleCheck, verifyJWT } from "../middlewares/auth.middleware.js";
 
-const router = express.Router();
+const bookingRouter = express.Router();
 
-router.post("/", auth, createBooking);
+bookingRouter.post("/book", verifyJWT, roleCheck(["user"]), bookSeat);
 
-export default router;
+export default bookingRouter;
