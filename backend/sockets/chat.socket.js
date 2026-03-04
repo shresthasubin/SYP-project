@@ -1,7 +1,7 @@
 const onlineUsers = new Map();
 const getShowtimeRoom = (showtimeId) => `showtime:${showtimeId}`;
 
-const HOLD_TTL_MS = 45_000;
+const HOLD_TTL_MS = 5 * 60 * 1000;
 // showtimeId -> Map(seatId -> { userId, socketId, updatedAt })
 const showtimeSeatHolds = new Map();
 // socketId -> Map(showtimeId -> Set(seatId))

@@ -8,6 +8,7 @@ import { useAuth } from "../../../shared/hooks/useAuth.js";
 import LiveChatModal from "../../chat/components/LiveChatModal.jsx";
 import MovieDetailPanel from "../components/MovieDetailPanel.jsx";
 import BookingPanel from "../components/BookingPanel.jsx";
+import TicketGeneratedModal from "../components/TicketGeneratedModal.jsx";
 
 const formatDuration = (value) => {
   const minutes = Number(value);
@@ -37,6 +38,7 @@ const prettyDateChip = (dateKey) => {
 
 const formatTime = (value) => String(value || "").slice(0, 5) || "--:--";
 const formatCurrency = (amount) => `Rs. ${Number(amount || 0).toFixed(2)}`;
+const SEAT_HOLD_SECONDS = 5 * 60;
 
 const sortSeats = (a, b) => {
   const rowA = Number(a.row) || 0;
@@ -68,6 +70,9 @@ export default function MovieDetail() {
   const [availableSeats, setAvailableSeats] = useState([]);
   const [selectedSeatIds, setSelectedSeatIds] = useState([]);
   const [heldSeatIds, setHeldSeatIds] = useState([]);
+  const [generatedTicketPayload, setGeneratedTicketPayload] = useState(null);
+  const [seatHoldDeadline, setSeatHoldDeadline] = useState(null);
+  const [seatHoldSecondsLeft, setSeatHoldSecondsLeft] = useState(0);
   const bookingSocketRef = useRef(null);
   const activeShowtimeRef = useRef(null);
 
@@ -178,6 +183,8 @@ export default function MovieDetail() {
     setAvailableSeats([]);
     setSelectedSeatIds([]);
     setHeldSeatIds([]);
+    setSeatHoldDeadline(null);
+    setSeatHoldSecondsLeft(0);
     setBookingSubmitting(false);
   };
 
@@ -194,6 +201,7 @@ export default function MovieDetail() {
       );
       if (response.data?.success) {
         toast.success("Tickets booked successfully");
+        setGeneratedTicketPayload(response.data?.data || null);
         closeBookingModal();
       }
     } catch (err) {
@@ -240,6 +248,35 @@ export default function MovieDetail() {
     setChatHall({ id: group.hallId, name: group.hallName });
     setChatOpen(true);
   };
+
+  useEffect(() => {
+    if (!bookingOpen || !selectedShowtime?.id || selectedSeatIds.length === 0) {
+      setSeatHoldDeadline(null);
+      setSeatHoldSecondsLeft(0);
+      return;
+    }
+
+    const deadline = Date.now() + SEAT_HOLD_SECONDS * 1000;
+    setSeatHoldDeadline(deadline);
+    setSeatHoldSecondsLeft(SEAT_HOLD_SECONDS);
+  }, [bookingOpen, selectedShowtime?.id, selectedSeatIds]);
+
+  useEffect(() => {
+    if (!seatHoldDeadline || selectedSeatIds.length === 0) return;
+
+    const timer = setInterval(() => {
+      const secondsLeft = Math.max(0, Math.ceil((seatHoldDeadline - Date.now()) / 1000));
+      setSeatHoldSecondsLeft(secondsLeft);
+
+      if (secondsLeft === 0) {
+        setSelectedSeatIds([]);
+        setSeatHoldDeadline(null);
+        toast.error("Seat hold expired after 5 minutes. Please select seats again.");
+      }
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [seatHoldDeadline, selectedSeatIds.length]);
 
   useEffect(() => {
     if (!bookingOpen || !selectedShowtime?.id || !user?.id) return;
@@ -365,6 +402,7 @@ export default function MovieDetail() {
         selectedSeatLabels={selectedSeatLabels}
         bookingLoading={bookingLoading}
         selectedSeatCount={selectedSeatIds.length}
+        seatHoldSecondsLeft={seatHoldSecondsLeft}
         ticketTotal={ticketTotal}
         bookingSubmitting={bookingSubmitting}
         onToggleSeatSelection={toggleSeatSelection}
@@ -385,6 +423,12 @@ export default function MovieDetail() {
         hallId={chatHall?.id}
         hallName={chatHall?.name}
         currentUserId={user?.id}
+      />
+
+      <TicketGeneratedModal
+        open={Boolean(generatedTicketPayload)}
+        payload={generatedTicketPayload}
+        onClose={() => setGeneratedTicketPayload(null)}
       />
     </section>
   );

@@ -14,6 +14,7 @@ export default function BookingPanel({
   selectedSeatLabels,
   bookingLoading,
   selectedSeatCount,
+  seatHoldSecondsLeft,
   ticketTotal,
   bookingSubmitting,
   onToggleSeatSelection,
@@ -28,6 +29,8 @@ export default function BookingPanel({
   formatCurrency,
 }) {
   if (!bookingOpen) return null;
+  const holdMinutes = String(Math.floor((seatHoldSecondsLeft || 0) / 60)).padStart(2, "0");
+  const holdSeconds = String((seatHoldSecondsLeft || 0) % 60).padStart(2, "0");
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-[#0b0e14]/95 pb-10">
@@ -144,18 +147,18 @@ export default function BookingPanel({
                                 onClick={() => onToggleSeatSelection(seat)}
                                 disabled={isBooked || isHeld}
                                 title={seat.seat_number}
-                                className={`grid h-[22px] w-[22px] place-items-center transition duration-150 ${seatClass}`}
+                                className={` grid h-[22px] w-[22px] place-items-center transition duration-150 ${seatClass}`}
                               >
                                 <Armchair
-                                  size={16}
+                                  size={18}
                                   className={
                                     isBooked
-                                      ? "text-lime-200/70"
+                                      ? "text-slate-400"
                                       : isHeld
-                                        ? "text-amber-300/70"
+                                        ? "text-red-400"
                                         : isSelected
                                           ? "text-[#E7F25B]"
-                                          : "text-white/80"
+                                          : "text-emerald-400"
                                   }
                                 />
                               </button>
@@ -178,11 +181,16 @@ export default function BookingPanel({
                   </div>
 
                   <div className="mt-6 flex flex-wrap items-center justify-center gap-7 text-xs text-white/60">
-                    <div className="flex items-center gap-2"><Armchair size={14} className="text-white/80" />Available</div>
-                    <div className="flex items-center gap-2"><Armchair size={14} className="text-amber-300/80" />Held</div>
-                    <div className="flex items-center gap-2"><Armchair size={14} className="text-lime-200/80" />Reserved</div>
-                    <div className="flex items-center gap-2"><Armchair size={14} className="text-[#E7F25B]" />Selected</div>
+                    <div className="flex items-center gap-2"><Armchair size={18} className="text-emerald-400" />Available</div>
+                    <div className="flex items-center gap-2"><Armchair size={18} className="text-slate-400" />Sold</div>
+                    <div className="flex items-center gap-2"><Armchair size={18} className="text-red-400" />Locked</div>
+                    <div className="flex items-center gap-2"><Armchair size={18} className="text-[#E7F25B]" />Selected by me</div>
                   </div>
+            {selectedSeatCount > 0 && (
+              <p className="mt-7 text-center text-1xl text-red-200">
+                Seat will be deselected after 5 mins of inactivness.
+              </p>
+            )}
                 </>
               )}
             </div>
@@ -210,6 +218,14 @@ export default function BookingPanel({
             </div>
 
             <div className="mt-3 flex items-center justify-between text-sm text-white/60">
+              <span>Hold timer:</span>
+              <span className={`font-semibold ${selectedSeatCount > 0 ? "text-amber-300" : "text-white/50"}`}>
+                {selectedSeatCount > 0 ? `${holdMinutes}:${holdSeconds}` : "--:--"}
+              </span>
+            </div>
+
+
+            <div className="mt-3 flex items-center justify-between text-sm text-white/60">
               <span>Total Payment:</span>
               <span className="text-base font-semibold text-white">{formatCurrency(ticketTotal)}</span>
             </div>
@@ -220,7 +236,7 @@ export default function BookingPanel({
               disabled={bookingSubmitting || selectedSeatIds.length === 0}
               className="mt-7 h-12 w-full rounded-xl bg-[#e8001c] text-base font-semibold text-black shadow-[0_12px_30px_rgba(231,242,91,.18)] hover:brightness-95 disabled:opacity-60"
             >
-              {bookingSubmitting ? "Booking..." : "Add to Cart"}
+              {bookingSubmitting ? "Generating Ticket..." : "Confirm Booking"}
             </button>
             <button
               type="button"
