@@ -1,8 +1,27 @@
 import Movie from "../model/movie.model.js";
 
+const parseListField = (value) => {
+  if (Array.isArray(value)) {
+    return value.map((item) => String(item).trim()).filter(Boolean);
+  }
+  if (typeof value !== "string") return [];
+  return value
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+};
+
 const movieRegister = async (req, res) => {
   try {
-    const { movie_title, description, genre, duration } = req.body;
+    const {
+      movie_title,
+      description,
+      genre,
+      duration,
+      director,
+      writer,
+      casts,
+    } = req.body;
     if (!movie_title || !description || !genre || !duration) {
       return res.status(400).json({
         success: false,
@@ -10,14 +29,8 @@ const movieRegister = async (req, res) => {
       });
     }
 
-    let genreArr;
-    if (genre.includes(", ")) {
-      genreArr = genre.split(", ");
-    } else if (genre.includes(",")) {
-      genreArr = genre.split(",");
-    } else {
-      genreArr = genre.split(" ");
-    }
+    const genreArr = parseListField(genre);
+    const castsArr = parseListField(casts);
 
     if (!req.user) {
       return res.status(404).json({
@@ -52,6 +65,9 @@ const movieRegister = async (req, res) => {
       description,
       genre: genreArr,
       duration,
+      director: typeof director === "string" ? director.trim() : null,
+      writer: typeof writer === "string" ? writer.trim() : null,
+      casts: castsArr,
       releaseDate: date.toISOString().split("T")[0],
       isPlaying: true,
       playEndDate: endDate.toISOString().split("T")[0],
@@ -176,6 +192,9 @@ const movieUpdate = async (req, res) => {
       description,
       genre,
       duration,
+      director,
+      writer,
+      casts,
       releaseDate,
       isPlaying,
     } = req.body;
@@ -187,11 +206,20 @@ const movieUpdate = async (req, res) => {
       newEndDate = new Date(releaseDate);
       newEndDate.setDate(newEndDate.getDate() + 7);
     }
+
+    const parsedGenre = genre === undefined ? movie.genre : parseListField(genre);
+    const parsedCasts = casts === undefined ? movie.casts : parseListField(casts);
+
     const updatedMovie = await movie.update({
       movie_title: movie_title ?? movie.movie_title,
       description: description ?? movie.description,
-      genre: genre ?? movie.genre,
+      genre: parsedGenre,
       duration: duration ?? movie.duration,
+      director:
+        director === undefined ? movie.director : typeof director === "string" ? director.trim() : movie.director,
+      writer:
+        writer === undefined ? movie.writer : typeof writer === "string" ? writer.trim() : movie.writer,
+      casts: parsedCasts,
       moviePoster: moviePoster ?? movie.moviePoster,
       movieTrailer: movieTrailer ?? movie.movieTrailer,
       releaseDate: releaseDate ?? movie.releaseDate,
