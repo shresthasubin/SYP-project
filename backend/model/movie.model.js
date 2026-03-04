@@ -21,6 +21,39 @@ const Movie = sequelize.define(
         }
       },
     },
+    director: {
+      type: DataTypes.STRING(120),
+      set(value) {
+        if (typeof value === "string") {
+          this.setDataValue("director", value.trim());
+        }
+      },
+    },
+    writer: {
+      type: DataTypes.STRING(160),
+      set(value) {
+        if (typeof value === "string") {
+          this.setDataValue("writer", value.trim());
+        }
+      },
+    },
+    casts: {
+      type: DataTypes.JSON,
+      defaultValue: [],
+      set(value) {
+        if (Array.isArray(value)) {
+          this.setDataValue("casts", value);
+          return;
+        }
+        if (typeof value === "string") {
+          const normalized = value
+            .split(",")
+            .map((item) => item.trim())
+            .filter(Boolean);
+          this.setDataValue("casts", normalized);
+        }
+      },
+    },
     genre: {
       type: DataTypes.JSON,
       allowNull: false,
