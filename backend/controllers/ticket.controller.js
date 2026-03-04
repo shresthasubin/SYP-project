@@ -9,6 +9,7 @@ import Movie from "../model/movie.model.js";
 import Seat from "../model/seat.model.js";
 import Showtime from "../model/showtime.model.js";
 import Ticket from "../model/ticket.model.js";
+import { emitShowtimeSeatUpdate } from "../sockets/chat.socket.js";
 
 const DEFAULT_SEAT_PRICES = {
   regular: 300,
@@ -132,6 +133,8 @@ const createTicketBooking = async (req, res) => {
       return res.status(404).json({ success: false, message: "Showtime not found" });
     }
 
+    transaction = await sequelize.transaction();
+
     const seats = await Seat.findAll({
       where: {
         id: { [Op.in]: uniqueSeatIds },
@@ -140,6 +143,8 @@ const createTicketBooking = async (req, res) => {
       },
       attributes: ["id", "seat_number", "seatType"],
       order: [["row", "ASC"], ["column", "ASC"]],
+      transaction,
+      lock: transaction.LOCK.UPDATE,
     });
 
     if (seats.length !== uniqueSeatIds.length) {
@@ -162,6 +167,7 @@ const createTicketBooking = async (req, res) => {
           },
         },
       ],
+      transaction,
     });
 
     if (existingSeatLinks.length) {
@@ -179,8 +185,6 @@ const createTicketBooking = async (req, res) => {
     }));
 
     const totalPrice = seatPriceRows.reduce((sum, item) => sum + Number(item.price || 0), 0);
-
-    transaction = await sequelize.transaction();
 
     const booking = await Booking.create(
       {
@@ -210,6 +214,15 @@ const createTicketBooking = async (req, res) => {
     await Ticket.bulkCreate(ticketsPayload, { transaction });
 
     await transaction.commit();
+
+    const io = req.app.get("io");
+    emitShowtimeSeatUpdate(io, {
+      showtimeId,
+      action: "booked",
+      seatIds: seats.map((seat) => seat.id),
+      bookingId: booking.id,
+      userId: req.user.id,
+    });
 
     const createdTickets = await Ticket.findAll({
       where: { booking_id: booking.id },
@@ -263,6 +276,53 @@ const getMyTickets = async (req, res) => {
   }
 };
 
+const getMyBookingTickets = async (req, res) => {
+  try {
+    const bookingId = parsePositiveInt(req.params.bookingId);
+    if (!bookingId) {
+      return res.status(400).json({ success: false, message: "Invalid bookingId" });
+    }
+
+    const booking = await Booking.findOne({
+      where: { id: bookingId, user_id: req.user.id },
+      include: [
+        {
+          model: Showtime,
+          attributes: ["id", "show_date", "start_time", "end_time"],
+          include: [
+            { model: Movie, attributes: ["id", "movie_title", "moviePoster"] },
+            {
+              model: Hallroom,
+              attributes: ["id", "roomName"],
+              include: [{ model: Hall, attributes: ["id", "hall_name", "hall_location"] }],
+            },
+          ],
+        },
+      ],
+    });
+
+    if (!booking) {
+      return res.status(404).json({ success: false, message: "Booking not found" });
+    }
+
+    const tickets = await Ticket.findAll({
+      where: { booking_id: booking.id, user_id: req.user.id },
+      include: [{ model: Seat, attributes: ["id", "seat_number", "seatType"] }],
+      order: [["id", "ASC"]],
+    });
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        booking,
+        tickets,
+      },
+    });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: "Failed to fetch booking tickets", error: err.message });
+  }
+};
+
 const cancelMyBooking = async (req, res) => {
   let transaction;
   try {
@@ -279,6 +339,15 @@ const cancelMyBooking = async (req, res) => {
       return res.status(404).json({ success: false, message: "Booking not found" });
     }
 
+    if (booking.booking_status === "cancelled") {
+      return res.status(400).json({ success: false, message: "Booking is already cancelled" });
+    }
+
+    const bookingSeatRows = await BookingSeat.findAll({
+      where: { booking_id: booking.id },
+      attributes: ["seat_id"],
+    });
+
     transaction = await sequelize.transaction();
 
     await booking.update({ booking_status: "cancelled" }, { transaction });
@@ -289,6 +358,15 @@ const cancelMyBooking = async (req, res) => {
 
     await transaction.commit();
 
+    const io = req.app.get("io");
+    emitShowtimeSeatUpdate(io, {
+      showtimeId: booking.showtime_id,
+      action: "released",
+      seatIds: bookingSeatRows.map((row) => row.seat_id),
+      bookingId: booking.id,
+      userId: req.user.id,
+    });
+
     return res.status(200).json({ success: true, message: "Booking cancelled successfully" });
   } catch (err) {
     if (transaction && !transaction.finished) {
@@ -298,4 +376,4 @@ const cancelMyBooking = async (req, res) => {
   }
 };
 
-export { cancelMyBooking, createTicketBooking, getMyTickets, getSeatAvailabilityForShowtime };
+export { cancelMyBooking, createTicketBooking, getMyBookingTickets, getMyTickets, getSeatAvailabilityForShowtime };
