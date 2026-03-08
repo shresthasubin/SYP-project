@@ -44,8 +44,8 @@ const ThemedToaster = () => {
       toastOptions={{
         duration: 3000,
         style: {
-          background: isDark ? "#363636" : "#f3f4f6",
-          color: isDark ? "#fff" : "#000",
+          background: "#363636",
+          color: "#fff",
         },
         success: {
           duration: 3000,

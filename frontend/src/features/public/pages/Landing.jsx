@@ -99,7 +99,7 @@ export default function Landing() {
   return (
     <div className="bg-primary text-text-primary">
       <Hero />
-      <MovieCalendar />
+      
 
       
       <MovieRail

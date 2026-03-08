@@ -12,8 +12,6 @@ import {
   CalendarClock,
   LogIn,
   LogOut,
-  Sun,
-  Moon,
   Download,
 } from "lucide-react";
 import axios from "axios";
@@ -21,7 +19,6 @@ import QRCode from "qrcode";
 import { jsPDF } from "jspdf";
 import avatar from "../../../assets/avatar.png";
 import { useAuth } from "../../../shared/hooks/useAuth.js";
-import { useTheme } from "../../../shared/context/ThemeContext.jsx";
 import { API_BASE_URL, API_SERVER_URL } from "../../../shared/config/api.js";
 
 const MENU_ITEMS = [
@@ -162,7 +159,6 @@ const TicketSection = ({ title, subtitle, tickets, loading, ticketQrMap, onDownl
 
 const Profile = () => {
   const { user, isAuthenticated, loading, logout } = useAuth();
-  const { isDark, toggleTheme } = useTheme();
   const [activeTab, setActiveTab] = useState("tickets");
   const [rawTickets, setRawTickets] = useState([]);
   const [ticketsLoading, setTicketsLoading] = useState(false);
@@ -462,13 +458,9 @@ const Profile = () => {
             <div className="space-y-4">
               <div className="rounded-xl border border-white/10 bg-[#0a1022]/80 p-4">
                 <p className="text-sm font-semibold text-white">Appearance</p>
-                <button
-                  onClick={toggleTheme}
-                  className="mt-3 inline-flex items-center gap-2 rounded-lg border border-white/20 px-3 py-2 text-sm text-slate-200 hover:border-[#e7df58] hover:text-[#e7df58]"
-                >
-                  {isDark ? <Sun size={16} /> : <Moon size={16} />}
-                  Switch to {isDark ? "Light" : "Dark"} Theme
-                </button>
+                <p className="mt-3 text-sm text-slate-300">
+                  Dark mode is enabled across the entire site.
+                </p>
               </div>
               <div className="rounded-xl border border-white/10 bg-[#0a1022]/80 p-4">
                 <p className="text-sm font-semibold text-white">Session</p>

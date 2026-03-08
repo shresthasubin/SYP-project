@@ -2,8 +2,6 @@ import React, { useState, useEffect, useMemo, useRef } from "react";
 import {
   Menu,
   X,
-  Sun,
-  Moon,
   Ticket,
   ChevronDown,
   LogOut,
@@ -458,7 +456,7 @@ const Navbar = () => {
   });
   const [detectingLocation, setDetectingLocation] = useState(false);
   const [locationError, setLocationError] = useState("");
-  const { isDark, toggleTheme } = useTheme();
+  const { isDark } = useTheme();
   const { user, isAuthenticated, loading, logout } = useAuth();
   const location = useLocation();
   const profileRef = useRef(null);
@@ -745,14 +743,6 @@ const Navbar = () => {
             )}
           </div>
 
-          <button
-            onClick={toggleTheme}
-            className={`rounded-lg border p-2 text-text-primary transition-colors ${subtleBtnClass}`}
-            aria-label="Toggle theme"
-          >
-            {isDark ? <Sun size={18} /> : <Moon size={18} />}
-          </button>
-         
           {loading ? (
             <span className={`rounded-lg border px-4 py-2 text-sm font-semibold text-text-secondary ${signInClass}`}>
               Loading...
@@ -808,13 +798,6 @@ const Navbar = () => {
         </div>
 
         <div className="ml-3 flex items-center gap-2 md:hidden">
-          <button
-            onClick={toggleTheme}
-            className={`rounded-lg border p-2 text-text-primary ${subtleBtnClass}`}
-            aria-label="Toggle theme"
-          >
-            {isDark ? <Sun size={18} /> : <Moon size={18} />}
-          </button>
           <button
             onClick={() => setLocationOpen((prev) => !prev)}
             className={`rounded-lg border p-2 text-text-primary ${subtleBtnClass}`}

@@ -112,9 +112,18 @@ export default function BookingPanel({
 
           <section className="col-span-12 rounded-2xl bg-white/5 p-6 ring-1 ring-white/10 lg:col-span-6 xl:p-7">
             <div className="mx-auto w-full max-w-[760px]">
-              <div className="relative mx-auto h-24">
-                <div className="absolute inset-x-0 top-0 mx-auto h-20 w-[92%] rounded-[6px] bg-white/10 ring-1 ring-white/10 [clip-path:polygon(12%_0%,88%_0%,100%_100%,0%_100%)]" />
-                <div className="absolute inset-x-0 top-[24px] text-center text-sm text-white/50">Screen</div>
+              <div className="relative mx-auto h-28 w-full max-w-[720px] overflow-visible">
+                <div className="pointer-events-none absolute left-1/2 top-[68px] h-14 w-[84%] -translate-x-1/2 rounded-full bg-sky-200/12 blur-3xl" />
+                <div className="pointer-events-none absolute left-1/2 top-[86px] h-8 w-[62%] -translate-x-1/2 rounded-full bg-white/7 blur-2xl" />
+                <div className="absolute inset-x-0 top-0 mx-auto h-[90px] w-[92%] overflow-hidden [clip-path:polygon(12%_0%,88%_0%,100%_74%,96.5%_100%,3.5%_100%,0%_74%)]">
+                  <div className="absolute inset-0 bg-gradient-to-b from-[#f8fbff] via-[#b9c3cf] to-[#252c35]" />
+                  <div className="absolute inset-x-[12%] top-0 h-[2px] rounded-full bg-[#f4c8d0]/95" />
+                  <div className="absolute inset-x-[3%] bottom-0 h-[12px] rounded-b-[999px] bg-gradient-to-b from-transparent via-white/6 to-[#f3c7cf]/90" />
+                  <div className="pointer-events-none absolute inset-x-[10%] bottom-[6px] h-[14px] rounded-full bg-black/20 blur-md" />
+                  <div className="absolute inset-x-0 top-[30px] text-center text-sm font-medium uppercase tracking-[0.42em] text-white/85">
+                    Screen
+                  </div>
+                </div>
               </div>
 
               {bookingLoading ? (
@@ -152,6 +161,7 @@ export default function BookingPanel({
                                 <Armchair
                                   size={18}
                                   className={
+                                    
                                     isBooked
                                       ? "text-slate-400"
                                       : isHeld

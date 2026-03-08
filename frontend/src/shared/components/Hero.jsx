@@ -523,15 +523,7 @@ const Hero = () => {
             className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide px-6 lg:px-20"
             role="list"
           >
-            {HERO_SLIDES.map((movie, index) => (
-              <ThumbnailCard
-                key={movie.id}
-                movie={movie}
-                index={index}
-                activeIndex={activeIndex}
-                onClick={() => handleThumbnailClick(index)}
-              />
-            ))}
+       
           </div>
         </div>
       </section>
