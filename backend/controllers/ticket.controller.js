@@ -9,7 +9,6 @@ import Movie from "../model/movie.model.js";
 import Seat from "../model/seat.model.js";
 import Showtime from "../model/showtime.model.js";
 import Ticket from "../model/ticket.model.js";
-import { emitShowtimeSeatUpdate } from "../sockets/chat.socket.js";
 
 const DEFAULT_SEAT_PRICES = {
   regular: 300,
@@ -70,7 +69,7 @@ const getSeatAvailabilityForShowtime = async (req, res) => {
               attributes: ["id", "showtime_id", "booking_status"],
               where: {
                 showtime_id: showtimeId,
-                booking_status: { [Op.ne]: "cancelled" },
+                booking_status: "confirmed",
               },
             },
           ],
@@ -163,7 +162,7 @@ const createTicketBooking = async (req, res) => {
           attributes: ["id", "showtime_id", "booking_status"],
           where: {
             showtime_id: showtimeId,
-            booking_status: { [Op.ne]: "cancelled" },
+            booking_status: "confirmed",
           },
         },
       ],
@@ -191,7 +190,7 @@ const createTicketBooking = async (req, res) => {
         user_id: req.user.id,
         showtime_id: showtimeId,
         total_price: totalPrice,
-        booking_status: "confirmed",
+        booking_status: "pending",
       },
       { transaction },
     );
@@ -201,42 +200,15 @@ const createTicketBooking = async (req, res) => {
       { transaction },
     );
 
-    const ticketsPayload = seatPriceRows.map(({ seat, price }) => ({
-      ticket_code: buildTicketCode(showtimeId, seat.id),
-      booking_id: booking.id,
-      user_id: req.user.id,
-      showtime_id: showtimeId,
-      seat_id: seat.id,
-      price,
-      ticket_status: "booked",
-    }));
-
-    await Ticket.bulkCreate(ticketsPayload, { transaction });
-
     await transaction.commit();
-
-    const io = req.app.get("io");
-    emitShowtimeSeatUpdate(io, {
-      showtimeId,
-      action: "booked",
-      seatIds: seats.map((seat) => seat.id),
-      bookingId: booking.id,
-      userId: req.user.id,
-    });
-
-    const createdTickets = await Ticket.findAll({
-      where: { booking_id: booking.id },
-      include: [{ model: Seat, attributes: ["id", "seat_number", "seatType"] }],
-      order: [["id", "ASC"]],
-    });
 
     return res.status(201).json({
       success: true,
-      message: "Tickets booked successfully",
+      message: "Booking created successfully. Complete payment to generate tickets.",
       data: {
         booking,
         showtime,
-        tickets: createdTickets,
+        tickets: [],
       },
     });
   } catch (err) {

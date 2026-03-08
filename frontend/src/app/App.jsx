@@ -17,6 +17,8 @@ import FAQ from "../features/public/pages/FAQ.jsx";
 import NotFound from "../features/public/pages/NotFound.jsx";
 import HallStaffApply from "../features/public/pages/HallStaffApply.jsx";
 import Profile from "../features/public/pages/Profile.jsx";
+import PaymentEsewaSuccess from "../features/public/pages/PaymentEsewaSuccess.jsx";
+import PaymentEsewaFailure from "../features/public/pages/PaymentEsewaFailure.jsx";
 import AdminLayout from "../features/admin/layouts/AdminLayout.jsx";
 import HallAdminLayout from "../features/halladmin/layouts/HallAdminLayout.jsx";
 import Dashboard from "../features/admin/pages/Dashboard.jsx";
@@ -30,6 +32,7 @@ import HallAdminMessages from "../features/halladmin/pages/Messages.jsx";
 import SeatLayoutPreview from "../features/halladmin/components/SeatLayoutPreview.jsx";
 import { AuthProvider } from "../shared/context/AuthContext.jsx";
 import { ThemeProvider, useTheme } from "../shared/context/ThemeContext.jsx";
+import { ProtectedRoute, PublicOnlyRoute } from "../shared/routes/RouteGuards.jsx";
 
 const ThemedToaster = () => {
   const { isDark } = useTheme();
@@ -79,31 +82,41 @@ const App = () => {
             <Route path="/legal/cookie" element={<Cookie />} />
             <Route path="/faq" element={<FAQ />} />
             <Route path="/hall-staff/apply" element={<HallStaffApply />} />
-            <Route path="/profile" element={<Profile />} />
+            <Route element={<ProtectedRoute />}>
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/payment/esewa/success" element={<PaymentEsewaSuccess />} />
+              <Route path="/payment/esewa/failure" element={<PaymentEsewaFailure />} />
+              <Route path="/payment-success" element={<PaymentEsewaSuccess />} />
+              <Route path="/payment-failed" element={<PaymentEsewaFailure />} />
+            </Route>
+          </Route>
+
+          <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<Dashboard />} />
+              <Route path="movies" element={<Movies />} />
+              <Route path="halls" element={<Halls />} />
+              <Route path="showtimes" element={<Showtimes />} />
+              <Route path="users" element={<User />} />
+              <Route path="form-applications" element={<FormApplications />} />
+            </Route>
             <Route path="/reg" element={<SeatLayoutPreview />} />
           </Route>
 
-          {/* Admin Routes */}
-          <Route path="/admin" element={<AdminLayout />}>
-            <Route index element={<Dashboard />} />
-            <Route path="movies" element={<Movies />} />
-            <Route path="halls" element={<Halls />} />
-            <Route path="showtimes" element={<Showtimes />} />
-            <Route path="users" element={<User />} />
-            <Route path="form-applications" element={<FormApplications />} />
+          <Route element={<ProtectedRoute allowedRoles={["hall-admin", "admin"]} />}>
+            <Route path="/halladmin" element={<HallAdminLayout />}>
+              <Route index element={<HallAdminDashboard />} />
+              <Route path="movies" element={<Movies />} />
+              <Route path="halls" element={<Halls />} />
+              <Route path="showtimes" element={<Showtimes />} />
+              <Route path="messages" element={<HallAdminMessages />} />
+            </Route>
           </Route>
 
-          <Route path="/halladmin" element={<HallAdminLayout />}>
-            <Route index element={<HallAdminDashboard />} />
-            <Route path="movies" element={<Movies />} />
-            <Route path="halls" element={<Halls />} />
-            <Route path="showtimes" element={<Showtimes />} />
-            <Route path="messages" element={<HallAdminMessages />} />
+          <Route element={<PublicOnlyRoute />}>
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
           </Route>
-
-          {/* auth is kept separate outside layout (simple) */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </AuthProvider>

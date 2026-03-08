@@ -14,8 +14,11 @@ import {
   LogOut,
   Sun,
   Moon,
+  Download,
 } from "lucide-react";
 import axios from "axios";
+import QRCode from "qrcode";
+import { jsPDF } from "jspdf";
 import avatar from "../../../assets/avatar.png";
 import { useAuth } from "../../../shared/hooks/useAuth.js";
 import { useTheme } from "../../../shared/context/ThemeContext.jsx";
@@ -52,7 +55,29 @@ const formatTicketDateTime = (showDate, startTime) => {
   });
 };
 
-const TicketRow = ({ ticket }) => (
+const getTicketQrPayload = (ticket) =>
+  JSON.stringify({
+    ticket_id: ticket.id || "",
+    ticket_code: ticket.ticketCode || "",
+    booking_id: ticket.bookingId || "",
+    movie: ticket.title || "",
+    showtime: ticket.dateTime || "",
+    venue: ticket.venue || "",
+    seat: ticket.seatLabel || "",
+  });
+
+const toDataUrl = async (url) => {
+  const response = await fetch(url);
+  const blob = await response.blob();
+  return await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+};
+
+const TicketRow = ({ ticket, ticketQrMap, onDownloadTicket }) => (
   <article className="group relative overflow-hidden rounded-2xl border border-white/10 bg-[#0a1022]/90 p-4 transition-all duration-300 hover:border-[#e7df58]/50 hover:bg-[#101934] md:p-5">
     <div className="relative flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
       <div className="flex min-w-0 items-start gap-4">
@@ -77,23 +102,40 @@ const TicketRow = ({ ticket }) => (
       </div>
 
       <div className="flex items-center justify-between gap-3 md:justify-end">
-        <span
-          className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold tracking-wide ${
-            ticket.status === "Upcoming"
-              ? "border-[#e7df58]/60 bg-[#e7df58]/15 text-[#f3ec7d]"
-              : ticket.status === "Cancelled"
-                ? "border-rose-500/60 bg-rose-500/15 text-rose-300"
-                : "border-slate-500/50 bg-slate-500/15 text-slate-300"
-          }`}
-        >
-          {ticket.status}
-        </span>
+        <div className="flex items-center gap-3">
+          <img
+            src={ticketQrMap[ticket.id] || "https://placehold.co/180x180?text=QR"}
+            alt={`QR for ticket ${ticket.ticketCode || ticket.id}`}
+            className="h-16 w-16 rounded-lg border border-white/15 bg-white p-1"
+          />
+          <div className="flex flex-col items-end gap-2">
+            <span
+              className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold tracking-wide ${
+                ticket.status === "Upcoming"
+                  ? "border-[#e7df58]/60 bg-[#e7df58]/15 text-[#f3ec7d]"
+                  : ticket.status === "Cancelled"
+                    ? "border-rose-500/60 bg-rose-500/15 text-rose-300"
+                    : "border-slate-500/50 bg-slate-500/15 text-slate-300"
+              }`}
+            >
+              {ticket.status}
+            </span>
+            <button
+              type="button"
+              onClick={() => onDownloadTicket(ticket)}
+              className="inline-flex items-center gap-1 rounded-lg border border-white/20 px-2.5 py-1.5 text-xs font-semibold text-white hover:border-[#e7df58] hover:text-[#f3ec7d]"
+            >
+              <Download size={13} />
+              Download Ticket
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </article>
 );
 
-const TicketSection = ({ title, subtitle, tickets, loading }) => (
+const TicketSection = ({ title, subtitle, tickets, loading, ticketQrMap, onDownloadTicket }) => (
   <section>
     <div className="mb-4 flex items-center justify-between">
       <div>
@@ -111,7 +153,7 @@ const TicketSection = ({ title, subtitle, tickets, loading }) => (
     ) : (
       <div className="space-y-4">
         {tickets.map((ticket) => (
-          <TicketRow key={ticket.id} ticket={ticket} />
+          <TicketRow key={ticket.id} ticket={ticket} ticketQrMap={ticketQrMap} onDownloadTicket={onDownloadTicket} />
         ))}
       </div>
     )}
@@ -124,6 +166,7 @@ const Profile = () => {
   const [activeTab, setActiveTab] = useState("tickets");
   const [rawTickets, setRawTickets] = useState([]);
   const [ticketsLoading, setTicketsLoading] = useState(false);
+  const [ticketQrMap, setTicketQrMap] = useState({});
 
   const displayName = useMemo(() => {
     const fromUser = user?.fullname || user?.fullName || user?.name;
@@ -163,42 +206,38 @@ const Profile = () => {
   }, [activeTab, isAuthenticated]);
 
   const ticketCards = useMemo(() => {
-    const grouped = new Map();
-
-    rawTickets.forEach((ticket) => {
-      const bookingId = ticket.booking_id || ticket.Booking?.id || ticket.id;
-      const existing = grouped.get(bookingId) || {
-        id: bookingId,
-        title: ticket.Showtime?.Movie?.movie_title || "Movie",
-        dateTime: formatTicketDateTime(ticket.Showtime?.show_date, ticket.Showtime?.start_time),
-        venue: `${ticket.Showtime?.Hallroom?.Hall?.hall_name || "Cinema Hall"}  -  ${ticket.Showtime?.Hallroom?.roomName || "Room"}`,
-        seats: [],
-        poster: getPosterUrl(ticket.Showtime?.Movie?.moviePoster),
-        bookingStatus: ticket.Booking?.booking_status || "confirmed",
-        showDate: ticket.Showtime?.show_date || "",
-        startTime: formatTime(ticket.Showtime?.start_time),
-      };
-
-      if (ticket.Seat?.seat_number) {
-        existing.seats.push(ticket.Seat.seat_number);
-      }
-
-      grouped.set(bookingId, existing);
-    });
-
-    return Array.from(grouped.values())
-      .map((item) => {
-        const d = item.showDate ? new Date(`${item.showDate}T${item.startTime || "00:00"}:00`) : null;
+    return rawTickets
+      .map((ticket) => {
+        const showDate = ticket.Showtime?.show_date || "";
+        const startTime = formatTime(ticket.Showtime?.start_time);
+        const d = showDate ? new Date(`${showDate}T${startTime || "00:00"}:00`) : null;
         const isUpcoming = d && !Number.isNaN(d.getTime()) ? d.getTime() >= Date.now() : false;
 
         let status = isUpcoming ? "Upcoming" : "Completed";
-        if (item.bookingStatus === "cancelled") status = "Cancelled";
+        const bookingStatus = ticket.Booking?.booking_status || "confirmed";
+        if (bookingStatus === "cancelled") status = "Cancelled";
 
-        return {
-          ...item,
-          seats: `${item.seats.length} Ticket${item.seats.length === 1 ? "" : "s"}  -  ${item.seats.join(", ") || "No seat"}`,
+        const bookingId = ticket.booking_id || ticket.Booking?.id || "-";
+        const seatLabel = ticket.Seat?.seat_number ? String(ticket.Seat.seat_number) : "No seat";
+        const codeLabel = ticket.ticket_code ? String(ticket.ticket_code) : "-";
+
+        const mappedTicket = {
+          id: ticket.id,
+          title: ticket.Showtime?.Movie?.movie_title || "Movie",
+          dateTime: formatTicketDateTime(showDate, ticket.Showtime?.start_time),
+          venue: `${ticket.Showtime?.Hallroom?.Hall?.hall_name || "Cinema Hall"}  -  ${ticket.Showtime?.Hallroom?.roomName || "Room"}`,
+          seats: `Seat: ${seatLabel}  -  Code: ${codeLabel}`,
+          poster: getPosterUrl(ticket.Showtime?.Movie?.moviePoster),
+          bookingStatus,
           status,
+          showDate,
+          startTime,
+          bookingId,
+          seatLabel,
+          ticketCode: codeLabel,
         };
+
+        return mappedTicket;
       })
       .sort((a, b) => {
         const da = new Date(`${a.showDate || "1970-01-01"}T${a.startTime || "00:00"}:00`).getTime();
@@ -215,6 +254,99 @@ const Profile = () => {
     () => ticketCards.filter((ticket) => ticket.status !== "Upcoming"),
     [ticketCards],
   );
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const buildQrs = async () => {
+      try {
+        const entries = await Promise.all(
+          ticketCards.map(async (ticket) => {
+            const qrUrl = await QRCode.toDataURL(getTicketQrPayload(ticket), {
+              width: 180,
+              margin: 1,
+              errorCorrectionLevel: "M",
+            });
+            return [ticket.id, qrUrl];
+          }),
+        );
+        if (!cancelled) setTicketQrMap(Object.fromEntries(entries));
+      } catch {
+        if (!cancelled) setTicketQrMap({});
+      }
+    };
+
+    if (ticketCards.length) {
+      buildQrs();
+    } else {
+      setTicketQrMap({});
+    }
+
+    return () => {
+      cancelled = true;
+    };
+  }, [ticketCards]);
+
+  const handleDownloadTicket = async (ticket) => {
+    const qrUrl =
+      ticketQrMap[ticket.id] ||
+      (await QRCode.toDataURL(getTicketQrPayload(ticket), {
+        width: 240,
+        margin: 1,
+        errorCorrectionLevel: "M",
+      }));
+
+    const doc = new jsPDF({ unit: "pt", format: "a4" });
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const startX = 40;
+    const startY = 46;
+
+    doc.setFillColor(17, 26, 51);
+    doc.roundedRect(24, 24, pageWidth - 48, 360, 12, 12, "F");
+    doc.setDrawColor(42, 51, 82);
+    doc.roundedRect(24, 24, pageWidth - 48, 360, 12, 12, "S");
+
+    let posterData = null;
+    try {
+      posterData = await toDataUrl(ticket.poster);
+    } catch (_) {
+      posterData = null;
+    }
+
+    if (posterData) {
+      doc.addImage(posterData, "JPEG", startX, startY, 88, 128);
+    }
+
+    const textX = posterData ? startX + 108 : startX;
+    doc.setTextColor(245, 247, 255);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(21);
+    doc.text(ticket.title || "Movie Ticket", textX, startY + 20);
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(12);
+    doc.setTextColor(209, 216, 240);
+    doc.text(`Date & Time: ${ticket.dateTime || "-"}`, textX, startY + 50);
+    doc.text(`Venue: ${ticket.venue || "-"}`, textX, startY + 74, { maxWidth: 280 });
+    doc.text(`Seat: ${ticket.seatLabel || "-"}`, textX, startY + 98);
+    doc.text(`Ticket Code: ${ticket.ticketCode || "-"}`, textX, startY + 122);
+    doc.text(`Booking ID: ${ticket.bookingId || "-"}`, textX, startY + 146);
+    doc.text(`Status: ${ticket.status || "-"}`, textX, startY + 170);
+
+    doc.setFillColor(255, 255, 255);
+    doc.roundedRect(pageWidth - 182, startY, 138, 138, 8, 8, "F");
+    doc.addImage(qrUrl, "PNG", pageWidth - 174, startY + 8, 122, 122);
+
+    doc.setTextColor(181, 191, 220);
+    doc.setFontSize(10);
+    doc.text("Show this QR at cinema entry for validation.", startX, 330);
+    doc.text(`Generated: ${new Date().toLocaleString()}`, startX, 346);
+
+    const fileName = `ticket-${String(ticket.ticketCode || ticket.id || "cinema-ticket")
+      .replace(/[^a-zA-Z0-9-_]/g, "_")
+      .slice(0, 60)}.pdf`;
+    doc.save(fileName);
+  };
 
   if (loading) {
     return <div className="min-h-[60vh] px-6 py-24 text-center text-text-secondary">Loading profile...</div>;
@@ -312,12 +444,16 @@ const Profile = () => {
                 subtitle="Your next movie nights are lined up."
                 tickets={upcomingTickets}
                 loading={ticketsLoading}
+                ticketQrMap={ticketQrMap}
+                onDownloadTicket={handleDownloadTicket}
               />
               <TicketSection
                 title="Past Tickets & Orders"
                 subtitle="Recent bookings you have completed."
                 tickets={pastTickets}
                 loading={ticketsLoading}
+                ticketQrMap={ticketQrMap}
+                onDownloadTicket={handleDownloadTicket}
               />
             </div>
           )}

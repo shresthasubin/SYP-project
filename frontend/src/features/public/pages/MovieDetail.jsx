@@ -212,7 +212,7 @@ export default function MovieDetail() {
         { withCredentials: true },
       );
       if (response.data?.success) {
-        toast.success("Tickets booked successfully");
+        toast.success("Booking created. Complete payment to generate tickets.");
         setGeneratedTicketPayload(response.data?.data || null);
         closeBookingModal();
       }

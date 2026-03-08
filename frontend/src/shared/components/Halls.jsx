@@ -28,9 +28,9 @@ const Halls = () => {
   const [chatHall, setChatHall] = useState(null);
   const [selectedCity, setSelectedCity] = useState(() => {
     try {
-      return localStorage.getItem(LOCATION_CITY_STORAGE_KEY) || "Kathmandu";
+      return localStorage.getItem(LOCATION_CITY_STORAGE_KEY) || ALL_NEPAL_CITY;
     } catch {
-      return "Kathmandu";
+      return ALL_NEPAL_CITY;
     }
   });
 
@@ -57,9 +57,9 @@ const Halls = () => {
   useEffect(() => {
     const syncFromStorage = () => {
       try {
-        setSelectedCity(localStorage.getItem(LOCATION_CITY_STORAGE_KEY) || "Kathmandu");
+        setSelectedCity(localStorage.getItem(LOCATION_CITY_STORAGE_KEY) || ALL_NEPAL_CITY);
       } catch {
-        setSelectedCity("Kathmandu");
+        setSelectedCity(ALL_NEPAL_CITY);
       }
     };
 

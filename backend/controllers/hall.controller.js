@@ -1,6 +1,7 @@
 import Hall from "../model/hall.model.js";
 import Hallroom from "../model/hallroom.model.js";
 import Seat from "../model/seat.model.js";
+import Hallclass from "../model/hallclass.model.js";
 import { sequelize } from "../db/index.js";
 import { Op } from "sequelize";
 
@@ -24,6 +25,20 @@ const parseHallroomsPayload = (hallroomsRaw) => {
     return Array.isArray(parsed) ? parsed : [];
   } catch {
     return [];
+  }
+};
+
+const ensureHallClasses = async (transaction) => {
+  const defaults = [
+    { seatType: "regular", price: 300 },
+    { seatType: "premium", price: 500 },
+  ];
+
+  for (const item of defaults) {
+    const existing = await Hallclass.findByPk(item.seatType, { transaction });
+    if (!existing) {
+      await Hallclass.create(item, { transaction });
+    }
   }
 };
 
@@ -126,6 +141,7 @@ const hallRegister = async (req, res) => {
     await ensureSeatColumns();
 
     tx = await sequelize.transaction();
+    await ensureHallClasses(tx);
 
     const hall = await Hall.create(
       {
@@ -143,6 +159,10 @@ const hallRegister = async (req, res) => {
       const totalRows = Number(room.rows ?? room.totalRows);
       const totalColumns = Number(room.seatsPerRow ?? room.totalColumns);
       const roomName = (room.roomName || "").trim();
+      const seatTypesMap =
+        room && typeof room.seatTypes === "object" && room.seatTypes !== null
+          ? room.seatTypes
+          : {};
 
       if (!roomName || totalRows <= 0 || totalColumns <= 0) {
         await tx.rollback();
@@ -172,6 +192,7 @@ const hallRegister = async (req, res) => {
         for (let colIndex = 0; colIndex < totalColumns; colIndex++) {
           const key = `${rowIndex}-${colIndex}`;
           const isGap = emptySet.has(key);
+          const selectedSeatType = seatTypesMap[key] === "premium" ? "premium" : "regular";
           const rowNumber = rowIndex + 1;
           const colNumber = colIndex + 1;
           const rowLabel = rowToLabel(rowNumber);
@@ -187,7 +208,7 @@ const hallRegister = async (req, res) => {
               row: rowNumber,
               column: colNumber,
               hallroom_id: createdRoom.id,
-              seatType: isGap ? null : "regular",
+              seatType: isGap ? null : selectedSeatType,
               type: isGap ? "gap" : "seat",
             },
             { transaction: tx },
@@ -264,16 +285,20 @@ const hallUpdate = async (req, res) => {
     } = req.body;
 
     const hallPoster = req.file?.filename;
+    const updatePayload = {
+      hall_name: hall_name ?? hall.hall_name,
+      hall_location: hall_location ?? hall.hall_location,
+      hall_contact: hall_contact ?? hall.hall_contact,
+      license: license ?? hall.license,
+      registeredDate: registeredDate ?? hall.registeredDate,
+      hallPoster: hallPoster ?? hall.hallPoster,
+    };
 
-    const updateHall = await hall.update({
-      hall_name,
-      hall_location,
-      hall_contact,
-      isActive: isActive === "true" || isActive === true,
-      license,
-      registeredDate,
-      hallPoster: hallPoster,
-    });
+    if (isActive !== undefined) {
+      updatePayload.isActive = isActive === "true" || isActive === true;
+    }
+
+    const updateHall = await hall.update(updatePayload);
 
     return res.status(201).json({
       success: true,
@@ -370,4 +395,49 @@ const hallDelete = async (req, res) => {
   }
 };
 
-export { hallRegister, hallUpdate, hallGet, hallDelete, hallGetActive };
+const hallActivate = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const hall = await Hall.findByPk(id);
+
+    if (!hall) {
+      return res.status(404).json({
+        success: false,
+        message: "Hall with id doesn't found",
+      });
+    }
+
+    if (req.user?.role === "hall-admin") {
+      if (!req.user.license) {
+        return res.status(403).json({
+          success: false,
+          message: "Hall admin does not have an assigned license",
+        });
+      }
+
+      if (hall.license !== req.user.license) {
+        return res.status(403).json({
+          success: false,
+          message: "Not authorized to activate this hall",
+        });
+      }
+    }
+
+    hall.isActive = true;
+    await hall.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Hall has been activated",
+      data: hall,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: "Server failed while activating hall",
+      error: err.message,
+    });
+  }
+};
+
+export { hallRegister, hallUpdate, hallGet, hallDelete, hallGetActive, hallActivate };

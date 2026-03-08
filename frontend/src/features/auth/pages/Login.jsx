@@ -1,5 +1,5 @@
 import { useState, useContext } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { User, Lock, Eye, EyeOff, Film } from "lucide-react";
 import { toast } from "react-hot-toast";
 import axios from "axios";
@@ -13,6 +13,7 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [passwordVisible, setPasswordVisible] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useContext(AuthContext);
 
   const handleSubmit = async (e) => {
@@ -39,9 +40,12 @@ const Login = () => {
         const userData = response.data.data.userExist;
         login(userData, response.data.data.token);
         toast.success("Login successful!");
+        const fromPath = typeof location.state?.from === "string" ? location.state.from : "";
 
         // Navigate based on user role
-        if (userData.role === "admin") {
+        if (fromPath) {
+          navigate(fromPath);
+        } else if (userData.role === "admin") {
           navigate("/admin");
         } else if (userData.role === "hall-admin") {
           navigate("/halladmin");

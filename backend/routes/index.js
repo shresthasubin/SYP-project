@@ -8,6 +8,7 @@ import showtimeRoute from './showtime.routes.js'
 import chatRoutes from './chat.routes.js'
 import ticketRoute from './ticket.route.js'
 import bookingRouter from './booking.routes.js'
+import paymentRouter from './payment.routes.js'
 
 const router = express.Router()
 
@@ -20,5 +21,6 @@ router.use('/showtime', showtimeRoute)
 router.use('/chat', chatRoutes)
 router.use('/ticket', ticketRoute)
 router.use('/bookings', bookingRouter)
+router.use('/payment', paymentRouter)
 
 export default router

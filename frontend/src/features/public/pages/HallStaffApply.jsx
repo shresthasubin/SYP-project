@@ -19,6 +19,7 @@ const createRoom = () => ({
   rows: 5,
   seatsPerRow: 10,
   emptySeats: [],
+  seatTypes: {},
 });
 
 const getSeatKey = (rowIndex, seatIndex) => `${rowIndex}-${seatIndex}`;
@@ -50,6 +51,7 @@ const HallStaffApply = () => {
   const [step3Errors, setStep3Errors] = useState([]);
   const [step3FormError, setStep3FormError] = useState("");
   const [step4Error, setStep4Error] = useState("");
+  const [seatBrush, setSeatBrush] = useState("regular");
   const [submitTrace, setSubmitTrace] = useState([]);
 
   const totalCapacity = useMemo(() => {
@@ -138,14 +140,21 @@ const HallStaffApply = () => {
     setRooms((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const toggleEmptySeat = (roomIndex, rowIndex, seatIndex) => {
+  const applySeatBrush = (roomIndex, rowIndex, seatIndex) => {
     const seatKey = getSeatKey(rowIndex, seatIndex);
     const room = rooms[roomIndex];
-    const exists = room.emptySeats.includes(seatKey);
-    const next = exists
-      ? room.emptySeats.filter((key) => key !== seatKey)
-      : [...room.emptySeats, seatKey];
-    updateRoom(roomIndex, { emptySeats: next });
+    const emptySet = new Set(room.emptySeats);
+    const seatTypes = { ...(room.seatTypes || {}) };
+
+    if (seatBrush === "blocked") {
+      emptySet.add(seatKey);
+      delete seatTypes[seatKey];
+    } else {
+      emptySet.delete(seatKey);
+      seatTypes[seatKey] = seatBrush === "premium" ? "premium" : "regular";
+    }
+
+    updateRoom(roomIndex, { emptySeats: Array.from(emptySet), seatTypes });
   };
 
   const goToStep2 = () => {
@@ -508,6 +517,7 @@ const HallStaffApply = () => {
                           updateRoom(idx, {
                             rows: Number(e.target.value) || 1,
                             emptySeats: [],
+                            seatTypes: {},
                           })
                         }
                         placeholder="Rows"
@@ -526,6 +536,7 @@ const HallStaffApply = () => {
                           updateRoom(idx, {
                             seatsPerRow: Number(e.target.value) || 1,
                             emptySeats: [],
+                            seatTypes: {},
                           })
                         }
                         placeholder="Seats per row"
@@ -569,12 +580,37 @@ const HallStaffApply = () => {
       {step === 4 && (
         <div className="mt-6 rounded-2xl border border-white/10 bg-black/30 p-6">
           <h2 className="text-xl font-semibold">Phase 4: Seat Layout Builder</h2>
-          <p className="mt-1 text-sm text-slate-300">
-            Click a seat to mark it blocked/empty.
-          </p>
+          <p className="mt-1 text-sm text-slate-300">Select a brush and click seats to apply.</p>
+          <div className="mt-3 flex items-center gap-2 text-xs">
+            <span className="text-slate-300">Brush:</span>
+            <button
+              type="button"
+              onClick={() => setSeatBrush("regular")}
+              className={`rounded border px-3 py-1 ${seatBrush === "regular" ? "border-emerald-400 bg-emerald-500/20 text-emerald-300" : "border-white/15 text-slate-300"}`}
+            >
+              Regular
+            </button>
+            <button
+              type="button"
+              onClick={() => setSeatBrush("premium")}
+              className={`rounded border px-3 py-1 ${seatBrush === "premium" ? "border-amber-400 bg-amber-500/20 text-amber-300" : "border-white/15 text-slate-300"}`}
+            >
+              Premium
+            </button>
+            <button
+              type="button"
+              onClick={() => setSeatBrush("blocked")}
+              className={`rounded border px-3 py-1 ${seatBrush === "blocked" ? "border-slate-400 bg-slate-500/20 text-slate-200" : "border-white/15 text-slate-300"}`}
+            >
+              Blocked
+            </button>
+          </div>
           <div className="mt-3 flex flex-wrap gap-3 text-xs">
             <span className="inline-flex items-center gap-1 rounded-full border border-pink-400/30 bg-pink-400/10 px-3 py-1 text-pink-300">
-              <Armchair size={12} /> Available
+              <Armchair size={12} /> Regular
+            </span>
+            <span className="inline-flex items-center gap-1 rounded-full border border-amber-400/30 bg-amber-400/10 px-3 py-1 text-amber-300">
+              <Armchair size={12} /> Premium
             </span>
             <span className="inline-flex items-center gap-1 rounded-full border border-slate-500/30 bg-slate-500/10 px-3 py-1 text-slate-300">
               <Armchair size={12} /> Blocked
@@ -612,19 +648,26 @@ const HallStaffApply = () => {
                             {Array.from({ length: seatsPerRow }).map((__, seatIndex) => {
                               const key = getSeatKey(rowIndex, seatIndex);
                               const isEmpty = room.emptySeats.includes(key);
+                              const seatType = room.seatTypes?.[key] === "premium" ? "premium" : "regular";
                               return (
                                 <button
                                   key={key}
                                   type="button"
                                   onClick={() =>
-                                    toggleEmptySeat(roomIndex, rowIndex, seatIndex)
+                                    applySeatBrush(roomIndex, rowIndex, seatIndex)
                                   }
                                   className="p-0.5 transition-transform hover:scale-110"
-                                  title={`${String.fromCharCode(65 + rowIndex)}${seatIndex + 1}`}
+                                  title={`${String.fromCharCode(65 + rowIndex)}${seatIndex + 1} - ${isEmpty ? "blocked" : seatType}`}
                                 >
                                   <Armchair
                                     size={16}
-                                    className={isEmpty ? "text-slate-600 opacity-50" : "text-pink-400"}
+                                    className={
+                                      isEmpty
+                                        ? "text-slate-600 opacity-50"
+                                        : seatType === "premium"
+                                          ? "text-amber-400"
+                                          : "text-pink-400"
+                                    }
                                   />
                                 </button>
                               );

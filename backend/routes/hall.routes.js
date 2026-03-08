@@ -4,6 +4,7 @@ import {
   hallGet,
   hallGetActive,
   hallRegister,
+  hallActivate,
   hallUpdate,
 } from "../controllers/hall.controller.js";
 import {
@@ -33,6 +34,7 @@ hallRouter.put(
 hallRouter.get("/get", [verifyJWT, roleCheck(["admin","hall-admin"])], hallGet);
 hallRouter.get("/get-active", hallGetActive);
 hallRouter.delete("/delete/:id", [verifyJWT, roleCheck(["admin"])], hallDelete);
+hallRouter.put("/activate/:id", [verifyJWT, roleCheck(["admin","hall-admin"])], hallActivate);
 
 hallRouter.post(
   "/apply",

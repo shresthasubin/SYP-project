@@ -1,5 +1,6 @@
 import Hallroom from "../model/hallroom.model.js";
 import Seat from "../model/seat.model.js";
+import Hallclass from "../model/hallclass.model.js";
 
 const numberToAlphabet = (n) => {
   let result = "";
@@ -12,8 +13,24 @@ const numberToAlphabet = (n) => {
   return result;
 };
 
+const ensureHallClasses = async () => {
+  const defaults = [
+    { seatType: "regular", price: 300 },
+    { seatType: "premium", price: 500 },
+  ];
+
+  for (const item of defaults) {
+    const existing = await Hallclass.findByPk(item.seatType);
+    if (!existing) {
+      await Hallclass.create(item);
+    }
+  }
+};
+
 const createSeat = async (req, res) => {
   try {
+    await ensureHallClasses();
+
     const { hallRoomId } = req.params
     const intRoomId = parseInt(hallRoomId)
     const hallRoom = await Hallroom.findByPk(intRoomId)

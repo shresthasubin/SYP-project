@@ -4,6 +4,7 @@ import Hall from "../model/hall.model.js";
 import User from "../model/user.model.js";
 import Hallroom from "../model/hallroom.model.js";
 import Seat from "../model/seat.model.js";
+import Hallclass from "../model/hallclass.model.js";
 import { Op } from "sequelize";
 
 const rowToLabel = (rowNumber) => {
@@ -26,6 +27,20 @@ const parseHallroomsPayload = (hallroomsRaw) => {
     return Array.isArray(parsed) ? parsed : [];
   } catch {
     return [];
+  }
+};
+
+const ensureHallClasses = async (transaction) => {
+  const defaults = [
+    { seatType: "regular", price: 300 },
+    { seatType: "premium", price: 500 },
+  ];
+
+  for (const item of defaults) {
+    const existing = await Hallclass.findByPk(item.seatType, { transaction });
+    if (!existing) {
+      await Hallclass.create(item, { transaction });
+    }
   }
 };
 
@@ -245,6 +260,7 @@ const approveHallApplication = async (req, res) => {
   try {
     await ensureSeatColumns();
     await ensureHallroomIndexes();
+    await ensureHallClasses(tx);
     const { id } = req.params;
     const application = await HallApplication.findByPk(id, { transaction: tx });
 
@@ -317,6 +333,10 @@ const approveHallApplication = async (req, res) => {
       const totalRows = Number(room.rows ?? room.totalRows);
       const totalColumns = Number(room.seatsPerRow ?? room.totalColumns);
       const roomName = (room.roomName || "").trim();
+      const seatTypesMap =
+        room && typeof room.seatTypes === "object" && room.seatTypes !== null
+          ? room.seatTypes
+          : {};
 
       if (!roomName || totalRows <= 0 || totalColumns <= 0) continue;
 
@@ -340,6 +360,7 @@ const approveHallApplication = async (req, res) => {
         for (let colIndex = 0; colIndex < totalColumns; colIndex++) {
           const key = `${rowIndex}-${colIndex}`;
           const isGap = emptySet.has(key);
+          const selectedSeatType = seatTypesMap[key] === "premium" ? "premium" : "regular";
           const rowNumber = rowIndex + 1;
           const colNumber = colIndex + 1;
           const rowLabel = rowToLabel(rowNumber);
@@ -355,7 +376,7 @@ const approveHallApplication = async (req, res) => {
               row: rowNumber,
               column: colNumber,
               hallroom_id: createdRoom.id,
-              seatType: isGap ? null : "regular",
+              seatType: isGap ? null : selectedSeatType,
               type: isGap ? "gap" : "seat",
             },
             { transaction: tx },

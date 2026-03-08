@@ -4,7 +4,6 @@ import Booking from "../model/booking.model.js";
 import BookingSeat from "../model/bookingSeat.model.js";
 import Seat from "../model/seat.model.js";
 import Showtime from "../model/showtime.model.js";
-import { emitShowtimeSeatUpdate } from "../sockets/chat.socket.js";
 
 const parsePositiveInt = (value) => {
   const n = Number(value);
@@ -67,7 +66,7 @@ export const bookSeat = async (req, res) => {
         user_id: userId,
         showtime_id: showtimeId,
         total_price: totalPrice > 0 ? totalPrice : 300,
-        booking_status: "confirmed",
+        booking_status: "pending",
       },
       { transaction },
     );
@@ -81,14 +80,6 @@ export const bookSeat = async (req, res) => {
     );
 
     await transaction.commit();
-
-    emitShowtimeSeatUpdate(req.app.get("io"), {
-      showtimeId,
-      action: "booked",
-      seatIds: [seatId],
-      bookingId: booking.id,
-      userId,
-    });
 
     return res.status(201).json({ success: true, booking });
   } catch (err) {

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Plus, Search, Edit2, Trash2, X, Upload, MapPin, Phone, Users, Armchair } from "lucide-react";
+import { Plus, Search, Edit2, Trash2, X, Upload, MapPin, Phone, Users, Armchair, CheckCircle2 } from "lucide-react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import LocationPickerMap from "../../../shared/components/LocationPickerMap.jsx";
@@ -12,6 +12,7 @@ const createRoom = () => ({
   rows: 5,
   seatsPerRow: 10,
   emptySeats: [],
+  seatTypes: {},
 });
 
 const emptyForm = {
@@ -33,6 +34,7 @@ const Halls = () => {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState(emptyForm);
   const [rooms, setRooms] = useState([createRoom()]);
+  const [seatBrush, setSeatBrush] = useState("regular");
 
   useEffect(() => {
     fetchHalls();
@@ -79,12 +81,21 @@ const Halls = () => {
     setRooms((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const toggleEmptySeat = (roomIndex, rowIndex, colIndex) => {
+  const applySeatBrush = (roomIndex, rowIndex, colIndex) => {
     const key = seatKey(rowIndex, colIndex);
     const room = rooms[roomIndex];
-    const exists = room.emptySeats.includes(key);
-    const next = exists ? room.emptySeats.filter((k) => k !== key) : [...room.emptySeats, key];
-    updateRoom(roomIndex, { emptySeats: next });
+    const emptySet = new Set(room.emptySeats);
+    const seatTypes = { ...(room.seatTypes || {}) };
+
+    if (seatBrush === "blocked") {
+      emptySet.add(key);
+      delete seatTypes[key];
+    } else {
+      emptySet.delete(key);
+      seatTypes[key] = seatBrush === "premium" ? "premium" : "regular";
+    }
+
+    updateRoom(roomIndex, { emptySeats: Array.from(emptySet), seatTypes });
   };
 
   const canProceedDetails =
@@ -154,6 +165,21 @@ const Halls = () => {
       fetchHalls();
     } catch {
       toast.error("Failed to deactivate hall");
+    }
+  };
+
+  const handleActivate = async (hall) => {
+    try {
+      const data = new FormData();
+      data.append("isActive", "true");
+      await axios.put(`${API_BASE_URL}/hall/update/${hall.id}`, data, {
+        withCredentials: true,
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      toast.success("Hall activated successfully");
+      fetchHalls();
+    } catch {
+      toast.error("Failed to activate hall");
     }
   };
 
@@ -252,6 +278,15 @@ const Halls = () => {
                       className="p-2 rounded-full bg-red-500/20 hover:bg-red-500/40 text-red-500 transition-colors"
                     >
                       <Trash2 size={20} />
+                    </button>
+                  )}
+                  {!hall.isActive && (
+                    <button
+                      onClick={() => handleActivate(hall)}
+                      className="p-2 rounded-full bg-emerald-500/20 hover:bg-emerald-500/40 text-emerald-400 transition-colors"
+                      title="Activate Hall"
+                    >
+                      <CheckCircle2 size={20} />
                     </button>
                   )}
                 </div>
@@ -443,6 +478,7 @@ const Halls = () => {
                             updateRoom(idx, {
                               rows: Number(e.target.value) || 1,
                               emptySeats: [],
+                              seatTypes: {},
                             })
                           }
                           className="rounded-lg bg-black border border-white/10 p-3 text-white"
@@ -455,6 +491,7 @@ const Halls = () => {
                             updateRoom(idx, {
                               seatsPerRow: Number(e.target.value) || 1,
                               emptySeats: [],
+                              seatTypes: {},
                             })
                           }
                           className="rounded-lg bg-black border border-white/10 p-3 text-white"
@@ -474,6 +511,30 @@ const Halls = () => {
                 <div className="space-y-6">
                   <div className="rounded-lg border border-emerald-600/30 bg-emerald-900/20 p-3 text-sm text-emerald-200">
                     Calculated total capacity: {totalCapacity}
+                  </div>
+                  <div className="flex items-center gap-2 text-xs">
+                    <span className="text-slate-300">Brush:</span>
+                    <button
+                      type="button"
+                      onClick={() => setSeatBrush("regular")}
+                      className={`rounded border px-3 py-1 ${seatBrush === "regular" ? "border-emerald-400 bg-emerald-500/20 text-emerald-300" : "border-white/15 text-slate-300"}`}
+                    >
+                      Regular
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSeatBrush("premium")}
+                      className={`rounded border px-3 py-1 ${seatBrush === "premium" ? "border-amber-400 bg-amber-500/20 text-amber-300" : "border-white/15 text-slate-300"}`}
+                    >
+                      Premium
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSeatBrush("blocked")}
+                      className={`rounded border px-3 py-1 ${seatBrush === "blocked" ? "border-slate-400 bg-slate-500/20 text-slate-200" : "border-white/15 text-slate-300"}`}
+                    >
+                      Blocked
+                    </button>
                   </div>
                   {rooms.map((room, roomIndex) => {
                     const rows = Number(room.rows);
@@ -496,17 +557,24 @@ const Halls = () => {
                                   {Array.from({ length: seats }).map((__, colIndex) => {
                                     const key = seatKey(rowIndex, colIndex);
                                     const isEmpty = room.emptySeats.includes(key);
+                                    const seatType = room.seatTypes?.[key] === "premium" ? "premium" : "regular";
                                     return (
                                       <button
                                         key={key}
                                         type="button"
-                                        onClick={() => toggleEmptySeat(roomIndex, rowIndex, colIndex)}
+                                        onClick={() => applySeatBrush(roomIndex, rowIndex, colIndex)}
                                         className="p-0.5 transition-transform hover:scale-110"
-                                        title={`${String.fromCharCode(65 + rowIndex)}${colIndex + 1}`}
+                                        title={`${String.fromCharCode(65 + rowIndex)}${colIndex + 1} - ${isEmpty ? "blocked" : seatType}`}
                                       >
                                         <Armchair
                                           size={16}
-                                          className={isEmpty ? "text-slate-600 opacity-50" : "text-pink-400"}
+                                          className={
+                                            isEmpty
+                                              ? "text-slate-600 opacity-50"
+                                              : seatType === "premium"
+                                                ? "text-amber-400"
+                                                : "text-pink-400"
+                                          }
                                         />
                                       </button>
                                     );
