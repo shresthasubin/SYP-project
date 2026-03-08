@@ -131,6 +131,16 @@ const movieRegister = async (req, res) => {
       movieTrailer: movieTrailer.filename,
     });
 
+    await Notification.create({
+      userId: null,
+      title: "Movie Added in Collection",
+      message: `A new movie "${movie.movie_title}" has been added!`,
+      type: "movie",
+      isRead: false,
+      referenceId: movie.id,
+      referenceType: "Movie",
+    });
+
     return res.status(201).json({
       success: true,
       message: "Movie has been registered successfully",
@@ -172,6 +182,16 @@ const movieDelete = async (req, res) => {
     }
 
     await movie.destroy();
+
+    await Notification.create({
+      userId: null,
+      title: "Movie Removal",
+      message: `Movie "${movie.movie_title}" has been removed from the listings.`,
+      type: "movie",
+      isRead: false,
+      referenceId: movie.id,
+      referenceType: "Movie",
+    });
 
     return res.status(200).json({
       success: true,
@@ -287,6 +307,16 @@ const movieUpdate = async (req, res) => {
       isPlaying: isPlaying ?? movie.isPlaying,
       playEndDate: newEndDate,
     });
+
+    await Notification.create({
+      userId: null,
+      title: "Movie Updated",
+      message: `Movie "${updatedMovie.movie_title}" has been updated. Check the new details!`,
+      type: "movie",
+      isRead: false,
+      referenceId: updatedMovie.id,
+      referenceType: "Movie",
+    }); 
 
     return res.status(200).json({
       success: true,

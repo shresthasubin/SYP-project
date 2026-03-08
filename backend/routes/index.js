@@ -9,6 +9,7 @@ import chatRoutes from './chat.routes.js'
 import ticketRoute from './ticket.route.js'
 import bookingRouter from './booking.routes.js'
 import paymentRouter from './payment.routes.js'
+import notifyRouter from './notification.route.js'
 
 const router = express.Router()
 
@@ -22,5 +23,6 @@ router.use('/chat', chatRoutes)
 router.use('/ticket', ticketRoute)
 router.use('/bookings', bookingRouter)
 router.use('/payment', paymentRouter)
+router.use('/notification', notifyRouter)
 
 export default router

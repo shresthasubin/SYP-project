@@ -71,6 +71,16 @@ export const bookSeat = async (req, res) => {
       { transaction },
     );
 
+    await Notification.create(
+      {
+        userId,
+        title: "Booking Created",
+        message: `Your booking #${booking.id} has been created. Complete payment to confirm your seat.`,
+        isRead: false,
+      },
+      { transaction }
+    );
+
     await BookingSeat.create(
       {
         booking_id: booking.id,

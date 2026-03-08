@@ -66,6 +66,12 @@ const generateTicketsForBooking = async ({ bookingId, userId, transaction }) => 
   if (existingTickets > 0) {
     if (booking.booking_status !== "confirmed") {
       await booking.update({ booking_status: "confirmed" }, { transaction });
+      await Notification.create({
+        userId,
+        title: "Booking Confirmed",
+        message: `Your booking #${booking.id} has been confirmed. Enjoy your movie!`,
+        isRead: false,
+      });
     }
     return { booking, created: false };
   }
@@ -134,6 +140,16 @@ const generateTicketsForBooking = async ({ bookingId, userId, transaction }) => 
   await Ticket.bulkCreate(ticketsPayload, { transaction });
   await booking.update({ booking_status: "confirmed" }, { transaction });
 
+  await Notification.create(
+    {
+      userId: req.user.id,
+      title: "Tickets Generated",
+      message: `Your tickets for booking #${booking.id} are confirmed.`,
+      isRead: false,
+    },
+    { transaction }
+  );
+  
   return { booking, created: true };
 };
 
@@ -320,9 +336,23 @@ const verifyPayment = async (req, res) => {
       await emitConfirmedSeatUpdateForBooking(req, booking);
     }
 
+    await Notification.create({
+      userId: req.user.id,
+      title: "Payment Successful",
+      message: `Your payment for booking #${booking.id} has been confirmed. Tickets have been generated.`,
+      isRead: false,
+    });
+
     if (paymentStatus === "failed" && booking.booking_status !== "cancelled") {
       await booking.update({ booking_status: "pending" });
     }
+
+    await Notification.create({
+      userId: req.user.id,
+      title: "Payment Failed",
+      message: `Your payment for booking #${booking.id} has failed. Please try again.`,
+      isRead: false,
+    });
 
     return res.status(200).json({
       success: true,

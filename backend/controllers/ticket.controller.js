@@ -195,6 +195,16 @@ const createTicketBooking = async (req, res) => {
       { transaction },
     );
 
+    await Notification.create(
+      {
+        userId: req.user.id,
+        title: "Booking Created",
+        message: `Your booking #${booking.id} has been created. Complete payment to generate tickets.`,
+        isRead: false,
+      },
+      { transaction }
+    );
+
     await BookingSeat.bulkCreate(
       seats.map((seat) => ({ booking_id: booking.id, seat_id: seat.id })),
       { transaction },
@@ -328,6 +338,16 @@ const cancelMyBooking = async (req, res) => {
       { where: { booking_id: booking.id, user_id: req.user.id }, transaction },
     );
 
+    await Notification.create(
+      {
+        userId: req.user.id,
+        title: "Booking Cancelled",
+        message: `Your booking #${booking.id} has been cancelled.`,
+        isRead: false,
+      },
+      { transaction }
+    );
+    
     await transaction.commit();
 
     const io = req.app.get("io");

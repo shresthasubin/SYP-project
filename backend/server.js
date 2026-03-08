@@ -11,6 +11,7 @@ import swaggerUi from "swagger-ui-express";
 import http from "http";
 import { Server } from "socket.io";
 import { setupSocket } from "./sockets/chat.socket.js";
+import { Notification } from "./model/notification.model.js";
 
 dotenv.config({
   path: "./.env",
