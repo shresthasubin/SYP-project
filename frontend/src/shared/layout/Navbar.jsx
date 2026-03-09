@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
+import axios from "axios";
 import {
   Menu,
   X,
   Ticket,
   ChevronDown,
   LogOut,
+  Bell,
   MapPin,
   Search,
   Crosshair,
@@ -18,6 +20,7 @@ import {
 import { NavLink, Link, useLocation } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext.jsx";
 import { useAuth } from "../hooks/useAuth.js";
+import { API_BASE_URL } from "../config/api.js";
 import "../../index.css";
 import biratnagarImg from "../../assets/location/biratnagar.png";
 import butwalImg from "../../assets/location/butwal.png";
@@ -441,12 +444,36 @@ const LOCATION_CITY_STORAGE_KEY = "selected_city";
 const LOCATION_CITY_EVENT = "city-changed";
 const ALL_NEPAL_CITY = "All Nepal";
 
+const formatNotificationTime = (value) => {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+
+  const diffMs = date.getTime() - Date.now();
+  const minutes = Math.round(diffMs / 60000);
+
+  if (Math.abs(minutes) < 1) return "Just now";
+  if (Math.abs(minutes) < 60) return new Intl.RelativeTimeFormat(undefined, { numeric: "auto" }).format(minutes, "minute");
+
+  const hours = Math.round(minutes / 60);
+  if (Math.abs(hours) < 24) return new Intl.RelativeTimeFormat(undefined, { numeric: "auto" }).format(hours, "hour");
+
+  const days = Math.round(hours / 24);
+  if (Math.abs(days) < 7) return new Intl.RelativeTimeFormat(undefined, { numeric: "auto" }).format(days, "day");
+
+  return date.toLocaleDateString();
+};
+
 const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [locationOpen, setLocationOpen] = useState(false);
   const [citySearch, setCitySearch] = useState("");
+  const [notifications, setNotifications] = useState([]);
+  const [notificationsLoading, setNotificationsLoading] = useState(false);
+  const [notificationsError, setNotificationsError] = useState("");
   const [selectedCity, setSelectedCity] = useState(() => {
     try {
       return localStorage.getItem(LOCATION_CITY_STORAGE_KEY) || "Kathmandu";
@@ -460,6 +487,7 @@ const Navbar = () => {
   const { user, isAuthenticated, loading, logout } = useAuth();
   const location = useLocation();
   const profileRef = useRef(null);
+  const notificationsRef = useRef(null);
   const locationRef = useRef(null);
 
   const displayName = useMemo(() => {
@@ -472,6 +500,11 @@ const Navbar = () => {
   const profileInitial = useMemo(
     () => (displayName?.trim()?.[0] || "P").toUpperCase(),
     [displayName],
+  );
+
+  const unreadCount = useMemo(
+    () => notifications.filter((item) => !item?.isRead).length,
+    [notifications],
   );
 
   const filteredCities = useMemo(() => {
@@ -532,6 +565,7 @@ const Navbar = () => {
   useEffect(() => {
     setOpen(false);
     setProfileOpen(false);
+    setNotificationsOpen(false);
     setLocationOpen(false);
     setLocationError("");
   }, [location.pathname]);
@@ -541,6 +575,9 @@ const Navbar = () => {
       if (profileRef.current && !profileRef.current.contains(event.target)) {
         setProfileOpen(false);
       }
+      if (notificationsRef.current && !notificationsRef.current.contains(event.target)) {
+        setNotificationsOpen(false);
+      }
       if (locationRef.current && !locationRef.current.contains(event.target)) {
         setLocationOpen(false);
       }
@@ -549,6 +586,70 @@ const Navbar = () => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    if (!isAuthenticated || !user?.id) {
+      setNotifications([]);
+      setNotificationsError("");
+      setNotificationsLoading(false);
+      return;
+    }
+
+    let active = true;
+
+    const fetchNotifications = async ({ silent = false } = {}) => {
+      if (!silent) setNotificationsLoading(true);
+      setNotificationsError("");
+
+      try {
+        const response = await axios.get(
+          `${API_BASE_URL}/notification/get-notification/${user.id}`,
+          { withCredentials: true },
+        );
+
+        if (!active) return;
+        const items = Array.isArray(response.data?.data) ? response.data.data : [];
+        setNotifications(
+          items.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)),
+        );
+      } catch (error) {
+        if (!active) return;
+        setNotificationsError(error.response?.data?.message || "Failed to load notifications");
+      } finally {
+        if (active && !silent) setNotificationsLoading(false);
+      }
+    };
+
+    fetchNotifications();
+    const intervalId = window.setInterval(() => fetchNotifications({ silent: true }), 30000);
+
+    return () => {
+      active = false;
+      window.clearInterval(intervalId);
+    };
+  }, [isAuthenticated, user?.id]);
+
+  const markNotificationAsRead = async (notificationId) => {
+    const id = Number(notificationId);
+    if (!Number.isInteger(id) || id <= 0) return;
+
+    setNotifications((prev) => prev.map((item) => (
+      Number(item.id) === id ? { ...item, isRead: true } : item
+    )));
+
+    try {
+      await axios.put(
+        `${API_BASE_URL}/notification/get-notification/${id}/read`,
+        {},
+        { withCredentials: true },
+      );
+    } catch (error) {
+      setNotifications((prev) => prev.map((item) => (
+        Number(item.id) === id ? { ...item, isRead: false } : item
+      )));
+      setNotificationsError(error.response?.data?.message || "Failed to mark notification as read");
+    }
+  };
 
   const applySelectedCity = (cityName) => {
     setSelectedCity(cityName);
@@ -748,45 +849,112 @@ const Navbar = () => {
               Loading...
             </span>
           ) : isAuthenticated ? (
-            <div className="relative" ref={profileRef}>
-              <button
-                onClick={() => setProfileOpen((prev) => !prev)}
-                className={`flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-sm font-semibold text-text-primary transition-colors ${signInClass}`}
-              >
-                <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-accent text-xs font-bold text-white">
-                  {profileInitial}
-                </span>
-                <span className="max-w-28 truncate">{displayName}</span>
-                <ChevronDown
-                  size={16}
-                  className={`transition-transform ${profileOpen ? "rotate-180" : ""}`}
-                />
-              </button>
-
-              {profileOpen && (
-                <div
-                  className={`absolute right-0 mt-2 w-64 rounded-xl border p-3 shadow-2xl ${profilePanelClass}`}
+            <>
+              <div className="relative" ref={notificationsRef}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setNotificationsOpen((prev) => !prev);
+                    setProfileOpen(false);
+                  }}
+                  className={`relative rounded-lg border p-2 text-text-primary transition-colors ${signInClass}`}
+                  aria-label="Open notifications"
                 >
-                  <p className="text-sm font-semibold text-text-primary">{displayName}</p>
-                  <p className="mb-3 truncate text-xs text-text-secondary">
-                    {user?.email || "Signed in user"}
-                  </p>
-                  <Link
-                    to="/profile"
-                    className="block rounded-lg border border-transparent px-3 py-2 text-sm font-semibold text-text-primary transition-colors hover:bg-accent hover:text-white"
+                  <Bell size={18} />
+                  {unreadCount > 0 ? (
+                    <span className="absolute -right-1 -top-1 inline-flex min-w-[18px] items-center justify-center rounded-full bg-accent px-1 text-[10px] font-bold leading-4 text-white">
+                      {unreadCount > 9 ? "9+" : unreadCount}
+                    </span>
+                  ) : null}
+                </button>
+
+                {notificationsOpen && (
+                  <div className={`absolute right-0 mt-2 w-80 rounded-xl border p-3 shadow-2xl ${profilePanelClass}`}>
+                    <div className="mb-3 flex items-center justify-between">
+                      <p className="text-sm font-semibold text-text-primary">Notifications</p>
+                      <span className="text-xs text-text-secondary">{unreadCount} unread</span>
+                    </div>
+
+                    {notificationsLoading ? (
+                      <p className="text-sm text-text-secondary">Loading notifications...</p>
+                    ) : notificationsError ? (
+                      <p className="text-sm text-rose-400">{notificationsError}</p>
+                    ) : notifications.length === 0 ? (
+                      <p className="text-sm text-text-secondary">No notifications yet.</p>
+                    ) : (
+                      <div className="max-h-80 space-y-2 overflow-y-auto pr-1">
+                        {notifications.map((item) => (
+                          <button
+                            key={item.id}
+                            type="button"
+                            onClick={() => {
+                              if (!item.isRead) markNotificationAsRead(item.id);
+                            }}
+                            className={`w-full rounded-lg border px-3 py-2 text-left transition ${
+                              item.isRead ? "border-white/10 bg-white/[0.03]" : "border-accent/30 bg-accent/10"
+                            }`}
+                          >
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="min-w-0">
+                                <p className="truncate text-sm font-semibold text-text-primary">{item.title || "Notification"}</p>
+                                <p className="mt-1 text-xs text-text-secondary">{item.message || ""}</p>
+                              </div>
+                              {!item.isRead ? <span className="mt-1 h-2 w-2 rounded-full bg-accent" /> : null}
+                            </div>
+                            <p className="mt-2 text-[11px] uppercase tracking-[0.18em] text-text-secondary/80">
+                              {formatNotificationTime(item.createdAt)}
+                            </p>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div className="relative" ref={profileRef}>
+                <button
+                  onClick={() => {
+                    setProfileOpen((prev) => !prev);
+                    setNotificationsOpen(false);
+                  }}
+                  className={`flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-sm font-semibold text-text-primary transition-colors ${signInClass}`}
+                >
+                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-accent text-xs font-bold text-white">
+                    {profileInitial}
+                  </span>
+                  <span className="max-w-28 truncate">{displayName}</span>
+                  <ChevronDown
+                    size={16}
+                    className={`transition-transform ${profileOpen ? "rotate-180" : ""}`}
+                  />
+                </button>
+
+                {profileOpen && (
+                  <div
+                    className={`absolute right-0 mt-2 w-64 rounded-xl border p-3 shadow-2xl ${profilePanelClass}`}
                   >
-                    View Profile
-                  </Link>
-                  <button
-                    onClick={logout}
-                    className="mt-2 flex w-full items-center gap-2 rounded-lg border border-transparent px-3 py-2 text-sm font-semibold text-text-primary transition-colors hover:bg-accent hover:text-white"
-                  >
-                    <LogOut size={16} />
-                    Logout
-                  </button>
-                </div>
-              )}
-            </div>
+                    <p className="text-sm font-semibold text-text-primary">{displayName}</p>
+                    <p className="mb-3 truncate text-xs text-text-secondary">
+                      {user?.email || "Signed in user"}
+                    </p>
+                    <Link
+                      to="/profile"
+                      className="block rounded-lg border border-transparent px-3 py-2 text-sm font-semibold text-text-primary transition-colors hover:bg-accent hover:text-white"
+                    >
+                      View Profile
+                    </Link>
+                    <button
+                      onClick={logout}
+                      className="mt-2 flex w-full items-center gap-2 rounded-lg border border-transparent px-3 py-2 text-sm font-semibold text-text-primary transition-colors hover:bg-accent hover:text-white"
+                    >
+                      <LogOut size={16} />
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
+            </>
           ) : (
             <Link
               to="/login"
@@ -876,6 +1044,40 @@ const Navbar = () => {
                 >
                   View Profile
                 </Link>
+                <div className="mt-3 rounded-lg border border-white/10 p-3">
+                  <div className="mb-2 flex items-center justify-between">
+                    <span className="inline-flex items-center gap-2 text-sm font-semibold text-text-primary">
+                      <Bell size={15} />
+                      Notifications
+                    </span>
+                    <span className="text-xs text-text-secondary">{unreadCount} unread</span>
+                  </div>
+                  {notificationsLoading ? (
+                    <p className="text-xs text-text-secondary">Loading notifications...</p>
+                  ) : notificationsError ? (
+                    <p className="text-xs text-rose-400">{notificationsError}</p>
+                  ) : notifications.length === 0 ? (
+                    <p className="text-xs text-text-secondary">No notifications yet.</p>
+                  ) : (
+                    <div className="max-h-52 space-y-2 overflow-y-auto">
+                      {notifications.slice(0, 5).map((item) => (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => {
+                            if (!item.isRead) markNotificationAsRead(item.id);
+                          }}
+                          className={`w-full rounded-md border px-2 py-2 text-left ${
+                            item.isRead ? "border-white/10 bg-white/[0.03]" : "border-accent/30 bg-accent/10"
+                          }`}
+                        >
+                          <p className="text-xs font-semibold text-text-primary">{item.title || "Notification"}</p>
+                          <p className="mt-1 text-[11px] text-text-secondary">{item.message || ""}</p>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
                 <button
                   onClick={logout}
                   className={`mt-1 flex w-full items-center justify-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold text-text-primary ${signInClass}`}
