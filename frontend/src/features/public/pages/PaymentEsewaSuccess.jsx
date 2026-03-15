@@ -49,7 +49,7 @@ const PaymentEsewaSuccess = () => {
     getQueryParam(searchParams, "product_id") ||
     getQueryParam(searchParams, "oid") ||
     localStorage.getItem("esewa_transaction_uuid");
-  const transactionCode = esewaData?.transaction_code || "-";
+  const transactionCode = esewaData?.transaction_code || getQueryParam(searchParams, "transaction_code") || "-";
   const gatewayStatus = result?.gateway_status || esewaData?.status || "-";
   const totalAmount = esewaData?.total_amount || "-";
 
@@ -63,9 +63,13 @@ const PaymentEsewaSuccess = () => {
 
       try {
         setLoading(true);
-        const res = await checkEsewaPaymentStatus({ transactionUuid });
+        const res = await checkEsewaPaymentStatus({
+          transactionUuid,
+          transactionCode: transactionCode !== "-" ? transactionCode : null,
+        });
         if (res?.success) {
           setResult(res?.data || null);
+          localStorage.removeItem("esewa_transaction_uuid");
           toast.success("Payment status updated");
         } else {
           toast.error(res?.message || "Failed to verify payment");
@@ -78,7 +82,7 @@ const PaymentEsewaSuccess = () => {
     };
 
     run();
-  }, [transactionUuid]);
+  }, [transactionCode, transactionUuid]);
 
   return (
     <section className="min-h-screen bg-[#0a0a0a] px-5 pt-20 text-white">

@@ -12,10 +12,13 @@ export const initiateEsewaPayment = async ({ bookingId }) => {
   return response.data;
 };
 
-export const checkEsewaPaymentStatus = async ({ transactionUuid }) => {
+export const checkEsewaPaymentStatus = async ({ transactionUuid, transactionCode }) => {
   const response = await axios.post(
     `${API_BASE_URL}/payment/esewa/status`,
-    { transaction_uuid: transactionUuid },
+    {
+      transaction_uuid: transactionUuid,
+      transaction_code: transactionCode,
+    },
     { withCredentials: true },
   );
 

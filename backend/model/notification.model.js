@@ -6,7 +6,8 @@ export const Notification = sequelize.define(
     {
         userId: {
             type: DataTypes.INTEGER,
-            allowNull: false
+            allowNull: true,
+            defaultValue: null
         },
         title: {
             type: DataTypes.STRING,

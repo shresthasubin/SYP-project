@@ -1,3 +1,4 @@
+import { Notification } from "../model/notification.model.js";
 import Movie from "../model/movie.model.js";
 
 const parseListField = (value) => {

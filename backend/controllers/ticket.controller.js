@@ -6,6 +6,7 @@ import Hall from "../model/hall.model.js";
 import Hallclass from "../model/hallclass.model.js";
 import Hallroom from "../model/hallroom.model.js";
 import Movie from "../model/movie.model.js";
+import { Notification } from "../model/notification.model.js";
 import Seat from "../model/seat.model.js";
 import Showtime from "../model/showtime.model.js";
 import Ticket from "../model/ticket.model.js";
@@ -200,6 +201,7 @@ const createTicketBooking = async (req, res) => {
         userId: req.user.id,
         title: "Booking Created",
         message: `Your booking #${booking.id} has been created. Complete payment to generate tickets.`,
+        type: "booking",
         isRead: false,
       },
       { transaction }
@@ -343,6 +345,7 @@ const cancelMyBooking = async (req, res) => {
         userId: req.user.id,
         title: "Booking Cancelled",
         message: `Your booking #${booking.id} has been cancelled.`,
+        type: "booking",
         isRead: false,
       },
       { transaction }
