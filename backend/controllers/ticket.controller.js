@@ -62,19 +62,19 @@ const getSeatAvailabilityForShowtime = async (req, res) => {
 
     const bookedRows = seatIds.length
       ? await BookingSeat.findAll({
-          where: { seat_id: { [Op.in]: seatIds } },
-          include: [
-            {
-              model: Booking,
-              required: true,
-              attributes: ["id", "showtime_id", "booking_status"],
-              where: {
-                showtime_id: showtimeId,
-                booking_status: "confirmed",
-              },
+        where: { seat_id: { [Op.in]: seatIds } },
+        include: [
+          {
+            model: Booking,
+            required: true,
+            attributes: ["id", "showtime_id", "booking_status"],
+            where: {
+              showtime_id: showtimeId,
+              booking_status: "confirmed",
             },
-          ],
-        })
+          },
+        ],
+      })
       : [];
 
     const bookedSeatIdSet = new Set(bookedRows.map((row) => row.seat_id));
@@ -350,7 +350,7 @@ const cancelMyBooking = async (req, res) => {
       },
       { transaction }
     );
-    
+
     await transaction.commit();
 
     const io = req.app.get("io");

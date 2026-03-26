@@ -34,9 +34,9 @@ const team = [
 
 const About = () => {
   return (
-    <main className="pb-12 pt-24">
+    <main className="pb-4 pt-24">
       <section className="container mx-auto px-6">
-        <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-secondary p-8 md:p-12">
+        <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-black p-8 md:p-12">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(229,9,20,0.20),transparent_45%)]" />
           <div className="relative space-y-5">
             <p className="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-accent">
@@ -55,13 +55,13 @@ const About = () => {
 
       <section className="container mx-auto px-6 py-10">
         <div className="grid gap-6 md:grid-cols-2">
-          <article className="rounded-2xl border border-white/10 bg-secondary p-6">
+          <article className="rounded-2xl border border-white/10 bg-black p-6">
             <h2 className="mb-3 text-2xl font-bold text-text-primary">Our Vision</h2>
             <p className="text-sm leading-relaxed text-text-secondary">
               To become the most trusted movie-booking experience where discovering films, selecting theaters, and reserving seats feel effortless for every viewer.
             </p>
           </article>
-          <article className="rounded-2xl border border-white/10 bg-secondary p-6">
+          <article className="rounded-2xl border border-white/10 bg-black p-6">
             <h2 className="mb-3 text-2xl font-bold text-text-primary">Our Promise</h2>
             <p className="text-sm leading-relaxed text-text-secondary">
               Consistent performance, transparent booking flows, and dependable support for users, theater partners, and admins across all core features.
@@ -94,7 +94,7 @@ const About = () => {
       <section className="container mx-auto px-6 py-10">
         <div className="mb-6 flex items-center justify-between">
           <h2 className="text-3xl font-bold text-text-primary">Team Behind The Platform</h2>
-          <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-secondary px-3 py-1 text-xs font-semibold text-text-secondary">
+          <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-black px-3 py-1 text-xs font-semibold text-text-secondary">
             <ShieldCheck size={14} />
             Trusted Operations
           </span>
@@ -103,7 +103,7 @@ const About = () => {
           {team.map((member) => (
             <article
               key={member.id}
-              className="group overflow-hidden rounded-2xl border border-white/10 bg-secondary transition-all duration-300 hover:-translate-y-1 hover:border-accent/60"
+              className="group overflow-hidden rounded-2xl border border-white/10 bg-black transition-all duration-300 hover:-translate-y-1 hover:border-accent/60"
             >
               <div className="h-72 overflow-hidden">
                 <img
@@ -125,19 +125,19 @@ const About = () => {
         </div>
       </section>
 
-      <section className="container mx-auto px-6 py-4">
-        <div className="rounded-2xl border border-accent/30 bg-accent/10 p-6 md:p-8">
-          <p className="text-xs font-semibold uppercase tracking-wider text-accent">Join Us</p>
-          <h2 className="mt-2 text-3xl font-extrabold text-text-primary">Use Our System With Your Hall</h2>
+      <section className="container mx-auto mt-8 px-6 py-4">
+        <div className="rounded-2xl border border-accent/30 bg-gradient-to-r from-[#2a0a0a] to-black p-6 md:p-8">
+          <p className="text-xs font-semibold uppercase tracking-wider text-accent">Hall Admin</p>
+          <h2 className="mt-2 text-3xl font-extrabold text-text-primary">Join CinemaHub as a Hall Admin</h2>
           <p className="mt-3 max-w-3xl text-sm text-text-secondary md:text-base">
-            Join our system with your hall and manage your cinema operations on Cinema Hub.
+            Register as a hall admin to manage your cinema, schedules, and daily hall operations on CinemaHub.
           </p>
           <div className="mt-5">
             <Link
               to="/hall-staff/apply"
-              className="inline-flex items-center rounded-lg bg-accent px-5 py-2.5 text-sm font-semibold text-white hover:bg-accent-hover"
+              className="inline-flex items-center rounded-lg bg-[#d72626] px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-[#d72626]/20 transition hover:bg-[#bb1f1f]"
             >
-              Join With Your Hall
+              Apply as Hall Admin
             </Link>
           </div>
         </div>

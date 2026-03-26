@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Mail, Lock, Eye, EyeOff, Film } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, Film, ArrowLeft } from "lucide-react";
 import { toast } from "react-hot-toast";
 import axios from "axios";
 import { API_BASE_URL } from "../../../shared/config/api.js";
@@ -90,6 +90,14 @@ const Register = () => {
             {/* Right Column: Form */}
             <div className="w-full lg:w-1/2 overflow-y-auto p-8 sm:p-14">
               <div className="flex flex-col gap-6">
+                <Link
+                  to="/"
+                  className="inline-flex items-center gap-2 text-sm font-semibold text-slate-400 transition hover:text-white"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Back to Home
+                </Link>
+
                 {/* Header */}
                 <div className="flex items-center gap-3">
                   <Film className="text-[#D72626] w-8 h-8" />

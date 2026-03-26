@@ -10,8 +10,6 @@ import {
   useMapEvents,
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import { useTheme } from "../context/ThemeContext.jsx";
-
 const DEFAULT_CENTER = [27.7172, 85.324];
 
 const parseCoordinatePair = (value) => {
@@ -59,7 +57,6 @@ const MapViewportUpdater = ({ center, zoom }) => {
 };
 
 const LocationPickerMap = ({ locationValue, onLocationSelect }) => {
-  const { isDark } = useTheme();
   const initialCoordinatePair = useMemo(
     () => parseCoordinatePair(locationValue),
     [locationValue],
@@ -72,6 +69,7 @@ const LocationPickerMap = ({ locationValue, onLocationSelect }) => {
   const [searchError, setSearchError] = useState("");
   const [mapCenter, setMapCenter] = useState(initialCoordinatePair || DEFAULT_CENTER);
   const [mapZoom, setMapZoom] = useState(initialCoordinatePair ? 15 : 12);
+  const [detecting, setDetecting] = useState(false);
 
   useEffect(() => {
     if (!locationValue?.trim()) {
@@ -126,8 +124,28 @@ const LocationPickerMap = ({ locationValue, onLocationSelect }) => {
     resolveAddress(lat, lng);
   };
 
-  const handleSearch = async (e) => {
-    e.preventDefault();
+  const detectMyLocation = () => {
+    if (!navigator.geolocation) {
+      setSearchError("Geolocation not supported in this browser.");
+      return;
+    }
+    setDetecting(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords;
+        setSearchError("");
+        handleMapPick(latitude, longitude);
+        setDetecting(false);
+      },
+      (err) => {
+        setSearchError(err.message || "Unable to detect location.");
+        setDetecting(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000 },
+    );
+  };
+
+  const handleSearch = async () => {
 
     const trimmedQuery = searchQuery.trim();
     if (!trimmedQuery) {
@@ -178,22 +196,29 @@ const LocationPickerMap = ({ locationValue, onLocationSelect }) => {
 
   return (
     <div className="space-y-2">
-      <form onSubmit={handleSearch} className="flex gap-2">
+      <div className="flex gap-2">
         <input
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              handleSearch();
+            }
+          }}
           placeholder="Search location on map"
           className="w-full rounded-lg border border-white/15 bg-secondary px-3 py-2 text-sm text-text-primary focus:border-[#D72626] focus:outline-none"
         />
         <button
-          type="submit"
+          type="button"
+          onClick={handleSearch}
           disabled={isSearching}
           className="rounded-lg bg-[#D72626] px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
         >
           {isSearching ? "..." : "Search"}
         </button>
-      </form>
+      </div>
       {searchResults.length > 0 && (
         <div className="max-h-40 overflow-y-auto rounded-lg border border-white/15 bg-secondary">
           {searchResults.map((result) => (
@@ -208,6 +233,19 @@ const LocationPickerMap = ({ locationValue, onLocationSelect }) => {
           ))}
         </div>
       )}
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={detectMyLocation}
+          disabled={detecting}
+          className="rounded-lg border border-white/15 bg-black/60 px-3 py-2 text-xs font-semibold text-white transition hover:bg-white/10 disabled:opacity-60"
+        >
+          {detecting ? "Detecting..." : "Use my location"}
+        </button>
+        {searchError ? (
+          <span className="text-xs text-rose-400">{searchError}</span>
+        ) : null}
+      </div>
       {searchError && <p className="text-xs text-amber-300">{searchError}</p>}
       <div className="h-72 w-full overflow-hidden rounded-xl border border-white/15 shadow-[0_10px_35px_rgba(0,0,0,0.35)] md:h-80">
         <MapContainer
@@ -218,13 +256,13 @@ const LocationPickerMap = ({ locationValue, onLocationSelect }) => {
           style={{ height: "100%", width: "100%" }}
         >
           <LayersControl position="topright">
-            <LayersControl.BaseLayer checked={!isDark} name="Detailed Streets">
+            <LayersControl.BaseLayer checked name="Detailed Streets">
               <TileLayer
                 attribution='&copy; OpenStreetMap contributors &copy; CARTO'
                 url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
               />
             </LayersControl.BaseLayer>
-            <LayersControl.BaseLayer checked={isDark} name="Dark Streets">
+            <LayersControl.BaseLayer name="Dark Streets">
               <TileLayer
                 attribution='&copy; OpenStreetMap contributors &copy; CARTO'
                 url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"

@@ -1,23 +1,36 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link as RouterLink } from "react-router-dom";
 import {
-  CircleUserRound,
-  Ticket,
-  Wallet,
-  CreditCard,
-  Heart,
-  Settings,
-  MapPin,
-  Clock3,
+  Avatar,
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Chip,
+  Container,
+  Divider,
+  Grid,
+  Paper,
+  Stack,
+  Typography,
+} from "@mui/material";
+import {
   CalendarClock,
+  CircleUserRound,
+  Clock3,
+  CreditCard,
+  Download,
+  Heart,
   LogIn,
   LogOut,
-  Download,
+  MapPin,
+  Settings,
+  Ticket,
+  Wallet,
 } from "lucide-react";
 import axios from "axios";
 import QRCode from "qrcode";
 import { jsPDF } from "jspdf";
-import avatar from "../../../assets/avatar.png";
 import { useAuth } from "../../../shared/hooks/useAuth.js";
 import { API_BASE_URL, API_SERVER_URL } from "../../../shared/config/api.js";
 
@@ -29,6 +42,15 @@ const MENU_ITEMS = [
   { key: "watchlist", label: "My Watchlist", icon: Heart },
   { key: "settings", label: "Settings", icon: Settings },
 ];
+
+const pageSurface = {
+  borderRadius: 4,
+  border: "1px solid rgba(255,255,255,0.08)",
+  background:
+    "linear-gradient(180deg, rgba(24,24,27,0.96) 0%, rgba(14,14,16,0.98) 100%)",
+  color: "#fff",
+  boxShadow: "0 18px 48px rgba(0,0,0,0.24)",
+};
 
 const getPosterUrl = (poster) => {
   if (!poster) return "https://placehold.co/600x900?text=No+Poster";
@@ -63,6 +85,23 @@ const getTicketQrPayload = (ticket) =>
     seat: ticket.seatLabel || "",
   });
 
+const getInitials = (name) => {
+  const parts = String(name || "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+
+  if (parts.length >= 2) {
+    return `${parts[0][0] || ""}${parts[1][0] || ""}`.toUpperCase();
+  }
+
+  if (parts.length === 1) {
+    return parts[0].slice(0, 2).toUpperCase();
+  }
+
+  return "GU";
+};
+
 const toDataUrl = async (url) => {
   const response = await fetch(url);
   const blob = await response.blob();
@@ -74,87 +113,191 @@ const toDataUrl = async (url) => {
   });
 };
 
+const InfoCard = ({ label, value }) => (
+  <Paper sx={{ ...pageSurface, p: 2.5 }}>
+    <Typography
+      sx={{
+        color: "rgba(255,255,255,0.5)",
+        textTransform: "uppercase",
+        letterSpacing: "0.14em",
+        fontSize: 12,
+        fontWeight: 700,
+      }}
+    >
+      {label}
+    </Typography>
+    <Typography sx={{ mt: 1.25, fontSize: 18, fontWeight: 800, color: "#fff" }}>
+      {value}
+    </Typography>
+  </Paper>
+);
+
 const TicketRow = ({ ticket, ticketQrMap, onDownloadTicket }) => (
-  <article className="group relative overflow-hidden rounded-2xl border border-white/10 bg-[#0a1022]/90 p-4 transition-all duration-300 hover:border-[#e7df58]/50 hover:bg-[#101934] md:p-5">
-    <div className="relative flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-      <div className="flex min-w-0 items-start gap-4">
-        <img
+  <Paper
+    sx={{
+      ...pageSurface,
+      p: { xs: 2, md: 2.5 },
+      transition: "transform 180ms ease, border-color 180ms ease",
+      "&:hover": {
+        transform: "translateY(-4px)",
+        borderColor: "rgba(229,9,20,0.32)",
+      },
+    }}
+  >
+    <Stack
+      direction={{ xs: "column", md: "row" }}
+      spacing={2}
+      alignItems={{ xs: "flex-start", md: "center" }}
+      justifyContent="space-between"
+    >
+      <Stack direction="row" spacing={2} alignItems="flex-start" sx={{ minWidth: 0 }}>
+        <Box
+          component="img"
           src={ticket.poster}
           alt={`${ticket.title} poster`}
-          className="h-20 w-14 rounded-lg object-cover shadow-lg shadow-black/30"
+          sx={{
+            width: { xs: 62, md: 72 },
+            height: { xs: 92, md: 104 },
+            borderRadius: 2,
+            objectFit: "cover",
+            border: "1px solid rgba(255,255,255,0.08)",
+          }}
         />
-        <div className="min-w-0">
-          <h3 className="truncate text-xl font-semibold text-white">{ticket.title}</h3>
-          <p className="mt-1 flex items-center gap-2 text-sm text-slate-300">
-            <Clock3 size={14} className="text-[#e7df58]" />
-            {ticket.dateTime}
-          </p>
-          <p className="mt-2 flex items-center gap-2 text-sm text-slate-300">
-            <MapPin size={14} className="text-[#e7df58]" />
-            {ticket.venue}
-          </p>
-          <p className="mt-1 text-sm text-slate-400">{ticket.seats}</p>
-          <p className="mt-1 text-xs text-slate-500">Booking #{ticket.id}</p>
-        </div>
-      </div>
+        <Box sx={{ minWidth: 0 }}>
+          <Typography sx={{ fontSize: { xs: 18, md: 22 }, fontWeight: 800, color: "#fff" }}>
+            {ticket.title}
+          </Typography>
+          <Stack spacing={0.8} sx={{ mt: 1.25 }}>
+            <Typography sx={{ display: "flex", alignItems: "center", gap: 1, color: "rgba(255,255,255,0.7)", fontSize: 14 }}>
+              <Clock3 size={14} color="#e50914" />
+              {ticket.dateTime}
+            </Typography>
+            <Typography sx={{ display: "flex", alignItems: "center", gap: 1, color: "rgba(255,255,255,0.7)", fontSize: 14 }}>
+              <MapPin size={14} color="#e50914" />
+              {ticket.venue}
+            </Typography>
+            <Typography sx={{ color: "rgba(255,255,255,0.6)", fontSize: 14 }}>
+              {ticket.seats}
+            </Typography>
+            <Typography sx={{ color: "rgba(255,255,255,0.42)", fontSize: 12 }}>
+              Booking #{ticket.id}
+            </Typography>
+          </Stack>
+        </Box>
+      </Stack>
 
-      <div className="flex items-center justify-between gap-3 md:justify-end">
-        <div className="flex items-center gap-3">
-          <img
-            src={ticketQrMap[ticket.id] || "https://placehold.co/180x180?text=QR"}
-            alt={`QR for ticket ${ticket.ticketCode || ticket.id}`}
-            className="h-16 w-16 rounded-lg border border-white/15 bg-white p-1"
-          />
-          <div className="flex flex-col items-end gap-2">
-            <span
-              className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold tracking-wide ${
+      <Stack
+        direction={{ xs: "row", sm: "row" }}
+        spacing={1.5}
+        alignItems="center"
+        sx={{ width: { xs: "100%", md: "auto" }, justifyContent: { xs: "space-between", md: "flex-end" } }}
+      >
+        <Box
+          component="img"
+          src={ticketQrMap[ticket.id] || "https://placehold.co/180x180?text=QR"}
+          alt={`QR for ticket ${ticket.ticketCode || ticket.id}`}
+          sx={{
+            width: 72,
+            height: 72,
+            borderRadius: 2,
+            border: "1px solid rgba(255,255,255,0.12)",
+            backgroundColor: "#fff",
+            p: 0.5,
+          }}
+        />
+        <Stack spacing={1} alignItems={{ xs: "flex-end", md: "flex-end" }}>
+          <Chip
+            label={ticket.status}
+            sx={{
+              borderRadius: 999,
+              fontWeight: 700,
+              color:
                 ticket.status === "Upcoming"
-                  ? "border-[#e7df58]/60 bg-[#e7df58]/15 text-[#f3ec7d]"
+                  ? "#fff"
                   : ticket.status === "Cancelled"
-                    ? "border-rose-500/60 bg-rose-500/15 text-rose-300"
-                    : "border-slate-500/50 bg-slate-500/15 text-slate-300"
-              }`}
-            >
-              {ticket.status}
-            </span>
-            <button
-              type="button"
-              onClick={() => onDownloadTicket(ticket)}
-              className="inline-flex items-center gap-1 rounded-lg border border-white/20 px-2.5 py-1.5 text-xs font-semibold text-white hover:border-[#e7df58] hover:text-[#f3ec7d]"
-            >
-              <Download size={13} />
-              Download Ticket
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </article>
+                    ? "#fecdd3"
+                    : "rgba(255,255,255,0.78)",
+              border:
+                ticket.status === "Upcoming"
+                  ? "1px solid rgba(229,9,20,0.34)"
+                  : ticket.status === "Cancelled"
+                    ? "1px solid rgba(244,63,94,0.34)"
+                    : "1px solid rgba(255,255,255,0.14)",
+              backgroundColor:
+                ticket.status === "Upcoming"
+                  ? "rgba(229,9,20,0.16)"
+                  : ticket.status === "Cancelled"
+                    ? "rgba(244,63,94,0.12)"
+                    : "rgba(255,255,255,0.06)",
+            }}
+          />
+          <Button
+            type="button"
+            onClick={() => onDownloadTicket(ticket)}
+            variant="outlined"
+            startIcon={<Download size={14} />}
+            sx={{
+              borderRadius: 999,
+              color: "#fff",
+              borderColor: "rgba(255,255,255,0.18)",
+              textTransform: "none",
+              fontWeight: 700,
+              "&:hover": {
+                borderColor: "#e50914",
+                backgroundColor: "rgba(229,9,20,0.08)",
+              },
+            }}
+          >
+            Download Ticket
+          </Button>
+        </Stack>
+      </Stack>
+    </Stack>
+  </Paper>
 );
 
 const TicketSection = ({ title, subtitle, tickets, loading, ticketQrMap, onDownloadTicket }) => (
-  <section>
-    <div className="mb-4 flex items-center justify-between">
-      <div>
-        <h2 className="text-2xl font-semibold text-white">{title}</h2>
-        <p className="mt-1 text-sm text-slate-400">{subtitle}</p>
-      </div>
-      <span className="rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs font-medium text-slate-300">
-        {tickets.length} {tickets.length === 1 ? "item" : "items"}
-      </span>
-    </div>
+  <Box>
+    <Stack
+      direction={{ xs: "column", md: "row" }}
+      alignItems={{ xs: "flex-start", md: "center" }}
+      justifyContent="space-between"
+      spacing={1.5}
+      sx={{ mb: 2.5 }}
+    >
+      <Box>
+        <Typography variant="h5" sx={{ fontWeight: 800, color: "#fff" }}>
+          {title}
+        </Typography>
+        <Typography sx={{ mt: 0.8, color: "rgba(255,255,255,0.6)" }}>{subtitle}</Typography>
+      </Box>
+      <Chip
+        label={`${tickets.length} ${tickets.length === 1 ? "item" : "items"}`}
+        sx={{
+          borderRadius: 999,
+          color: "#fff",
+          fontWeight: 700,
+          border: "1px solid rgba(255,255,255,0.14)",
+          backgroundColor: "rgba(255,255,255,0.05)",
+        }}
+      />
+    </Stack>
     {loading ? (
-      <div className="rounded-xl border border-white/10 bg-[#0a1022]/70 p-4 text-sm text-slate-300">Loading tickets...</div>
+      <Paper sx={{ ...pageSurface, p: 3 }}>
+        <Typography sx={{ color: "rgba(255,255,255,0.68)" }}>Loading tickets...</Typography>
+      </Paper>
     ) : tickets.length === 0 ? (
-      <div className="rounded-xl border border-white/10 bg-[#0a1022]/70 p-4 text-sm text-slate-300">No tickets available.</div>
+      <Paper sx={{ ...pageSurface, p: 3 }}>
+        <Typography sx={{ color: "rgba(255,255,255,0.68)" }}>No tickets available.</Typography>
+      </Paper>
     ) : (
-      <div className="space-y-4">
+      <Stack spacing={2}>
         {tickets.map((ticket) => (
           <TicketRow key={ticket.id} ticket={ticket} ticketQrMap={ticketQrMap} onDownloadTicket={onDownloadTicket} />
         ))}
-      </div>
+      </Stack>
     )}
-  </section>
+  </Box>
 );
 
 const Profile = () => {
@@ -170,6 +313,8 @@ const Profile = () => {
     if (user?.email) return user.email.split("@")[0];
     return "Guest User";
   }, [user]);
+
+  const profileInitials = useMemo(() => getInitials(displayName), [displayName]);
 
   const selectedCity = useMemo(() => {
     try {
@@ -217,7 +362,7 @@ const Profile = () => {
         const seatLabel = ticket.Seat?.seat_number ? String(ticket.Seat.seat_number) : "No seat";
         const codeLabel = ticket.ticket_code ? String(ticket.ticket_code) : "-";
 
-        const mappedTicket = {
+        return {
           id: ticket.id,
           title: ticket.Showtime?.Movie?.movie_title || "Movie",
           dateTime: formatTicketDateTime(showDate, ticket.Showtime?.start_time),
@@ -232,8 +377,6 @@ const Profile = () => {
           seatLabel,
           ticketCode: codeLabel,
         };
-
-        return mappedTicket;
       })
       .sort((a, b) => {
         const da = new Date(`${a.showDate || "1970-01-01"}T${a.startTime || "00:00"}:00`).getTime();
@@ -242,14 +385,8 @@ const Profile = () => {
       });
   }, [rawTickets]);
 
-  const upcomingTickets = useMemo(
-    () => ticketCards.filter((ticket) => ticket.status === "Upcoming"),
-    [ticketCards],
-  );
-  const pastTickets = useMemo(
-    () => ticketCards.filter((ticket) => ticket.status !== "Upcoming"),
-    [ticketCards],
-  );
+  const upcomingTickets = useMemo(() => ticketCards.filter((ticket) => ticket.status === "Upcoming"), [ticketCards]);
+  const pastTickets = useMemo(() => ticketCards.filter((ticket) => ticket.status !== "Upcoming"), [ticketCards]);
 
   useEffect(() => {
     let cancelled = false;
@@ -345,144 +482,263 @@ const Profile = () => {
   };
 
   if (loading) {
-    return <div className="min-h-[60vh] px-6 py-24 text-center text-text-secondary">Loading profile...</div>;
+    return (
+      <Box sx={{ minHeight: "60vh", display: "grid", placeItems: "center", color: "rgba(255,255,255,0.65)" }}>
+        Loading profile...
+      </Box>
+    );
   }
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-[70vh] px-6 py-24">
-        <div className="mx-auto max-w-xl rounded-2xl border border-white/10 bg-secondary p-8 text-center">
-          <h1 className="text-2xl font-bold text-text-primary">Profile</h1>
-          <p className="mt-2 text-sm text-text-secondary">You need to sign in to view your profile and tickets.</p>
-          <Link
-            to="/login"
-            className="mx-auto mt-6 inline-flex items-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-hover"
-          >
-            <LogIn size={16} />
-            Sign In
-          </Link>
-        </div>
-      </div>
+      <Box component="main" sx={{ py: { xs: 8, md: 12 } }}>
+        <Container maxWidth="sm">
+          <Paper sx={{ ...pageSurface, p: { xs: 3, md: 4 }, textAlign: "center" }}>
+            <Typography variant="h4" sx={{ fontWeight: 900, color: "#fff" }}>
+              Profile
+            </Typography>
+            <Typography sx={{ mt: 1.5, color: "rgba(255,255,255,0.65)" }}>
+              You need to sign in to view your profile and tickets.
+            </Typography>
+            <Button
+              component={RouterLink}
+              to="/login"
+              variant="contained"
+              startIcon={<LogIn size={16} />}
+              sx={{
+                mt: 3,
+                borderRadius: 999,
+                px: 3,
+                py: 1.2,
+                backgroundColor: "#e50914",
+                textTransform: "none",
+                fontWeight: 800,
+                "&:hover": { backgroundColor: "#c80811" },
+              }}
+            >
+              Sign In
+            </Button>
+          </Paper>
+        </Container>
+      </Box>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#020614] pb-16 pt-8 text-slate-100">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(231,223,88,0.08),transparent_40%),radial-gradient(circle_at_80%_20%,rgba(48,84,204,0.16),transparent_36%)]" />
-
-      <div className="relative mx-auto grid max-w-7xl grid-cols-1 gap-6 px-4 md:grid-cols-[280px_1fr] md:px-6">
-        <aside className="rounded-2xl border border-white/10 bg-[#050b1f]/90 p-5 shadow-xl shadow-black/40">
-          <div className="flex items-center gap-4">
-            <img src={avatar} alt="User avatar" className="h-16 w-16 rounded-xl border border-white/15 object-cover" />
-            <div className="min-w-0">
-              <p className="truncate text-xl font-semibold text-white">{displayName}</p>
-              <p className="truncate text-sm text-slate-400">{user?.email || "No email"}</p>
-            </div>
-          </div>
-
-          <nav className="mt-8 space-y-1">
-            {MENU_ITEMS.map(({ key, label, icon: Icon }) => (
-              <button
-                key={key}
-                onClick={() => setActiveTab(key)}
-                className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-base transition-colors ${
-                  activeTab === key
-                    ? "bg-[#e7df58]/15 font-semibold text-[#f3ec7d]"
-                    : "text-slate-300 hover:bg-white/5 hover:text-white"
-                }`}
+    <Box
+      component="main"
+      sx={{
+        minHeight: "100vh",
+        pb: 8,
+        pt: { xs: 2, sm: 4 },
+        background:
+          "radial-gradient(circle at top left, rgba(229,9,20,0.08) 0%, rgba(229,9,20,0) 32%), radial-gradient(circle at top right, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0) 28%), #050505",
+      }}
+    >
+      <Container maxWidth={false} sx={{ px: { xs: 2, md: 4, lg: 6 } }}>
+        <Stack spacing={3}>
+          <Paper sx={{ ...pageSurface, p: { xs: 2.5, md: 3 } }}>
+            <Stack spacing={2.5}>
+              <Stack
+                direction={{ xs: "column", md: "row" }}
+                spacing={2}
+                alignItems={{ xs: "flex-start", md: "center" }}
+                justifyContent="space-between"
               >
-                <Icon size={18} />
-                {label}
-              </button>
-            ))}
-          </nav>
-        </aside>
+                <Stack direction="row" spacing={2} alignItems="center" sx={{ minWidth: 0 }}>
+                  <Avatar
+                    sx={{
+                      width: 72,
+                      height: 72,
+                      border: "1px solid rgba(255,255,255,0.12)",
+                      bgcolor: "#e50914",
+                      color: "#fff",
+                      fontSize: 24,
+                      fontWeight: 900,
+                    }}
+                  >
+                    {profileInitials}
+                  </Avatar>
+                  <Box sx={{ minWidth: 0 }}>
+                    <Typography sx={{ fontSize: { xs: 22, md: 26 }, fontWeight: 800, color: "#fff" }}>
+                      {displayName}
+                    </Typography>
+                    <Typography sx={{ color: "rgba(255,255,255,0.58)", fontSize: 14 }} noWrap>
+                      {user?.email || "No email"}
+                    </Typography>
+                  </Box>
+                </Stack>
+                <Chip
+                  label={`${MENU_ITEMS.find((item) => item.key === activeTab)?.label || "Profile"} view`}
+                  sx={{
+                    borderRadius: 999,
+                    color: "#fff",
+                    fontWeight: 700,
+                    border: "1px solid rgba(255,255,255,0.14)",
+                    backgroundColor: "rgba(255,255,255,0.05)",
+                  }}
+                />
+              </Stack>
 
-        <main className="rounded-2xl border border-white/10 bg-[#050b1f]/85 p-5 shadow-xl shadow-black/40 md:p-8">
-          <div className="mb-8 flex items-center justify-between">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#e7df58]">Profile Panel</p>
-              <h1 className="mt-2 text-3xl font-bold text-white md:text-4xl">
-                {MENU_ITEMS.find((item) => item.key === activeTab)?.label || "Profile"}
-              </h1>
-            </div>
-            <div className="hidden items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-300 md:flex">
-              <CalendarClock size={15} className="text-[#e7df58]" />
-              Updated Just Now
-            </div>
-          </div>
+              <Divider sx={{ borderColor: "rgba(255,255,255,0.08)" }} />
 
-          {activeTab === "account" && (
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="rounded-xl border border-white/10 bg-[#0a1022]/80 p-4">
-                <p className="text-xs uppercase tracking-wide text-slate-400">Full Name</p>
-                <p className="mt-2 text-lg font-semibold text-white">{displayName}</p>
-              </div>
-              <div className="rounded-xl border border-white/10 bg-[#0a1022]/80 p-4">
-                <p className="text-xs uppercase tracking-wide text-slate-400">Email</p>
-                <p className="mt-2 text-lg font-semibold text-white">{user?.email || "-"}</p>
-              </div>
-              <div className="rounded-xl border border-white/10 bg-[#0a1022]/80 p-4">
-                <p className="text-xs uppercase tracking-wide text-slate-400">Role</p>
-                <p className="mt-2 text-lg font-semibold capitalize text-white">{user?.role || "user"}</p>
-              </div>
-              <div className="rounded-xl border border-white/10 bg-[#0a1022]/80 p-4">
-                <p className="text-xs uppercase tracking-wide text-slate-400">Selected Location</p>
-                <p className="mt-2 text-lg font-semibold text-white">{selectedCity}</p>
-              </div>
-            </div>
-          )}
+              <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+                {MENU_ITEMS.map(({ key, label, icon: Icon }) => (
+                  <Button
+                    key={key}
+                    onClick={() => setActiveTab(key)}
+                    startIcon={<Icon size={18} />}
+                    sx={{
+                      borderRadius: 999,
+                      px: 2,
+                      py: 1.15,
+                      color: activeTab === key ? "#fff" : "rgba(255,255,255,0.74)",
+                      backgroundColor: activeTab === key ? "rgba(229,9,20,0.18)" : "rgba(255,255,255,0.03)",
+                      border: activeTab === key ? "1px solid rgba(229,9,20,0.28)" : "1px solid rgba(255,255,255,0.08)",
+                      textTransform: "none",
+                      fontWeight: 700,
+                      "&:hover": {
+                        backgroundColor: activeTab === key ? "rgba(229,9,20,0.22)" : "rgba(255,255,255,0.06)",
+                      },
+                    }}
+                  >
+                    {label}
+                  </Button>
+                ))}
+              </Stack>
+            </Stack>
+          </Paper>
 
-          {activeTab === "tickets" && (
-            <div className="space-y-10">
-              <TicketSection
-                title="Upcoming Tickets & Orders"
-                subtitle="Your next movie nights are lined up."
-                tickets={upcomingTickets}
-                loading={ticketsLoading}
-                ticketQrMap={ticketQrMap}
-                onDownloadTicket={handleDownloadTicket}
-              />
-              <TicketSection
-                title="Past Tickets & Orders"
-                subtitle="Recent bookings you have completed."
-                tickets={pastTickets}
-                loading={ticketsLoading}
-                ticketQrMap={ticketQrMap}
-                onDownloadTicket={handleDownloadTicket}
-              />
-            </div>
-          )}
-
-          {activeTab === "settings" && (
-            <div className="space-y-4">
-              <div className="rounded-xl border border-white/10 bg-[#0a1022]/80 p-4">
-                <p className="text-sm font-semibold text-white">Appearance</p>
-                <p className="mt-3 text-sm text-slate-300">
-                  Dark mode is enabled across the entire site.
-                </p>
-              </div>
-              <div className="rounded-xl border border-white/10 bg-[#0a1022]/80 p-4">
-                <p className="text-sm font-semibold text-white">Session</p>
-                <button
-                  onClick={logout}
-                  className="mt-3 inline-flex items-center gap-2 rounded-lg border border-rose-400/50 px-3 py-2 text-sm text-rose-300 hover:bg-rose-500/10"
+          <Stack spacing={3}>
+              <Paper
+                sx={{
+                  ...pageSurface,
+                  p: { xs: 3, md: 4 },
+                  background:
+                    "radial-gradient(circle at top right, rgba(229,9,20,0.16) 0%, rgba(229,9,20,0) 30%), linear-gradient(135deg, rgba(24,24,27,0.98) 0%, rgba(15,15,18,0.98) 62%, rgba(46,10,14,0.94) 100%)",
+                }}
+              >
+                <Stack
+                  direction={{ xs: "column", md: "row" }}
+                  alignItems={{ xs: "flex-start", md: "center" }}
+                  justifyContent="space-between"
+                  spacing={2}
                 >
-                  <LogOut size={16} />
-                  Logout
-                </button>
-              </div>
-            </div>
-          )}
+                  <Box>
+                    <Typography
+                      sx={{
+                        color: "rgba(255,255,255,0.55)",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.22em",
+                        fontSize: 12,
+                        fontWeight: 800,
+                      }}
+                    >
+                      Profile Panel
+                    </Typography>
+                    <Typography variant="h3" sx={{ mt: 1, fontWeight: 900, color: "#fff", fontSize: { xs: "2rem", md: "2.8rem" } }}>
+                      {MENU_ITEMS.find((item) => item.key === activeTab)?.label || "Profile"}
+                    </Typography>
+                  </Box>
+                  <Chip
+                    icon={<CalendarClock size={14} />}
+                    label="Updated Just Now"
+                    sx={{
+                      borderRadius: 999,
+                      color: "#fff",
+                      fontWeight: 700,
+                      border: "1px solid rgba(255,255,255,0.14)",
+                      backgroundColor: "rgba(255,255,255,0.06)",
+                      "& .MuiChip-icon": { color: "#e50914" },
+                    }}
+                  />
+                </Stack>
+              </Paper>
 
-          {["wallet", "payments", "watchlist"].includes(activeTab) && (
-            <div className="rounded-xl border border-white/10 bg-[#0a1022]/80 p-5 text-slate-300">
-              This section is ready for integration with backend data.
-            </div>
-          )}
-        </main>
-      </div>
-    </div>
+              {activeTab === "account" && (
+                <Grid container spacing={2.5}>
+                  <Grid item xs={12} sm={6}>
+                    <InfoCard label="Full Name" value={displayName} />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <InfoCard label="Email" value={user?.email || "-"} />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <InfoCard label="Role" value={user?.role || "user"} />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <InfoCard label="Selected Location" value={selectedCity} />
+                  </Grid>
+                </Grid>
+              )}
+
+              {activeTab === "tickets" && (
+                <Stack spacing={4}>
+                  <TicketSection
+                    title="Upcoming Tickets & Orders"
+                    subtitle="Your next movie nights are lined up."
+                    tickets={upcomingTickets}
+                    loading={ticketsLoading}
+                    ticketQrMap={ticketQrMap}
+                    onDownloadTicket={handleDownloadTicket}
+                  />
+                  <TicketSection
+                    title="Past Tickets & Orders"
+                    subtitle="Recent bookings you have completed."
+                    tickets={pastTickets}
+                    loading={ticketsLoading}
+                    ticketQrMap={ticketQrMap}
+                    onDownloadTicket={handleDownloadTicket}
+                  />
+                </Stack>
+              )}
+
+              {activeTab === "settings" && (
+                <Stack spacing={2.5}>
+                  <Paper sx={{ ...pageSurface, p: 3 }}>
+                    <Typography sx={{ fontSize: 18, fontWeight: 800, color: "#fff" }}>Appearance</Typography>
+                    <Typography sx={{ mt: 1.2, color: "rgba(255,255,255,0.68)" }}>
+                      Dark mode is enabled across the entire site.
+                    </Typography>
+                  </Paper>
+                  <Paper sx={{ ...pageSurface, p: 3 }}>
+                    <Typography sx={{ fontSize: 18, fontWeight: 800, color: "#fff" }}>Session</Typography>
+                    <Button
+                      onClick={logout}
+                      variant="outlined"
+                      startIcon={<LogOut size={16} />}
+                      sx={{
+                        mt: 2,
+                        borderRadius: 999,
+                        color: "#fecdd3",
+                        borderColor: "rgba(244,63,94,0.4)",
+                        textTransform: "none",
+                        fontWeight: 700,
+                        "&:hover": {
+                          borderColor: "rgba(244,63,94,0.72)",
+                          backgroundColor: "rgba(244,63,94,0.08)",
+                        },
+                      }}
+                    >
+                      Logout
+                    </Button>
+                  </Paper>
+                </Stack>
+              )}
+
+              {["wallet", "payments", "watchlist"].includes(activeTab) && (
+                <Card sx={pageSurface}>
+                  <CardContent sx={{ p: 3 }}>
+                    <Typography sx={{ color: "rgba(255,255,255,0.72)" }}>
+                      This section is ready for integration with backend data.
+                    </Typography>
+                  </CardContent>
+                </Card>
+              )}
+          </Stack>
+        </Stack>
+      </Container>
+    </Box>
   );
 };
 

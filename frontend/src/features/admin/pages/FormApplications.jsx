@@ -1,15 +1,35 @@
-import React, { useEffect, useState } from "react";
-import { Armchair } from "lucide-react";
-import axios from "axios";
+import React, { useEffect, useMemo, useState } from "react";
+import { Armchair, CheckCircle2, Clock4, XCircle, ChevronDown } from "lucide-react";
 import { toast } from "react-hot-toast";
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api";
-const API_SERVER_URL = import.meta.env.VITE_API_SERVER_URL || "http://localhost:3000";
+import {
+  Alert,
+  Badge,
+  Box,
+  Button,
+  Card,
+  CardActions,
+  CardContent,
+  CardHeader,
+  Chip,
+  Collapse,
+  CssBaseline,
+  Divider,
+  Grid,
+  IconButton,
+  LinearProgress,
+  Skeleton,
+  Stack,
+  Tooltip,
+  Typography,
+} from "@mui/material";
+import { createTheme, styled, ThemeProvider } from "@mui/material/styles";
+import apiClient, { API_SERVER_URL } from "../../../shared/config/api";
 
 const FormApplications = () => {
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedAppId, setExpandedAppId] = useState(null);
+  const [submittingId, setSubmittingId] = useState(null);
 
   useEffect(() => {
     fetchApplications();
@@ -17,13 +37,9 @@ const FormApplications = () => {
 
   const fetchApplications = async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/hall/applications`, {
-        withCredentials: true,
-      });
-      if (response.data.success) {
-        setApplications(response.data.data || []);
-      }
-    } catch {
+      const response = await apiClient.get("/hall/applications");
+      setApplications(response || []);
+    } catch (err) {
       setApplications([]);
     } finally {
       setLoading(false);
@@ -31,12 +47,9 @@ const FormApplications = () => {
   };
 
   const handleApproveApplication = async (id) => {
+    setSubmittingId(id);
     try {
-      await axios.put(
-        `${API_BASE_URL}/hall/applications/${id}/approve`,
-        {},
-        { withCredentials: true },
-      );
+      await apiClient.put(`/hall/applications/${id}/approve`, {});
       toast.success("Application approved");
       fetchApplications();
     } catch (error) {
@@ -48,16 +61,14 @@ const FormApplications = () => {
           "Failed to approve application",
       );
     }
+    setSubmittingId(null);
   };
 
   const handleRejectApplication = async (id) => {
     const reviewNote = window.prompt("Optional rejection note:", "") || "";
+    setSubmittingId(id);
     try {
-      await axios.put(
-        `${API_BASE_URL}/hall/applications/${id}/reject`,
-        { reviewNote },
-        { withCredentials: true },
-      );
+      await apiClient.put(`/hall/applications/${id}/reject`, { reviewNote });
       toast.success("Application rejected");
       fetchApplications();
     } catch (error) {
@@ -69,148 +80,410 @@ const FormApplications = () => {
           "Failed to reject application",
       );
     }
+    setSubmittingId(null);
   };
 
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-white">Form Applications</h1>
-        <p className="mt-2 text-slate-400">Review hall registration submissions in detail.</p>
-      </div>
+  const theme = useMemo(
+    () =>
+      createTheme({
+        palette: {
+          mode: "dark",
+          primary: { main: "#e50914" },
+          secondary: { main: "#9ca3af" },
+          background: { default: "#0a0a0d", paper: "#111116" },
+        },
+        components: {
+          MuiCard: { styleOverrides: { root: { borderColor: "rgba(255,255,255,0.08)" } } },
+          MuiOutlinedInput: { styleOverrides: { root: { backgroundColor: "rgba(255,255,255,0.04)" } } },
+          MuiChip: {
+            styleOverrides: {
+              root: { fontWeight: 600, textTransform: "capitalize" },
+            },
+          },
+        },
+      }),
+    [],
+  );
 
-      <div className="rounded-xl border border-white/10 bg-black p-4">
-        <h2 className="text-xl font-semibold text-white">Pending Hall Registrations</h2>
-        {loading ? (
-          <p className="mt-3 text-slate-400">Loading applications...</p>
-        ) : applications.length === 0 ? (
-          <p className="mt-3 text-slate-400">No pending applications.</p>
-        ) : (
-          <div className="mt-4 space-y-3">
-            {applications.map((app) => (
-              <div key={app.id} className="rounded-lg border border-white/10 p-4">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div>
-                    <p className="font-semibold text-white">{app.hall_name}</p>
-                    <p className="text-sm text-slate-300">{app.hall_location}</p>
-                    <p className="text-sm text-slate-400">
-                      Contact: {app.hall_contact} | License: {app.license} | Submitted:{" "}
-                      {new Date(app.createdAt).toLocaleString()}
-                    </p>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setExpandedAppId((prev) => (prev === app.id ? null : app.id))}
-                      className="rounded-md border border-white/20 px-3 py-2 text-sm font-semibold text-white hover:bg-white/10"
-                    >
-                      {expandedAppId === app.id ? "Hide Details" : "View Full Form"}
-                    </button>
-                    <button
-                      onClick={() => handleApproveApplication(app.id)}
-                      className="rounded-md bg-emerald-600 px-3 py-2 text-sm font-semibold text-white hover:bg-emerald-500"
-                    >
-                      Approve
-                    </button>
-                    <button
-                      onClick={() => handleRejectApplication(app.id)}
-                      className="rounded-md bg-rose-600 px-3 py-2 text-sm font-semibold text-white hover:bg-rose-500"
-                    >
-                      Reject
-                    </button>
-                  </div>
-                </div>
+  const statusChip = (status = "pending") => {
+    const map = {
+      approved: { color: "success", icon: <CheckCircle2 size={16} /> },
+      rejected: { color: "error", icon: <XCircle size={16} /> },
+      pending: { color: "warning", icon: <Clock4 size={16} /> },
+    };
+    const { color, icon } = map[status] || map.pending;
+    return (
+      <Chip
+        size="small"
+        color={color}
+        variant="outlined"
+        icon={icon}
+        label={status.replace("_", " ")}
+        sx={{ borderRadius: 1.5, borderColor: "rgba(255,255,255,0.16)" }}
+      />
+    );
+  };
 
-                {expandedAppId === app.id && (
-                  <div className="mt-4 space-y-4 rounded-lg border border-white/10 bg-black/40 p-4">
-                    {app.hallPoster && (
-                      <div>
-                        <p className="mb-2 text-sm font-semibold text-slate-200">Hall Poster</p>
-                        <img
-                          src={`${API_SERVER_URL}/uploads/${app.hallPoster}`}
-                          alt={app.hall_name}
-                          className="h-40 w-full rounded-lg object-cover md:w-80"
-                        />
-                      </div>
-                    )}
+  const stats = useMemo(() => {
+    const total = applications.length;
+    const pending = applications.filter((a) => a.status === "pending").length;
+    const approved = applications.filter((a) => a.status === "approved").length;
+    const rejected = applications.filter((a) => a.status === "rejected").length;
+    return { total, pending, approved, rejected };
+  }, [applications]);
 
-                    <div className="grid gap-3 md:grid-cols-2">
-                      <p className="text-sm text-slate-300">
-                        <span className="font-semibold text-white">Total Capacity:</span>{" "}
-                        {app.totalCapacity ?? 0}
-                      </p>
-                      <p className="text-sm text-slate-300">
-                        <span className="font-semibold text-white">Applicant User ID:</span>{" "}
-                        {app.applicant_id}
-                      </p>
-                      <p className="text-sm text-slate-300">
-                        <span className="font-semibold text-white">Status:</span> {app.status}
-                      </p>
-                      <p className="text-sm text-slate-300">
-                        <span className="font-semibold text-white">Review Note:</span>{" "}
-                        {app.review_note || "-"}
-                      </p>
-                    </div>
+  const ExpandIconButton = styled((props) => {
+    const { expand, ...other } = props;
+    return <IconButton {...other} />;
+  })(({ theme: t, expand }) => ({
+    transform: !expand ? "rotate(0deg)" : "rotate(180deg)",
+    marginLeft: "auto",
+    transition: t.transitions.create("transform", {
+      duration: t.transitions.duration.shortest,
+    }),
+  }));
 
-                    <div>
-                      <p className="mb-2 text-sm font-semibold text-slate-200">Hall Rooms & Seat Layout</p>
-                      {!Array.isArray(app.hallrooms) || app.hallrooms.length === 0 ? (
-                        <p className="text-sm text-slate-400">No room configuration submitted.</p>
-                      ) : (
-                        <div className="space-y-4">
-                          {app.hallrooms.map((room, roomIndex) => {
-                            const rows = Number(room.rows ?? room.totalRows ?? 0);
-                            const seats = Number(room.seatsPerRow ?? room.totalColumns ?? 0);
-                            const emptySeats = Array.isArray(room.emptySeats) ? room.emptySeats : [];
-                            const emptySet = new Set(emptySeats);
-                            const available = rows * seats - emptySeats.length;
+  const renderSeatGrid = (room, roomIndex, appId) => {
+    const rows = Number(room.rows ?? room.totalRows ?? 0);
+    const seats = Number(room.seatsPerRow ?? room.totalColumns ?? 0);
+    const emptySeats = Array.isArray(room.emptySeats) ? room.emptySeats : [];
+    const emptySet = new Set(emptySeats);
+    const capacity = rows * seats;
+    const available = capacity - emptySeats.length;
 
-                            return (
-                              <div key={`${app.id}-${roomIndex}`} className="rounded-lg border border-white/10 p-3">
-                                <div className="mb-3 flex items-center justify-between">
-                                  <p className="font-semibold text-white">
-                                    {room.roomName || `Room ${roomIndex + 1}`}
-                                  </p>
-                                  <p className="text-xs text-slate-300">
-                                    {available}/{rows * seats} available
-                                  </p>
-                                </div>
-                                <div className="overflow-x-auto">
-                                  <div className="inline-flex flex-col gap-2">
-                                    {Array.from({ length: rows }).map((_, rowIndex) => (
-                                      <div key={rowIndex} className="flex items-center gap-2">
-                                        <span className="w-6 text-xs text-slate-300">
-                                          {String.fromCharCode(65 + rowIndex)}
-                                        </span>
-                                        <div className="flex gap-1">
-                                          {Array.from({ length: seats }).map((__, colIndex) => {
-                                            const key = `${rowIndex}-${colIndex}`;
-                                            const isEmpty = emptySet.has(key);
-                                            return (
-                                              <Armchair
-                                                key={key}
-                                                size={14}
-                                                className={isEmpty ? "text-slate-600 opacity-40" : "text-pink-400"}
-                                              />
-                                            );
-                                          })}
-                                        </div>
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
+    if (!rows || !seats) {
+      return (
+        <Typography variant="body2" color="text.secondary">
+          No seat layout provided.
+        </Typography>
+      );
+    }
+
+    return (
+      <Box key={`${appId}-${roomIndex}`} sx={{ p: 2, border: "1px solid rgba(255,255,255,0.08)", borderRadius: 2 }}>
+        <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
+          <Typography fontWeight={700}>{room.roomName || `Room ${roomIndex + 1}`}</Typography>
+          <Chip
+            size="small"
+            variant="outlined"
+            color="primary"
+            label={`${available}/${capacity} available`}
+            sx={{ borderColor: "rgba(255,255,255,0.18)" }}
+          />
+        </Stack>
+        <Box sx={{ overflowX: "auto" }}>
+          <Stack spacing={1.2}>
+            {Array.from({ length: rows }).map((_, rowIndex) => (
+              <Stack key={rowIndex} direction="row" alignItems="center" spacing={1}>
+                <Typography variant="caption" width={16} color="text.secondary">
+                  {String.fromCharCode(65 + rowIndex)}
+                </Typography>
+                <Stack direction="row" spacing={0.6}>
+                  {Array.from({ length: seats }).map((__, colIndex) => {
+                    const key = `${rowIndex}-${colIndex}`;
+                    const isEmpty = emptySet.has(key);
+                    return (
+                      <Tooltip key={key} title={isEmpty ? "Blocked" : "Seat available"}>
+                        <span>
+                          <Armchair
+                            size={16}
+                            color={isEmpty ? "#4b5563" : "#e50914"}
+                            style={{ opacity: isEmpty ? 0.35 : 1 }}
+                          />
+                        </span>
+                      </Tooltip>
+                    );
+                  })}
+                </Stack>
+              </Stack>
             ))}
-          </div>
-        )}
-      </div>
-    </div>
+          </Stack>
+        </Box>
+      </Box>
+    );
+  };
+
+  const renderApplicationCard = (app) => {
+    const isExpanded = expandedAppId === app.id;
+    return (
+      <Card
+        key={app.id}
+        variant="outlined"
+        sx={{
+          bgcolor: "rgba(255,255,255,0.02)",
+          borderColor: "rgba(255,255,255,0.08)",
+          "&:hover": { borderColor: "rgba(229,9,20,0.4)", boxShadow: "0 10px 30px rgba(0,0,0,0.35)" },
+        }}
+      >
+        <CardHeader
+          avatar={
+            <Badge
+              overlap="circular"
+              variant="dot"
+              color={app.status === "approved" ? "success" : app.status === "rejected" ? "error" : "warning"}
+            >
+              <Box
+                sx={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: "50%",
+                  bgcolor: "rgba(229,9,20,0.12)",
+                  display: "grid",
+                  placeItems: "center",
+                }}
+              >
+                <Armchair size={20} color="#e50914" />
+              </Box>
+            </Badge>
+          }
+          title={
+            <Stack direction="row" spacing={1} alignItems="center">
+              <Typography variant="h6">{app.hall_name || "Untitled Hall"}</Typography>
+              {statusChip(app.status)}
+            </Stack>
+          }
+          subheader={
+            <Typography variant="body2" color="text.secondary">
+              {app.hall_location || "Location not provided"} • Submitted{" "}
+              {app.createdAt ? new Date(app.createdAt).toLocaleString() : "—"}
+            </Typography>
+          }
+        />
+
+        <CardContent>
+          <Grid container spacing={2} alignItems="stretch">
+            <Grid item xs={12} md={8}>
+              <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+                <Chip
+                  label={`Contact: ${app.hall_contact || "—"}`}
+                  variant="outlined"
+                  color="secondary"
+                  icon={<CheckCircle2 size={16} />}
+                  sx={{ borderColor: "rgba(255,255,255,0.12)" }}
+                />
+                <Chip
+                  label={`License: ${app.license || "—"}`}
+                  variant="outlined"
+                  color="secondary"
+                  icon={<CheckCircle2 size={16} />}
+                  sx={{ borderColor: "rgba(255,255,255,0.12)" }}
+                />
+                <Chip
+                  label={`Capacity: ${app.totalCapacity ?? 0}`}
+                  variant="outlined"
+                  color="secondary"
+                  icon={<Armchair size={14} />}
+                  sx={{ borderColor: "rgba(255,255,255,0.12)" }}
+                />
+              </Stack>
+            </Grid>
+            <Grid item xs={12} md={4} textAlign={{ xs: "left", md: "right" }}>
+              <Typography variant="body2" color="text.secondary">
+                Applicant ID: {app.applicant_id || "—"}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Review note: {app.review_note || "—"}
+              </Typography>
+            </Grid>
+          </Grid>
+        </CardContent>
+
+        <CardActions disableSpacing sx={{ px: 2, pb: 2 }}>
+          <Button
+            variant="contained"
+            color="success"
+            size="small"
+            onClick={() => handleApproveApplication(app.id)}
+            disabled={submittingId === app.id}
+          >
+            Approve
+          </Button>
+          <Button
+            variant="outlined"
+            color="error"
+            size="small"
+            onClick={() => handleRejectApplication(app.id)}
+            disabled={submittingId === app.id}
+            sx={{ ml: 1 }}
+          >
+            Reject
+          </Button>
+          <ExpandIconButton
+            expand={isExpanded}
+            onClick={() => setExpandedAppId((prev) => (prev === app.id ? null : app.id))}
+            aria-expanded={isExpanded}
+            aria-label="show more"
+          >
+            <ChevronDown size={18} />
+          </ExpandIconButton>
+        </CardActions>
+
+        <Collapse in={isExpanded} timeout="auto" unmountOnExit>
+          <Divider sx={{ borderColor: "rgba(255,255,255,0.08)" }} />
+          <CardContent sx={{ pt: 3 }}>
+            <Grid container spacing={3}>
+              {app.hallPoster && (
+                <Grid item xs={12} md={4}>
+                  <Box
+                    component="img"
+                    alt={app.hall_name}
+                    src={`${API_SERVER_URL}/uploads/${app.hallPoster}`}
+                    sx={{
+                      width: "100%",
+                      height: 220,
+                      objectFit: "cover",
+                      borderRadius: 2,
+                      border: "1px solid rgba(255,255,255,0.08)",
+                    }}
+                  />
+                </Grid>
+              )}
+              <Grid item xs={12} md={app.hallPoster ? 8 : 12}>
+                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                  Hall Rooms & Seat Layout
+                </Typography>
+                {!Array.isArray(app.hallrooms) || app.hallrooms.length === 0 ? (
+                  <Alert severity="info" variant="outlined" sx={{ borderColor: "rgba(255,255,255,0.12)" }}>
+                    No room configuration submitted.
+                  </Alert>
+                ) : (
+                  <Stack spacing={2}>
+                    {app.hallrooms.map((room, index) => renderSeatGrid(room, index, app.id))}
+                  </Stack>
+                )}
+              </Grid>
+            </Grid>
+          </CardContent>
+        </Collapse>
+      </Card>
+    );
+  };
+
+  const renderSkeleton = () => (
+    <Stack spacing={2}>
+      {Array.from({ length: 3 }).map((_, idx) => (
+        <Card key={idx} variant="outlined" sx={{ bgcolor: "rgba(255,255,255,0.03)" }}>
+          <CardHeader
+            avatar={<Skeleton variant="circular" width={44} height={44} />}
+            title={<Skeleton width="60%" />}
+            subheader={<Skeleton width="40%" />}
+          />
+          <CardContent>
+            <Skeleton variant="rounded" height={36} width="90%" sx={{ mb: 1 }} />
+            <Skeleton variant="rounded" height={120} />
+          </CardContent>
+        </Card>
+      ))}
+    </Stack>
+  );
+
+  return (
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Box sx={{ p: { xs: 2, md: 3 } }}>
+        <Stack spacing={2}>
+          <Box>
+            <Typography variant="h4" fontWeight={800}>
+              Hall Applications
+            </Typography>
+            <Typography variant="body1" color="text.secondary">
+              Review, approve, or reject hall registration submissions.
+            </Typography>
+          </Box>
+
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={2} flexWrap="wrap" useFlexGap>
+            {[
+              {
+                key: "total",
+                label: "Total",
+                value: stats.total,
+                icon: <Armchair size={18} color="#e50914" />,
+                borderColor: "rgba(255,255,255,0.08)",
+              },
+              {
+                key: "pending",
+                label: "Pending",
+                value: stats.pending,
+                icon: <Clock4 size={18} color="#eab308" />,
+                borderColor: "rgba(229,9,20,0.35)",
+              },
+              {
+                key: "approved",
+                label: "Approved",
+                value: stats.approved,
+                icon: <CheckCircle2 size={18} color="#22c55e" />,
+                borderColor: "rgba(255,255,255,0.08)",
+              },
+              {
+                key: "rejected",
+                label: "Rejected",
+                value: stats.rejected,
+                icon: <XCircle size={18} color="#ef4444" />,
+                borderColor: "rgba(255,255,255,0.08)",
+              },
+            ].map((card) => (
+              <Card
+                key={card.key}
+                variant="outlined"
+                sx={{
+                  flex: "1 1 200px",
+                  minWidth: 0,
+                  borderColor: card.borderColor,
+                  height: "100%",
+                }}
+              >
+                <CardContent
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 1.5,
+                  }}
+                >
+                  <Box>
+                    <Typography variant="overline" color="text.secondary">
+                      {card.label}
+                    </Typography>
+                    <Typography variant="h5" fontWeight={700}>
+                      {card.value}
+                    </Typography>
+                  </Box>
+                  <Box
+                    sx={{
+                      width: 44,
+                      height: 44,
+                      borderRadius: 1.5,
+                      bgcolor: "rgba(255,255,255,0.04)",
+                      display: "grid",
+                      placeItems: "center",
+                      border: "1px solid rgba(255,255,255,0.06)",
+                    }}
+                  >
+                    {card.icon}
+                  </Box>
+                </CardContent>
+              </Card>
+            ))}
+          </Stack>
+
+          <Box>
+            <Typography variant="h6" fontWeight={700} gutterBottom>
+              Pending Hall Registrations
+            </Typography>
+            {loading ? (
+              renderSkeleton()
+            ) : applications.length === 0 ? (
+              <Alert severity="info" variant="outlined" sx={{ borderColor: "rgba(255,255,255,0.12)" }}>
+                No pending applications.
+              </Alert>
+            ) : (
+              <Stack spacing={2}>{applications.map((app) => renderApplicationCard(app))}</Stack>
+            )}
+          </Box>
+        </Stack>
+        {submittingId && <LinearProgress color="primary" sx={{ position: "fixed", bottom: 0, left: 0, right: 0 }} />}
+      </Box>
+    </ThemeProvider>
   );
 };
 

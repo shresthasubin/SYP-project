@@ -1,219 +1,635 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useEffect, useMemo, useState } from "react";
+import { Link as RouterLink } from "react-router-dom";
 import {
-  Star,
-  ChevronDown,
-  CalendarClock,
-} from "lucide-react";
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
+  Box,
+  Button,
+  Card,
+  CardActions,
+  CardContent,
+  CardMedia,
+  Chip,
+  Container,
+  Divider,
+  Paper,
+  Stack,
+  Typography,
+} from "@mui/material";
+import { ArrowRight, ChevronDown } from "lucide-react";
+import axios from "axios";
 import Hero from "../../../shared/components/Hero.jsx";
-import MovieCalendar from "../../../shared/components/MovieCalendar.jsx";
-import Halls from "../../../shared/components/Halls.jsx";
+import { API_BASE_URL, API_SERVER_URL } from "../../../shared/config/api";
 
-import heroPoster from "../../../assets/Batman.png";
-import card1 from "../../../assets/Dune.jpg";
-import card2 from "../../../assets/interstellar.jpg";
-import card3 from "../../../assets/Oppenheimer.jpg";
-import card4 from "../../../assets/avatar.png";
-import card5 from "../../../assets/RoadToNinja.png";
-import card6 from "../../../assets/purnaBahadur.png";
-import card7 from "../../../assets/unkoSweater.png";
-
-const NOW_SHOWING = [
-  { title: "Dune: Part Two", genre: "Sci-Fi", image: card1, rating: 8.6 },
-  { title: "Interstellar", genre: "Sci-Fi", image: card2, rating: 8.7 },
-  { title: "Oppenheimer", genre: "Drama", image: card3, rating: 8.5 },
-  { title: "Avatar", genre: "Adventure", image: card4, rating: 7.8 },
-  { title: "Road To Ninja", genre: "Anime", image: card5, rating: 7.9 },
-];
-
-const COMING_SOON = [
-  { title: "Purna Bahadur", genre: "Drama", image: card6, rating: 8.1 },
-  { title: "Unko Sweater", genre: "Romance", image: card7, rating: 7.8 },
-  { title: "Batman Returns", genre: "Action", image: heroPoster, rating: 8.0 },
-  { title: "Oppenheimer Re-Run", genre: "Historical", image: card3, rating: 8.5 },
-  { title: "Avatar Extended", genre: "Fantasy", image: card4, rating: 7.8 },
-];
-
-const TESTIMONIALS = [
-  { name: "Nina", text: "Smooth booking and great seats. The whole flow is fast." },
-  { name: "Raj", text: "The offers section helped me save on weekend shows." },
-  { name: "Ariana", text: "Best place to discover what is playing near me." },
-  { name: "Kushal", text: "Dark mode and mobile view are really clean now." },
+const PLATFORM_FEATURES = [
+  {
+    title: "Clear Showtimes",
+    detail: "Browse halls, rooms, and times without crowded booking flows or confusing seat states.",
+  },
+  {
+    title: "Reliable Booking",
+    detail: "Move from discovery to checkout quickly with organized movie pages and cleaner scheduling.",
+  },
+  {
+    title: "Trusted Halls",
+    detail: "Find verified venues, review locations, and compare sessions before you commit.",
+  },
 ];
 
 const FAQS = [
   {
     q: "Can I cancel or reschedule tickets?",
-    a: "Yes, cancellation and reschedule depend on hall policy and showtime cutoff.",
-  },
-  {
-    q: "Do I need to print my ticket?",
-    a: "No. Show the QR/e-ticket at entry from your confirmation page or email.",
-  },
-  {
-    q: "Can I pick seats before payment?",
-    a: "Yes, seat selection happens before checkout and stays locked briefly.",
+    a: "Yes, cancellation windows differ by hall and showtime. Check the policy on the booking page before you confirm.",
   },
   {
     q: "How do promo codes work?",
-    a: "Apply codes in checkout. Eligible offers are validated instantly.",
+    a: "Enter your promo code at checkout. The discount is validated instantly and reflected before submitting payment.",
+  },
+  {
+    q: "Is there a mobile ticket wallet?",
+    a: "Every confirmed booking stores a QR code, seat map, and theater directions inside the mobile app and your confirmation email.",
+  },
+  {
+    q: "What does 'Watch Later' mean?",
+    a: "Save a movie to your watchlist and we will text you when new showtimes, trailers, or promos drop.",
   },
 ];
 
-const MovieRail = ({ title, subtitle, movies }) => (
-  <section className="py-10">
-    <div className="container mx-auto px-6">
-      <div className="mb-6 flex items-end justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-text-primary">{title}</h2>
-          <p className="text-sm text-text-secondary">{subtitle}</p>
-        </div>
-        <Link to="/movies" className="text-sm font-semibold text-accent hover:underline">
-          View all
-        </Link>
-      </div>
-      <div className="flex gap-4 overflow-x-auto pb-2">
-        {movies.map((movie) => (
-          <article
-            key={movie.title}
-            className="w-44 shrink-0 overflow-hidden rounded-xl border border-white/10 bg-secondary"
+const APP_BADGES = [
+  { label: "App Store", detail: "Download for iPhone & iPad" },
+  { label: "Google Play", detail: "Download for Android" },
+];
+
+const sectionSurface = {
+  borderRadius: 0,
+  border: "1px solid rgba(255,255,255,0.08)",
+  background:
+    "linear-gradient(180deg, rgba(24,24,27,0.95) 0%, rgba(10,10,10,0.98) 100%)",
+  boxShadow: "0 24px 80px rgba(0,0,0,0.35)",
+};
+
+const cardSurface = {
+  height: "100%",
+  display: "flex",
+  flexDirection: "column",
+  borderRadius: 0,
+  border: "1px solid rgba(255,255,255,0.08)",
+  background:
+    "linear-gradient(180deg, rgba(28,28,30,0.98) 0%, rgba(16,16,18,0.98) 100%)",
+  color: "#fff",
+  boxShadow: "0 18px 50px rgba(0,0,0,0.28)",
+  transition: "transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease",
+  "&:hover": {
+    transform: "translateY(-6px)",
+    borderColor: "rgba(229,9,20,0.45)",
+    boxShadow: "0 24px 70px rgba(229,9,20,0.16)",
+  },
+};
+
+const FALLBACK_POSTER =
+  "https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=1000&auto=format&fit=crop";
+
+const getMoviePosterUrl = (poster) => {
+  if (!poster) return FALLBACK_POSTER;
+  if (/^https?:\/\//i.test(poster)) return poster;
+  return `${API_SERVER_URL}/uploads/${poster}`;
+};
+
+const normalizeTags = (genre) => {
+  if (Array.isArray(genre)) return genre.slice(0, 2);
+  if (typeof genre === "string") {
+    return genre
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean)
+      .slice(0, 2);
+  }
+  return ["Movie"];
+};
+
+const normalizeDuration = (duration) => {
+  const value = Number(duration);
+  if (!Number.isFinite(value) || value <= 0) return "N/A";
+  const hours = Math.floor(value / 60);
+  const mins = value % 60;
+  return `${hours}h ${mins}m`;
+};
+
+const normalizeReleaseDate = (releaseDate) => {
+  if (!releaseDate) return null;
+  const parsed = new Date(releaseDate);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+};
+
+const formatReleaseLabel = (releaseDate) => {
+  const parsed = normalizeReleaseDate(releaseDate);
+  if (!parsed) return "Release date to be announced";
+  return parsed.toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+};
+
+const SectionHeading = ({ eyebrow, title, description, actionLabel }) => (
+  <Stack
+    direction={{ xs: "column", md: "row" }}
+    justifyContent="space-between"
+    alignItems={{ xs: "flex-start", md: "flex-end" }}
+    spacing={2}
+    sx={{ mb: 4 }}
+  >
+    <Box>
+      {eyebrow ? (
+        <Typography
+          variant="overline"
+          sx={{
+            letterSpacing: "0.36em",
+            color: "rgba(255,255,255,0.62)",
+            display: "block",
+            mb: 0.5,
+          }}
+        >
+          {eyebrow}
+        </Typography>
+      ) : null}
+      <Typography variant="h4" sx={{ fontWeight: 800, color: "#fff" }}>
+        {title}
+      </Typography>
+      {description ? (
+        <Typography sx={{ mt: 1, maxWidth: 680, color: "rgba(255,255,255,0.68)" }}>
+          {description}
+        </Typography>
+      ) : null}
+    </Box>
+    {actionLabel ? (
+      <Button
+        component={RouterLink}
+        to="/movies"
+        endIcon={<ArrowRight size={16} />}
+        sx={{
+          color: "#fff",
+          borderRadius: 0,
+          px: 2.5,
+          py: 1.1,
+          border: "1px solid rgba(229,9,20,0.5)",
+          backgroundColor: "rgba(229,9,20,0.14)",
+          textTransform: "none",
+          fontWeight: 700,
+          "&:hover": {
+            borderColor: "#e50914",
+            backgroundColor: "rgba(229,9,20,0.22)",
+          },
+        }}
+      >
+        {actionLabel}
+      </Button>
+    ) : null}
+  </Stack>
+);
+
+function MovieCard({ id, image, title, genre, runtime }) {
+  const [isHovered, setIsHovered] = useState(false);
+
+  return (
+    <Card
+      sx={{
+        ...cardSurface,
+        maxWidth: 345,
+        minHeight: 350,
+        position: "relative",
+        overflow: "hidden",
+        transition: "transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease",
+      }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      role="region"
+      aria-label={`${title} movie card`}
+    >
+      <CardMedia
+        component="img"
+        alt={`${title} poster`}
+        image={image}
+        sx={{
+          height: "100%",
+          minHeight: 350,
+          objectFit: "cover",
+        }}
+      />
+
+      <Box
+        sx={{
+          position: "absolute",
+          inset: 0,
+          background:
+            "linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.86) 58%, rgba(0,0,0,0.94) 100%)",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "flex-end",
+          p: 1,
+          opacity: isHovered ? 1 : 0,
+          visibility: isHovered ? "visible" : "hidden",
+          transition: "opacity 0.3s ease-in-out, visibility 0.3s ease-in-out",
+          pointerEvents: isHovered ? "auto" : "none",
+        }}
+      >
+        <CardContent sx={{ flexGrow: 1, display: "flex", flexDirection: "column", justifyContent: "flex-end", pb: 1 }}>
+          <Typography
+            variant="caption"
+            sx={{
+              mb: 1.25,
+              color: "rgba(255,255,255,0.72)",
+              letterSpacing: "0.2em",
+              textTransform: "uppercase",
+            }}
           >
-            <img src={movie.image} alt={movie.title} className="h-56 w-full object-cover" />
-            <div className="space-y-1 p-3">
-              <h3 className="line-clamp-1 text-sm font-semibold text-text-primary">{movie.title}</h3>
-              <p className="text-xs text-text-secondary">{movie.genre}</p>
-              <p className="flex items-center gap-1 text-xs text-yellow-400">
-                <Star size={12} fill="currentColor" /> {movie.rating}
-              </p>
-            </div>
-          </article>
-        ))}
-      </div>
-    </div>
-  </section>
+            {genre}
+          </Typography>
+
+          <Typography gutterBottom variant="h5" component="div" sx={{ color: "#fff", fontWeight: 800 }}>
+            {title}
+          </Typography>
+
+          <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.72)", lineHeight: 1.7 }}>
+            {runtime ? `${genre}${genre ? " | " : ""}${runtime}` : genre}
+          </Typography>
+        </CardContent>
+
+        <CardActions
+          sx={{
+            justifyContent: "space-around",
+            px: 2,
+            pb: 2,
+            pt: 0.5,
+          }}
+        >
+          <Button
+            component={RouterLink}
+            to={id ? `/movies/${id}` : "/movies"}
+            size="small"
+            variant="contained"
+            sx={{
+              borderRadius: 0,
+              backgroundColor: "#e50914",
+              color: "#fff",
+              textTransform: "none",
+              fontWeight: 700,
+              "&:hover": { backgroundColor: "#c80811" },
+            }}
+          >
+            Buy Tickets
+          </Button>
+          <Button
+            component={RouterLink}
+            to={id ? `/movies/${id}` : "/movies"}
+            size="small"
+            variant="outlined"
+            sx={{
+              borderRadius: 0,
+              color: "#fff",
+              borderColor: "rgba(255,255,255,0.72)",
+              textTransform: "none",
+              fontWeight: 700,
+              "&:hover": {
+                borderColor: "#fff",
+                backgroundColor: "rgba(255,255,255,0.08)",
+              },
+            }}
+          >
+            Watch Trailer
+          </Button>
+        </CardActions>
+      </Box>
+    </Card>
+  );
+}
+
+const EmptyStateCard = ({ message }) => (
+  <Paper sx={{ ...cardSurface, p: 3, minHeight: 220, justifyContent: "center" }}>
+    <Typography sx={{ color: "rgba(255,255,255,0.72)", lineHeight: 1.7 }}>
+      {message}
+    </Typography>
+  </Paper>
 );
 
 export default function Landing() {
   const [openFaq, setOpenFaq] = useState(0);
+  const [movies, setMovies] = useState([]);
+  const [hallCount, setHallCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchLandingData = async () => {
+      try {
+        const [moviesResponse, hallsResponse] = await Promise.all([
+          axios.get(`${API_BASE_URL}/movie/get`, { withCredentials: true }),
+          axios.get(`${API_BASE_URL}/hall/get-active`, { withCredentials: true }),
+        ]);
+
+        if (moviesResponse.data?.success && Array.isArray(moviesResponse.data.data)) {
+          const mappedMovies = moviesResponse.data.data.map((movie) => ({
+            id: movie.id,
+            title: movie.movie_title || movie.title || "Untitled",
+            genre: normalizeTags(movie.genre).join(" | "),
+            runtime: normalizeDuration(movie.duration),
+            image: getMoviePosterUrl(movie.moviePoster),
+            summary: movie.description || movie.summary || "Details coming soon.",
+            releaseDate: movie.releaseDate || null,
+          }));
+          setMovies(mappedMovies);
+        } else {
+          setMovies([]);
+        }
+
+        if (hallsResponse.data?.success && Array.isArray(hallsResponse.data.data)) {
+          setHallCount(hallsResponse.data.data.length);
+        } else {
+          setHallCount(0);
+        }
+      } catch (error) {
+        console.error("Failed to fetch landing page data", error);
+        setMovies([]);
+        setHallCount(0);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchLandingData();
+  }, []);
+
+  const today = useMemo(() => new Date(), []);
+
+  const nowShowingMovies = useMemo(
+    () =>
+      movies
+        .filter((movie) => {
+          const releaseDate = normalizeReleaseDate(movie.releaseDate);
+          return !releaseDate || releaseDate <= today;
+        })
+        .slice(0, 6),
+    [movies, today],
+  );
+
+  const featuredMovies = useMemo(() => movies.slice(0, 6), [movies]);
+
+  const comingSoonMovies = useMemo(
+    () =>
+      movies
+        .filter((movie) => {
+          const releaseDate = normalizeReleaseDate(movie.releaseDate);
+          return releaseDate && releaseDate > today;
+        })
+        .sort((a, b) => normalizeReleaseDate(a.releaseDate) - normalizeReleaseDate(b.releaseDate))
+        .slice(0, 3),
+    [movies, today],
+  );
+
+  const heroStats = useMemo(
+    () => [
+      { label: "Movies Available", value: String(movies.length) },
+      { label: "Active Locations", value: String(hallCount) },
+      { label: "Coming Soon", value: String(comingSoonMovies.length) },
+    ],
+    [comingSoonMovies.length, hallCount, movies.length],
+  );
 
   return (
-    <div className="bg-primary text-text-primary">
+    <Box sx={{ backgroundColor: "#050505", color: "#fff" }}>
       <Hero />
-      
 
-      
-      <MovieRail
-        title="Coming Soon"
-        subtitle="Get ready for upcoming releases and advanced bookings."
-        movies={COMING_SOON}
-      />
-
-      <Halls />
-
-      <section className="py-10">
-        <div className="container mx-auto grid gap-6 px-6 lg:grid-cols-2">
-          <article className="overflow-hidden rounded-2xl border border-white/10 bg-secondary">
-            <img src={card3} alt="Festival screening" className="h-48 w-full object-cover" />
-            <div className="p-5">
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-accent">
-                Festival Pick
-              </p>
-              <h3 className="text-2xl font-bold">Horror Film Festival</h3>
-              <p className="mt-1 text-sm text-text-secondary">
-                Late-night screenings, special guests, and limited seats.
-              </p>
-            </div>
-          </article>
-          <article className="overflow-hidden rounded-2xl border border-white/10 bg-secondary">
-            <img src={card2} alt="Student discount" className="h-48 w-full object-cover" />
-            <div className="p-5">
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-accent">
-                Student Offer
-              </p>
-              <h3 className="text-2xl font-bold">Student Discount Days</h3>
-              <p className="mt-1 text-sm text-text-secondary">
-                Flash student deals every week with valid student ID.
-              </p>
-            </div>
-          </article>
-        </div>
-      </section>
-
-      <section className="py-10">
-        <div className="container mx-auto px-6">
-          <h2 className="text-center text-3xl font-bold">Happy Customers</h2>
-          <p className="mt-1 text-center text-sm text-text-secondary">
-            Trusted by moviegoers for fast and reliable booking.
-          </p>
-          <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            {TESTIMONIALS.map((item) => (
-              <article key={item.name} className="rounded-xl border border-white/10 bg-secondary p-4">
-                <p className="mb-2 flex text-yellow-400">
-                  <Star size={13} fill="currentColor" />
-                  <Star size={13} fill="currentColor" />
-                  <Star size={13} fill="currentColor" />
-                  <Star size={13} fill="currentColor" />
-                  <Star size={13} fill="currentColor" />
-                </p>
-                <p className="text-sm text-text-secondary">{item.text}</p>
-                <p className="mt-3 text-sm font-semibold">{item.name}</p>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="py-10">
-        <div className="container mx-auto max-w-3xl px-6">
-          <h2 className="text-center text-3xl font-bold">Frequently Asked Questions</h2>
-          <div className="mt-6 space-y-3">
-            {FAQS.map((item, index) => {
-              const isOpen = openFaq === index;
-              return (
-                <article key={item.q} className="overflow-hidden rounded-lg border border-white/10 bg-secondary">
-                  <button
-                    className="flex w-full items-center justify-between px-4 py-3 text-left text-sm font-semibold"
-                    onClick={() => setOpenFaq(isOpen ? -1 : index)}
-                    type="button"
-                  >
-                    {item.q}
-                    <ChevronDown
-                      size={16}
-                      className={`transition-transform ${isOpen ? "rotate-180" : ""}`}
-                    />
-                  </button>
-                  {isOpen && <p className="px-4 pb-4 text-sm text-text-secondary">{item.a}</p>}
-                </article>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      <section className="py-14">
-        <div className="container mx-auto max-w-4xl px-6">
-          <div className="rounded-2xl border border-white/10 bg-secondary p-7 text-center">
-            <p className="mb-2 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-accent">
-              <CalendarClock size={14} /> Ready for tonight?
-            </p>
-            <h2 className="text-3xl font-bold">Ready To Watch And Book Movies?</h2>
-            <p className="mx-auto mt-2 max-w-xl text-sm text-text-secondary">
-              Get showtimes, select seats, and secure your booking before seats sell out.
-            </p>
-            <div className="mt-6 flex flex-wrap justify-center gap-3">
-              <Link to="/movies" className="rounded-lg bg-accent px-5 py-3 text-sm font-semibold text-white">
-                Start Booking
-              </Link>
-              <Link
-                to="/locations"
-                className="rounded-lg border border-white/20 px-5 py-3 text-sm font-semibold text-text-primary"
+      <Container maxWidth="lg" sx={{ py: { xs: 6, md: 8 } }}>
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: { xs: "1fr", md: "repeat(3, 1fr)" },
+            gap: 3,
+          }}
+        >
+          {heroStats.map((stat) => (
+            <Paper key={stat.label} sx={{ ...sectionSurface, p: 3.5 }}>
+              <Typography variant="h3" sx={{ fontWeight: 900, color: "#fff" }}>
+                {stat.value}
+              </Typography>
+              <Typography
+                variant="overline"
+                sx={{ color: "rgba(255,255,255,0.6)", letterSpacing: "0.34em" }}
               >
-                Explore Halls
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-    </div>
+                {stat.label}
+              </Typography>
+            </Paper>
+          ))}
+        </Box>
+      </Container>
+
+      <Container maxWidth="lg" sx={{ pb: { xs: 6, md: 8 } }}>
+        <Paper sx={{ ...sectionSurface, p: { xs: 3, md: 4 } }}>
+          <SectionHeading
+            eyebrow="Now Showing"
+            title="What audiences are booking today"
+            description="A live look at currently available movies from your catalog."
+            actionLabel="Browse movies"
+          />
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: {
+                xs: "1fr",
+                md: "repeat(2, minmax(0, 1fr))",
+                lg: "repeat(3, minmax(0, 1fr))",
+              },
+              gap: 3,
+            }}
+          >
+            {loading ? (
+              <EmptyStateCard message="Loading live movies..." />
+            ) : nowShowingMovies.length > 0 ? (
+              nowShowingMovies.map((movie) => <MovieCard key={movie.id || movie.title} {...movie} />)
+            ) : (
+              <EmptyStateCard message="No currently released movies are available yet." />
+            )}
+          </Box>
+        </Paper>
+      </Container>
+
+      <Container maxWidth="lg" sx={{ pb: { xs: 6, md: 8 } }}>
+        <Paper sx={{ ...sectionSurface, p: { xs: 3, md: 4 } }}>
+          <SectionHeading
+            eyebrow="Featured"
+            title="More movies from the current lineup"
+            description="A broader look at titles available across your current catalog."
+            actionLabel="See showtimes"
+          />
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: {
+                xs: "1fr",
+                md: "repeat(2, minmax(0, 1fr))",
+                lg: "repeat(3, minmax(0, 1fr))",
+              },
+              gap: 3,
+            }}
+          >
+            {loading ? (
+              <EmptyStateCard message="Loading featured titles..." />
+            ) : featuredMovies.length > 0 ? (
+              featuredMovies.map((movie) => <MovieCard key={movie.id || movie.title} {...movie} />)
+            ) : (
+              <EmptyStateCard message="No featured movies are available right now." />
+            )}
+          </Box>
+        </Paper>
+      </Container>
+
+     
+
+      <Container maxWidth="lg" sx={{ pb: { xs: 6, md: 8 } }}>
+        <Paper
+          sx={{
+            ...sectionSurface,
+            p: { xs: 3, md: 4 },
+            background:
+              "linear-gradient(135deg, rgba(31,31,34,0.98) 0%, rgba(10,10,10,0.98) 65%, rgba(78,13,17,0.92) 100%)",
+          }}
+        >
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: { xs: "1fr", md: "1.1fr 0.9fr" },
+              gap: 4,
+              alignItems: "center",
+            }}
+          >
+            <Box>
+              <Typography
+                variant="overline"
+                sx={{ color: "rgba(255,255,255,0.58)", letterSpacing: "0.34em" }}
+              >
+                Why CinemaHub
+              </Typography>
+              <Typography variant="h3" sx={{ mt: 1, fontWeight: 900, lineHeight: 1.15 }}>
+                A more professional way to discover cinemas, movies, and showtimes
+              </Typography>
+              <Typography sx={{ mt: 2, color: "rgba(255,255,255,0.72)", lineHeight: 1.9, maxWidth: 620 }}>
+                Built for moviegoers who want less clutter and more confidence. CinemaHub helps you compare halls,
+                find the right session faster, and book with a cleaner flow from landing page to ticket confirmation.
+              </Typography>
+              <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ mt: 3 }}>
+                <Button
+                  component={RouterLink}
+                  to="/movies"
+                  variant="contained"
+                  endIcon={<ArrowRight size={16} />}
+                  sx={{
+                    borderRadius: 0,
+                    px: 3,
+                    py: 1.4,
+                    backgroundColor: "#e50914",
+                    textTransform: "none",
+                    fontWeight: 800,
+                    "&:hover": { backgroundColor: "#c80811" },
+                  }}
+                >
+                  Explore Movies
+                </Button>
+                <Button
+                  component={RouterLink}
+                  to="/locations"
+                  variant="outlined"
+                  sx={{
+                    borderRadius: 0,
+                    px: 3,
+                    py: 1.4,
+                    color: "#fff",
+                    borderColor: "rgba(255,255,255,0.22)",
+                    textTransform: "none",
+                    fontWeight: 700,
+                  }}
+                >
+                  View Locations
+                </Button>
+              </Stack>
+            </Box>
+
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: "1fr",
+                gap: 2,
+              }}
+            >
+              {PLATFORM_FEATURES.map((item, index) => (
+                <Paper
+                  key={item.title}
+                  sx={{
+                    p: 2.5,
+                    borderRadius: 0,
+                    border: "1px solid rgba(255,255,255,0.08)",
+                    backgroundColor: index === 0 ? "rgba(229,9,20,0.12)" : "rgba(255,255,255,0.04)",
+                    color: "#fff",
+                  }}
+                >
+                  <Typography variant="h6" sx={{ fontWeight: 800, mb: 0.8 }}>
+                    {item.title}
+                  </Typography>
+                  <Typography sx={{ color: "rgba(255,255,255,0.7)", lineHeight: 1.75 }}>
+                    {item.detail}
+                  </Typography>
+                </Paper>
+              ))}
+            </Box>
+          </Box>
+        </Paper>
+      </Container>
+
+      <Container maxWidth="lg" sx={{ pb: { xs: 6, md: 8 } }}>
+        <Paper sx={{ ...sectionSurface, p: { xs: 3, md: 4 } }}>
+          <SectionHeading eyebrow="Frequently Asked Questions" title="Answers in seconds" />
+          <Stack spacing={2}>
+            {FAQS.map((item, index) => (
+              <Accordion
+                key={item.q}
+                expanded={openFaq === index}
+                onChange={(_, expanded) => setOpenFaq(expanded ? index : -1)}
+                disableGutters
+                sx={{
+                  borderRadius: "0 !important",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  background:
+                    "linear-gradient(180deg, rgba(28,28,30,0.98) 0%, rgba(15,15,16,0.98) 100%)",
+                  color: "#fff",
+                  overflow: "hidden",
+                  "&:before": { display: "none" },
+                }}
+              >
+                <AccordionSummary
+                  expandIcon={<ChevronDown size={18} color="#ffffff" />}
+                  sx={{
+                    px: 3,
+                    py: 1,
+                    "& .MuiAccordionSummary-content": { my: 1.2 },
+                  }}
+                >
+                  <Typography sx={{ fontWeight: 700, letterSpacing: "0.04em" }}>
+                    {item.q}
+                  </Typography>
+                </AccordionSummary>
+                <AccordionDetails sx={{ px: 3, pt: 0, pb: 3 }}>
+                  <Typography sx={{ color: "rgba(255,255,255,0.72)", lineHeight: 1.8 }}>
+                    {item.a}
+                  </Typography>
+                </AccordionDetails>
+              </Accordion>
+            ))}
+          </Stack>
+        </Paper>
+      </Container>
+
+      <Container maxWidth="md" sx={{ pb: { xs: 7, md: 10 } }}>
+     
+      </Container>
+    </Box>
   );
 }

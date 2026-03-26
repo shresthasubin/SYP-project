@@ -147,39 +147,45 @@ export default function LiveChatModal({
 
   return (
     <div className="fixed inset-0 z-[70] flex items-end justify-center bg-black/60 p-3 md:items-center">
-      <div className="w-full max-w-2xl overflow-hidden rounded-2xl border border-white/15 bg-[#0b1220] text-white shadow-2xl">
+      <div className="w-full max-w-3xl overflow-hidden rounded-2xl border border-white/10 bg-[#0c1220] text-white shadow-2xl">
+        {/* Header */}
         <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
-          <div>
-            <p className="text-sm text-slate-300">Live Chat</p>
-            <h3 className="text-base font-semibold">{hallName || "Cinema Hall"}</h3>
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-full bg-[#e50914] text-sm font-bold grid place-items-center">
+              {(hallName || "Hall").slice(0, 2).toUpperCase()}
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-[0.18em] text-slate-400">Live Chat</p>
+              <h3 className="text-base font-semibold">{hallName || "Cinema Hall"}</h3>
+            </div>
           </div>
           <button
             onClick={onClose}
-            className="rounded-md border border-white/15 px-3 py-1.5 text-sm hover:bg-white/10"
+            className="rounded-md border border-white/15 px-3 py-1.5 text-xs font-semibold hover:bg-white/10"
           >
             Close
           </button>
         </div>
 
-        <div className="h-[52vh] overflow-y-auto bg-[#070d18] p-4 md:h-[56vh]">
-          {loading ? <p className="text-sm text-slate-400">Loading chat...</p> : null}
-          {!loading && messages.length === 0 ? (
+        {/* Messages */}
+        <div className="h-[56vh] overflow-y-auto bg-[#080e1a] p-4 md:h-[60vh]">
+          {loading && <p className="text-sm text-slate-400">Loading chat...</p>}
+          {!loading && messages.length === 0 && (
             <p className="text-sm text-slate-400">No messages yet. Start the conversation.</p>
-          ) : null}
+          )}
           {messages.map((msg) => {
             const mine = Number(msg.sender_id) === Number(currentUserId);
             return (
-              <div
-                key={msg.id}
-                className={`mb-3 flex ${mine ? "justify-end" : "justify-start"}`}
-              >
+              <div key={msg.id} className={`mb-3 flex ${mine ? "justify-end" : "justify-start"}`}>
                 <div
-                  className={`max-w-[80%] rounded-xl px-3 py-2 text-sm ${
-                    mine ? "bg-[#f4e451] text-black" : "bg-[#18253f] text-slate-100"
+                  className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm shadow ${
+                    mine
+                      ? "bg-[#e50914] text-white shadow-red-900/40"
+                      : "bg-[#111b2f] text-slate-100 border border-white/10"
                   }`}
                 >
                   <p>{msg.message}</p>
-                  <p className={`mt-1 text-[11px] ${mine ? "text-black/70" : "text-slate-400"}`}>
+                  <p className={`mt-1 text-[11px] ${mine ? "text-white/80" : "text-slate-400"}`}>
                     {formatTime(msg.createdAt)}
                   </p>
                 </div>
@@ -189,19 +195,20 @@ export default function LiveChatModal({
           <div ref={endRef} />
         </div>
 
-        <form onSubmit={handleSend} className="border-t border-white/10 p-3">
+        {/* Input */}
+        <form onSubmit={handleSend} className="border-t border-white/10 bg-[#0c1220] p-3">
           {error ? <p className="mb-2 text-xs text-red-400">{error}</p> : null}
-          <div className="flex gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Type a message..."
-              className="flex-1 rounded-lg border border-white/15 bg-[#111b2f] px-3 py-2 text-sm outline-none focus:border-[#f4e451]"
+              className="flex-1 rounded-lg border border-white/15 bg-[#111b2f] px-3 py-2 text-sm outline-none focus:border-[#e50914]"
             />
             <button
               type="submit"
               disabled={!canSend}
-              className="rounded-lg bg-[#f4e451] px-4 py-2 text-sm font-semibold text-black disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-lg bg-[#e50914] px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-red-900/30 transition hover:bg-[#f21925] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {sending ? "Sending..." : "Send"}
             </button>

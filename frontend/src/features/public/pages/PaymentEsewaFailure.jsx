@@ -15,7 +15,7 @@ const PaymentEsewaFailure = () => {
         <div className="mt-7 flex flex-wrap gap-3">
           <Link
             to="/profile"
-            className="rounded-lg bg-[#e7df58] px-4 py-2 text-sm font-semibold text-black hover:brightness-95"
+            className="rounded-lg bg-[#ff1313] px-4 py-2 text-sm font-semibold text-black hover:brightness-95"
           >
             Go to Profile
           </Link>

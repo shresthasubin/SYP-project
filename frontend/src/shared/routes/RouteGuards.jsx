@@ -1,6 +1,7 @@
 import React from "react";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth.js";
+import PageLoader from "../components/PageLoader.jsx";
 
 const getHomeByRole = (role) => {
   if (role === "admin") return "/admin";
@@ -10,7 +11,7 @@ const getHomeByRole = (role) => {
 
 const RouteLoading = () => (
   <div className="grid min-h-[60vh] place-items-center text-sm text-slate-300">
-    Checking session...
+   <PageLoader/>
   </div>
 );
 

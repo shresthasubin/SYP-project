@@ -1,4 +1,4 @@
-import React from "react";
+import React,{useState ,useEffect} from "react";
 import { Routes, Route } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import Login from "../features/auth/pages/Login.jsx";
@@ -7,7 +7,6 @@ import Landing from "../features/public/pages/Landing.jsx";
 import MoviesPage from "../features/public/pages/MoviesPage.jsx";
 import Locations from "../features/public/pages/Locations.jsx";
 import About from "../features/public/pages/About.jsx";
-import Contact from "../features/public/pages/Contact.jsx";
 import MovieDetail from "../features/public/pages/MovieDetail.jsx";
 import Layout from "../shared/layout/Layout.jsx";
 import Terms from "../features/public/pages/Terms.jsx";
@@ -28,55 +27,65 @@ import User from "../features/admin/pages/User.jsx";
 import FormApplications from "../features/admin/pages/FormApplications.jsx";
 import Showtimes from "../features/admin/pages/Showtimes.jsx";
 import HallAdminDashboard from "../features/halladmin/pages/Dashboard.jsx";
+import HallAdminHalls from "../features/halladmin/pages/Halls.jsx";
 import HallAdminMessages from "../features/halladmin/pages/Messages.jsx";
 import SeatLayoutPreview from "../features/halladmin/components/SeatLayoutPreview.jsx";
 import { AuthProvider } from "../shared/context/AuthContext.jsx";
-import { ThemeProvider, useTheme } from "../shared/context/ThemeContext.jsx";
-import { ProtectedRoute, PublicOnlyRoute } from "../shared/routes/RouteGuards.jsx";
-
-const ThemedToaster = () => {
-  const { isDark } = useTheme();
-  return (
-    <Toaster
-      position="top-right"
-      reverseOrder={false}
-      gutter={8}
-      toastOptions={{
-        duration: 3000,
-        style: {
-          background: "#363636",
-          color: "#fff",
-        },
-        success: {
-          duration: 3000,
-          style: {
-            background: "#10b981",
-          },
-        },
-        error: {
-          duration: 3000,
-          style: {
-            background: "#ef4444",
-          },
-        },
-      }}
-    />
-  );
-};
+import {
+  ProtectedRoute,
+  PublicOnlyRoute,
+} from "../shared/routes/RouteGuards.jsx";
+import PageLoader from "../shared/components/PageLoader.jsx";
 
 const App = () => {
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const handle = window.requestAnimationFrame
+      ? window.requestAnimationFrame(() => setLoading(false))
+      : setTimeout(() => setLoading(false), 400);
+    return () => {
+      if (handle && handle.cancel) handle.cancel();
+    };
+  }, []);
+
+  if (loading) {
+    return <PageLoader />;
+  }
+
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <ThemedToaster />
-        <Routes>
+    <AuthProvider>
+      <Toaster
+        position="top-right"
+        reverseOrder={false}
+        gutter={8}
+        toastOptions={{
+          duration: 3000,
+          style: {
+            background: "#363636",
+            color: "#fff",
+          },
+          success: {
+            duration: 6000,
+            style: {
+              background: "#10b981",
+            },
+          },
+          error: {
+            duration: 6000,
+            style: {
+              background: "#ef4444",
+            },
+          },
+        }}
+      />
+      <Routes>
           <Route element={<Layout />}>
             <Route path="/" element={<Landing />} />
             <Route path="/movies" element={<MoviesPage />} />
             <Route path="/movies/:id" element={<MovieDetail />} />
             <Route path="/locations" element={<Locations />} />
             <Route path="/about" element={<About />} />
-            <Route path="/contact" element={<Contact />} />
             <Route path="/legal/terms" element={<Terms />} />
             <Route path="/legal/privacy" element={<Privacy />} />
             <Route path="/legal/cookie" element={<Cookie />} />
@@ -84,9 +93,18 @@ const App = () => {
             <Route path="/hall-staff/apply" element={<HallStaffApply />} />
             <Route element={<ProtectedRoute />}>
               <Route path="/profile" element={<Profile />} />
-              <Route path="/payment/esewa/success" element={<PaymentEsewaSuccess />} />
-              <Route path="/payment/esewa/failure" element={<PaymentEsewaFailure />} />
-              <Route path="/payment-success" element={<PaymentEsewaSuccess />} />
+              <Route
+                path="/payment/esewa/success"
+                element={<PaymentEsewaSuccess />}
+              />
+              <Route
+                path="/payment/esewa/failure"
+                element={<PaymentEsewaFailure />}
+              />
+              <Route
+                path="/payment-success"
+                element={<PaymentEsewaSuccess />}
+              />
               <Route path="/payment-failed" element={<PaymentEsewaFailure />} />
             </Route>
           </Route>
@@ -103,11 +121,13 @@ const App = () => {
             <Route path="/reg" element={<SeatLayoutPreview />} />
           </Route>
 
-          <Route element={<ProtectedRoute allowedRoles={["hall-admin", "admin"]} />}>
+          <Route
+            element={<ProtectedRoute allowedRoles={["hall-admin", "admin"]} />}
+          >
             <Route path="/halladmin" element={<HallAdminLayout />}>
               <Route index element={<HallAdminDashboard />} />
               <Route path="movies" element={<Movies />} />
-              <Route path="halls" element={<Halls />} />
+              <Route path="halls" element={<HallAdminHalls />} />
               <Route path="showtimes" element={<Showtimes />} />
               <Route path="messages" element={<HallAdminMessages />} />
             </Route>
@@ -120,7 +140,6 @@ const App = () => {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </AuthProvider>
-    </ThemeProvider>
   );
 };
 

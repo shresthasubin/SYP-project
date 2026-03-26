@@ -76,3 +76,17 @@
   border-color: var(--color-accent) !important;
   color: #ffffff !important;
 }
+
+@keyframes offers-marquee {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.offers-marquee {
+  animation: offers-marquee 24s linear infinite;
+}

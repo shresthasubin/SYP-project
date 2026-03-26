@@ -18,7 +18,6 @@ import {
   Tent,
 } from "lucide-react";
 import { NavLink, Link, useLocation } from "react-router-dom";
-import { useTheme } from "../context/ThemeContext.jsx";
 import { useAuth } from "../hooks/useAuth.js";
 import { API_BASE_URL } from "../config/api.js";
 import "../../index.css";
@@ -32,33 +31,111 @@ import janakpurImg from "../../assets/location/janakpur.png";
 import kathmanduImg from "../../assets/location/kathmandu.png";
 import lalitpurImg from "../../assets/location/lalitpur.png";
 import pokharaImg from "../../assets/location/pokhara.png";
-import dhankutaImg from "../../assets/location/dhankuta.png";
+import dhankutaImg from "../../assets/location/Dhankuta.png";
 import damakImg from "../../assets/location/damak.png";
 import lumbiniImg from "../../assets/location/lumbini.png";
 import birgunjImg from "../../assets/location/birgunj.png";
+import logo from "../../assets/logo.svg";
+
+const getProfileInitials = (name) => {
+  const parts = String(name || "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+
+  if (parts.length >= 2) {
+    return `${parts[0][0] || ""}${parts[1][0] || ""}`.toUpperCase();
+  }
+
+  if (parts.length === 1) {
+    return parts[0].slice(0, 2).toUpperCase();
+  }
+
+  return "PR";
+};
+
 const NAV_ITEMS = [
   { to: "/", label: "Home", end: true },
   { to: "/movies", label: "Movies" },
   { to: "/locations", label: "Locations" },
   { to: "/about", label: "About" },
-  { to: "/contact", label: "Contact" },
 ];
 
 const NEPALI_CITIES = [
-  { name: "Kathmandu", icon: Landmark, lat: 27.7172, lon: 85.324, image: kathmanduImg },
-  { name: "Pokhara", icon: Mountain, lat: 28.2096, lon: 83.9856, image: pokharaImg },
-  { name: "Lalitpur", icon: Building2, lat: 27.6644, lon: 85.3188, image: lalitpurImg },
-  { name: "Biratnagar", icon: Home, lat: 26.4525, lon: 87.2718, image: biratnagarImg },
-  {name:"Dhankuta", icon: Castle, lat: 26.9833, lon: 87.3333, image: dhankutaImg},
- {name:"Lumbini", icon: Landmark, lat: 27.4844, lon: 83.2761, image: lumbiniImg},
- { name: "Damak", icon: Home, lat: 26.75, lon: 87.2833, image: damakImg },
- { name: "Butwal", icon: Home, lat: 27.6866, lon: 83.4323, image: butwalImg },
- { name: "Chitwan", icon: Tent, lat: 27.5291, lon: 84.3542, image: chitwanImg },
- { name: "Dharan", icon: Building2, lat: 26.8142, lon: 87.2797, image: dharanImg },
- {name:"Birgunj", icon: Home, lat: 27.0000, lon: 84.8667, image: birgunjImg},
-  { name: "Inaruwa", icon: Home, lat: 26.6068, lon: 87.1478, image: inaruwaImg },
+  {
+    name: "Kathmandu",
+    icon: Landmark,
+    lat: 27.7172,
+    lon: 85.324,
+    image: kathmanduImg,
+  },
+  {
+    name: "Pokhara",
+    icon: Mountain,
+    lat: 28.2096,
+    lon: 83.9856,
+    image: pokharaImg,
+  },
+  {
+    name: "Lalitpur",
+    icon: Building2,
+    lat: 27.6644,
+    lon: 85.3188,
+    image: lalitpurImg,
+  },
+  {
+    name: "Biratnagar",
+    icon: Home,
+    lat: 26.4525,
+    lon: 87.2718,
+    image: biratnagarImg,
+  },
+  {
+    name: "Dhankuta",
+    icon: Castle,
+    lat: 26.9833,
+    lon: 87.3333,
+    image: dhankutaImg,
+  },
+  {
+    name: "Lumbini",
+    icon: Landmark,
+    lat: 27.4844,
+    lon: 83.2761,
+    image: lumbiniImg,
+  },
+  { name: "Damak", icon: Home, lat: 26.75, lon: 87.2833, image: damakImg },
+  { name: "Butwal", icon: Home, lat: 27.6866, lon: 83.4323, image: butwalImg },
+  {
+    name: "Chitwan",
+    icon: Tent,
+    lat: 27.5291,
+    lon: 84.3542,
+    image: chitwanImg,
+  },
+  {
+    name: "Dharan",
+    icon: Building2,
+    lat: 26.8142,
+    lon: 87.2797,
+    image: dharanImg,
+  },
+  { name: "Birgunj", icon: Home, lat: 27.0, lon: 84.8667, image: birgunjImg },
+  {
+    name: "Inaruwa",
+    icon: Home,
+    lat: 26.6068,
+    lon: 87.1478,
+    image: inaruwaImg,
+  },
   { name: "Itahari", icon: Home, lat: 26.663, lon: 87.274, image: itahariImg },
-  { name: "Janakpur", icon: Landmark, lat: 26.7288, lon: 85.926, image: janakpurImg },
+  {
+    name: "Janakpur",
+    icon: Landmark,
+    lat: 26.7288,
+    lon: 85.926,
+    image: janakpurImg,
+  },
 ];
 
 const ALL_NEPAL_CITIES = [
@@ -414,17 +491,30 @@ const normalizeCityName = (name) =>
     .trim();
 
 const toTitleCase = (name) =>
-  name.replace(/\w\S*/g, (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase());
+  name.replace(
+    /\w\S*/g,
+    (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase(),
+  );
 
-const PRIMARY_CITY_NAMES = new Set(NEPALI_CITIES.map((city) => normalizeCityName(city.name)));
+const PRIMARY_CITY_NAMES = new Set(
+  NEPALI_CITIES.map((city) => normalizeCityName(city.name)),
+);
 const OTHER_NEPALI_CITIES = (() => {
   const seen = new Set();
   const list = [];
   for (const rawCity of ALL_NEPAL_CITIES) {
     const normalized = normalizeCityName(rawCity);
-    if (!normalized || PRIMARY_CITY_NAMES.has(normalized) || seen.has(normalized)) continue;
+    if (
+      !normalized ||
+      PRIMARY_CITY_NAMES.has(normalized) ||
+      seen.has(normalized)
+    )
+      continue;
     seen.add(normalized);
-    list.push({ value: toTitleCase(normalized), label: toTitleCase(normalized) });
+    list.push({
+      value: toTitleCase(normalized),
+      label: toTitleCase(normalized),
+    });
   }
   return list.sort((a, b) => a.label.localeCompare(b.label));
 })();
@@ -453,13 +543,25 @@ const formatNotificationTime = (value) => {
   const minutes = Math.round(diffMs / 60000);
 
   if (Math.abs(minutes) < 1) return "Just now";
-  if (Math.abs(minutes) < 60) return new Intl.RelativeTimeFormat(undefined, { numeric: "auto" }).format(minutes, "minute");
+  if (Math.abs(minutes) < 60)
+    return new Intl.RelativeTimeFormat(undefined, { numeric: "auto" }).format(
+      minutes,
+      "minute",
+    );
 
   const hours = Math.round(minutes / 60);
-  if (Math.abs(hours) < 24) return new Intl.RelativeTimeFormat(undefined, { numeric: "auto" }).format(hours, "hour");
+  if (Math.abs(hours) < 24)
+    return new Intl.RelativeTimeFormat(undefined, { numeric: "auto" }).format(
+      hours,
+      "hour",
+    );
 
   const days = Math.round(hours / 24);
-  if (Math.abs(days) < 7) return new Intl.RelativeTimeFormat(undefined, { numeric: "auto" }).format(days, "day");
+  if (Math.abs(days) < 7)
+    return new Intl.RelativeTimeFormat(undefined, { numeric: "auto" }).format(
+      days,
+      "day",
+    );
 
   return date.toLocaleDateString();
 };
@@ -483,12 +585,12 @@ const Navbar = () => {
   });
   const [detectingLocation, setDetectingLocation] = useState(false);
   const [locationError, setLocationError] = useState("");
-  const { isDark } = useTheme();
   const { user, isAuthenticated, loading, logout } = useAuth();
   const location = useLocation();
   const profileRef = useRef(null);
   const notificationsRef = useRef(null);
   const locationRef = useRef(null);
+  const mobileLocationRef = useRef(null);
 
   const displayName = useMemo(() => {
     const fromUser = user?.fullname || user?.fullName || user?.name;
@@ -497,10 +599,7 @@ const Navbar = () => {
     return "Profile";
   }, [user]);
 
-  const profileInitial = useMemo(
-    () => (displayName?.trim()?.[0] || "P").toUpperCase(),
-    [displayName],
-  );
+  const profileInitial = useMemo(() => getProfileInitials(displayName), [displayName]);
 
   const unreadCount = useMemo(
     () => notifications.filter((item) => !item?.isRead).length,
@@ -516,40 +615,27 @@ const Navbar = () => {
   const filteredOtherCities = useMemo(() => {
     const q = citySearch.trim().toLowerCase();
     if (!q) return OTHER_NEPALI_CITIES;
-    return OTHER_NEPALI_CITIES.filter((city) => city.label.toLowerCase().includes(q));
+    return OTHER_NEPALI_CITIES.filter((city) =>
+      city.label.toLowerCase().includes(q),
+    );
   }, [citySearch]);
 
-  const shellClass = isDark
-    ? scrolled
-      ? "border-white/20 bg-secondary/95 shadow-[0_10px_28px_rgba(0,0,0,0.35)] backdrop-blur-lg"
-      : "border-white/10 bg-secondary/80 backdrop-blur-md"
-    : scrolled
-      ? "border-black/10 bg-white/95 shadow-[0_10px_28px_rgba(0,0,0,0.12)] backdrop-blur-lg"
-      : "border-black/10 bg-white/90 backdrop-blur-md";
+  const shellClass = scrolled
+    ? "border-white/10 bg-black/95 shadow-[0_10px_28px_rgba(0,0,0,0.45)] backdrop-blur-lg"
+    : "border-white/10 bg-black/85 backdrop-blur-md";
 
-  const tabShellClass = isDark
-    ? "border-white/10 bg-primary/40"
-    : "border-black/10 bg-black/[0.03]";
+  const tabShellClass = "border-white/10 bg-white/5";
 
-  const subtleBtnClass = isDark
-    ? "border-white/10 bg-primary/40 hover:border-white/20 hover:bg-white/10"
-    : "border-black/10 bg-black/[0.03] hover:border-black/20 hover:bg-black/[0.06]";
+  const subtleBtnClass =
+    "border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/10";
 
-  const signInClass = isDark
-    ? "border-white/15 hover:bg-white/10"
-    : "border-black/15 hover:bg-black/[0.05]";
+  const signInClass = "border-white/10 hover:bg-white/10";
 
-  const mobilePanelClass = isDark
-    ? "border-white/10 bg-secondary/95"
-    : "border-black/10 bg-white/95";
+  const mobilePanelClass = "border-white/10 bg-black/95 backdrop-blur-lg";
 
-  const profilePanelClass = isDark
-    ? "border-white/10 bg-secondary/95"
-    : "border-black/10 bg-white/95";
+  const profilePanelClass = "border-white/10 bg-black/95";
 
-  const locationPanelClass = isDark
-    ? "border-white/15 bg-[#111827]"
-    : "border-black/15 bg-white";
+  const locationPanelClass = "border-white/10 bg-black/95 shadow-2xl";
 
   const navInactiveClass = "nav-item text-text-secondary";
   const navActiveClass = "nav-item nav-item-active";
@@ -575,10 +661,18 @@ const Navbar = () => {
       if (profileRef.current && !profileRef.current.contains(event.target)) {
         setProfileOpen(false);
       }
-      if (notificationsRef.current && !notificationsRef.current.contains(event.target)) {
+      if (
+        notificationsRef.current &&
+        !notificationsRef.current.contains(event.target)
+      ) {
         setNotificationsOpen(false);
       }
-      if (locationRef.current && !locationRef.current.contains(event.target)) {
+      const clickedInsideLocation =
+        (locationRef.current &&
+          locationRef.current.contains(event.target)) ||
+        (mobileLocationRef.current &&
+          mobileLocationRef.current.contains(event.target));
+      if (!clickedInsideLocation) {
         setLocationOpen(false);
       }
     };
@@ -608,20 +702,29 @@ const Navbar = () => {
         );
 
         if (!active) return;
-        const items = Array.isArray(response.data?.data) ? response.data.data : [];
+        const items = Array.isArray(response.data?.data)
+          ? response.data.data
+          : [];
         setNotifications(
-          items.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)),
+          items.sort(
+            (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0),
+          ),
         );
       } catch (error) {
         if (!active) return;
-        setNotificationsError(error.response?.data?.message || "Failed to load notifications");
+        setNotificationsError(
+          error.response?.data?.message || "Failed to load notifications",
+        );
       } finally {
         if (active && !silent) setNotificationsLoading(false);
       }
     };
 
     fetchNotifications();
-    const intervalId = window.setInterval(() => fetchNotifications({ silent: true }), 30000);
+    const intervalId = window.setInterval(
+      () => fetchNotifications({ silent: true }),
+      30000,
+    );
 
     return () => {
       active = false;
@@ -633,9 +736,11 @@ const Navbar = () => {
     const id = Number(notificationId);
     if (!Number.isInteger(id) || id <= 0) return;
 
-    setNotifications((prev) => prev.map((item) => (
-      Number(item.id) === id ? { ...item, isRead: true } : item
-    )));
+    setNotifications((prev) =>
+      prev.map((item) =>
+        Number(item.id) === id ? { ...item, isRead: true } : item,
+      ),
+    );
 
     try {
       await axios.put(
@@ -644,10 +749,14 @@ const Navbar = () => {
         { withCredentials: true },
       );
     } catch (error) {
-      setNotifications((prev) => prev.map((item) => (
-        Number(item.id) === id ? { ...item, isRead: false } : item
-      )));
-      setNotificationsError(error.response?.data?.message || "Failed to mark notification as read");
+      setNotifications((prev) =>
+        prev.map((item) =>
+          Number(item.id) === id ? { ...item, isRead: false } : item,
+        ),
+      );
+      setNotificationsError(
+        error.response?.data?.message || "Failed to mark notification as read",
+      );
     }
   };
 
@@ -655,7 +764,9 @@ const Navbar = () => {
     setSelectedCity(cityName);
     try {
       localStorage.setItem(LOCATION_CITY_STORAGE_KEY, cityName);
-      window.dispatchEvent(new CustomEvent(LOCATION_CITY_EVENT, { detail: { city: cityName } }));
+      window.dispatchEvent(
+        new CustomEvent(LOCATION_CITY_EVENT, { detail: { city: cityName } }),
+      );
     } catch {
       // no-op if storage/events are unavailable
     }
@@ -700,7 +811,7 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="sticky top-0 left-0 z-50 w-full px-4 py-4 md:px-6">
+    <nav className=" bg-black sticky top-0 left-0 z-50 w-full px-4 py-4 md:px-6">
       <div
         className={`mx-auto flex max-w-6xl items-center justify-between rounded-2xl border px-4 py-3 transition-all duration-300 md:px-5 ${shellClass}`}
       >
@@ -710,12 +821,14 @@ const Navbar = () => {
           className="inline-flex items-center gap-2 text-lg font-black tracking-tight text-text-primary md:text-xl"
         >
           <span className="inline-flex h-7 w-7 items-center justify-center rounded bg-accent text-white">
-            <Ticket size={15} />
+           <img src={logo} alt="Cinema Hub Logo" />
           </span>
-          Cinema Hub
+         
         </Link>
 
-        <ul className={`hidden items-center gap-1 rounded-xl border p-1 md:flex ${tabShellClass}`}>
+        <ul
+          className={`hidden items-center gap-1 rounded-xl border p-1 md:flex ${tabShellClass}`}
+        >
           {NAV_ITEMS.map((item) => (
             <li key={item.to}>
               <NavLink
@@ -723,9 +836,7 @@ const Navbar = () => {
                 end={item.end}
                 className={({ isActive }) =>
                   `rounded-lg border border-transparent px-3 py-2 text-sm font-semibold transition-colors ${
-                    isActive
-                      ? navActiveClass
-                      : navInactiveClass
+                    isActive ? navActiveClass : navInactiveClass
                   }`
                 }
               >
@@ -750,7 +861,23 @@ const Navbar = () => {
             </button>
 
             {locationOpen && (
-              <div className={`absolute -right-55 mt-8 w-[1280px] max-w-[92vw] rounded-2xl border p-4 shadow-2xl ${locationPanelClass}`}>
+              <div
+                className={`absolute left-1/2 -translate-x-1/2 lg:left-auto lg:translate-x-0 lg:right-0 mt-8 w-full max-w-5xl rounded-2xl border p-4 shadow-2xl ${locationPanelClass}`}
+                style={{ width: "min(92vw, 960px)" }}
+              >
+                <div className="flex items-center justify-between pb-2">
+                  <p className="text-sm font-semibold text-text-primary">
+                    Choose your city
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setLocationOpen(false)}
+                    className="rounded-md p-2 text-text-secondary hover:text-text-primary hover:bg-white/10 transition"
+                    aria-label="Close location selector"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
                 <div className="relative">
                   <Search
                     size={16}
@@ -811,7 +938,12 @@ const Navbar = () => {
                           />
                         ) : (
                           <span className="rounded-lg bg-black/20 p-2">
-                            <Icon size={24} className={city.name === selectedCity ? "text-accent" : ""} />
+                            <Icon
+                              size={24}
+                              className={
+                                city.name === selectedCity ? "text-accent" : ""
+                              }
+                            />
                           </span>
                         )}
                         <span className="line-clamp-1">{city.name}</span>
@@ -825,27 +957,28 @@ const Navbar = () => {
                 <div className="mt-2 max-h-36 overflow-y-auto rounded-lg border border-white/10 p-2">
                   <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
                     {filteredOtherCities.map((city) => (
-                    <button
-                      key={city.value}
-                      type="button"
-                      onClick={() => {
-                        applySelectedCity(city.value);
-                        setLocationOpen(false);
-                      }}
-                      className="rounded-md border border-white/20 px-2 py-1 text-left text-xs font-medium text-text-secondary transition hover:border-accent hover:text-text-primary"
-                    >
-                      {city.label}
-                    </button>
+                      <button
+                        key={city.value}
+                        type="button"
+                        onClick={() => {
+                          applySelectedCity(city.value);
+                          setLocationOpen(false);
+                        }}
+                        className="rounded-md border border-white/20 px-2 py-1 text-left text-xs font-medium text-text-secondary transition hover:border-accent hover:text-text-primary"
+                      >
+                        {city.label}
+                      </button>
                     ))}
                   </div>
                 </div>
-               
               </div>
             )}
           </div>
 
           {loading ? (
-            <span className={`rounded-lg border px-4 py-2 text-sm font-semibold text-text-secondary ${signInClass}`}>
+            <span
+              className={`rounded-lg border px-4 py-2 text-sm font-semibold text-text-secondary ${signInClass}`}
+            >
               Loading...
             </span>
           ) : isAuthenticated ? (
@@ -869,18 +1002,30 @@ const Navbar = () => {
                 </button>
 
                 {notificationsOpen && (
-                  <div className={`absolute right-0 mt-2 w-80 rounded-xl border p-3 shadow-2xl ${profilePanelClass}`}>
+                  <div
+                    className={`absolute right-0 mt-2 w-80 rounded-xl border p-3 shadow-2xl ${profilePanelClass}`}
+                  >
                     <div className="mb-3 flex items-center justify-between">
-                      <p className="text-sm font-semibold text-text-primary">Notifications</p>
-                      <span className="text-xs text-text-secondary">{unreadCount} unread</span>
+                      <p className="text-sm font-semibold text-text-primary">
+                        Notifications
+                      </p>
+                      <span className="text-xs text-text-secondary">
+                        {unreadCount} unread
+                      </span>
                     </div>
 
                     {notificationsLoading ? (
-                      <p className="text-sm text-text-secondary">Loading notifications...</p>
+                      <p className="text-sm text-text-secondary">
+                        Loading notifications...
+                      </p>
                     ) : notificationsError ? (
-                      <p className="text-sm text-rose-400">{notificationsError}</p>
+                      <p className="text-sm text-rose-400">
+                        {notificationsError}
+                      </p>
                     ) : notifications.length === 0 ? (
-                      <p className="text-sm text-text-secondary">No notifications yet.</p>
+                      <p className="text-sm text-text-secondary">
+                        No notifications yet.
+                      </p>
                     ) : (
                       <div className="max-h-80 space-y-2 overflow-y-auto pr-1">
                         {notifications.map((item) => (
@@ -891,15 +1036,23 @@ const Navbar = () => {
                               if (!item.isRead) markNotificationAsRead(item.id);
                             }}
                             className={`w-full rounded-lg border px-3 py-2 text-left transition ${
-                              item.isRead ? "border-white/10 bg-white/[0.03]" : "border-accent/30 bg-accent/10"
+                              item.isRead
+                                ? "border-white/10 bg-white/[0.03]"
+                                : "border-accent/30 bg-accent/10"
                             }`}
                           >
                             <div className="flex items-start justify-between gap-3">
                               <div className="min-w-0">
-                                <p className="truncate text-sm font-semibold text-text-primary">{item.title || "Notification"}</p>
-                                <p className="mt-1 text-xs text-text-secondary">{item.message || ""}</p>
+                                <p className="truncate text-sm font-semibold text-text-primary">
+                                  {item.title || "Notification"}
+                                </p>
+                                <p className="mt-1 text-xs text-text-secondary">
+                                  {item.message || ""}
+                                </p>
                               </div>
-                              {!item.isRead ? <span className="mt-1 h-2 w-2 rounded-full bg-accent" /> : null}
+                              {!item.isRead ? (
+                                <span className="mt-1 h-2 w-2 rounded-full bg-accent" />
+                              ) : null}
                             </div>
                             <p className="mt-2 text-[11px] uppercase tracking-[0.18em] text-text-secondary/80">
                               {formatNotificationTime(item.createdAt)}
@@ -934,7 +1087,9 @@ const Navbar = () => {
                   <div
                     className={`absolute right-0 mt-2 w-64 rounded-xl border p-3 shadow-2xl ${profilePanelClass}`}
                   >
-                    <p className="text-sm font-semibold text-text-primary">{displayName}</p>
+                    <p className="text-sm font-semibold text-text-primary">
+                      {displayName}
+                    </p>
                     <p className="mb-3 truncate text-xs text-text-secondary">
                       {user?.email || "Signed in user"}
                     </p>
@@ -984,7 +1139,9 @@ const Navbar = () => {
       </div>
 
       {open && (
-        <div className={`mx-auto mt-2 max-w-6xl rounded-2xl border p-3 backdrop-blur-md md:hidden ${mobilePanelClass}`}>
+        <div
+          className={`mx-auto mt-2 max-w-6xl rounded-2xl border p-3 backdrop-blur-md md:hidden max-h-[70vh] overflow-y-auto ${mobilePanelClass}`}
+        >
           <div className="flex flex-col gap-1">
             <button
               type="button"
@@ -1023,7 +1180,9 @@ const Navbar = () => {
               Book Now
             </Link>
             {loading ? (
-              <span className={`mt-1 rounded-lg border px-3 py-2 text-center text-sm font-semibold text-text-secondary ${signInClass}`}>
+              <span
+                className={`mt-1 rounded-lg border px-3 py-2 text-center text-sm font-semibold text-text-secondary ${signInClass}`}
+              >
                 Loading...
               </span>
             ) : isAuthenticated ? (
@@ -1033,8 +1192,12 @@ const Navbar = () => {
                     {profileInitial}
                   </span>
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-text-primary">{displayName}</p>
-                    <p className="truncate text-xs text-text-secondary">{user?.email || ""}</p>
+                    <p className="truncate text-sm font-semibold text-text-primary">
+                      {displayName}
+                    </p>
+                    <p className="truncate text-xs text-text-secondary">
+                      {user?.email || ""}
+                    </p>
                   </div>
                 </div>
                 <Link
@@ -1050,14 +1213,22 @@ const Navbar = () => {
                       <Bell size={15} />
                       Notifications
                     </span>
-                    <span className="text-xs text-text-secondary">{unreadCount} unread</span>
+                    <span className="text-xs text-text-secondary">
+                      {unreadCount} unread
+                    </span>
                   </div>
                   {notificationsLoading ? (
-                    <p className="text-xs text-text-secondary">Loading notifications...</p>
+                    <p className="text-xs text-text-secondary">
+                      Loading notifications...
+                    </p>
                   ) : notificationsError ? (
-                    <p className="text-xs text-rose-400">{notificationsError}</p>
+                    <p className="text-xs text-rose-400">
+                      {notificationsError}
+                    </p>
                   ) : notifications.length === 0 ? (
-                    <p className="text-xs text-text-secondary">No notifications yet.</p>
+                    <p className="text-xs text-text-secondary">
+                      No notifications yet.
+                    </p>
                   ) : (
                     <div className="max-h-52 space-y-2 overflow-y-auto">
                       {notifications.slice(0, 5).map((item) => (
@@ -1068,11 +1239,17 @@ const Navbar = () => {
                             if (!item.isRead) markNotificationAsRead(item.id);
                           }}
                           className={`w-full rounded-md border px-2 py-2 text-left ${
-                            item.isRead ? "border-white/10 bg-white/[0.03]" : "border-accent/30 bg-accent/10"
+                            item.isRead
+                              ? "border-white/10 bg-white/[0.03]"
+                              : "border-accent/30 bg-accent/10"
                           }`}
                         >
-                          <p className="text-xs font-semibold text-text-primary">{item.title || "Notification"}</p>
-                          <p className="mt-1 text-[11px] text-text-secondary">{item.message || ""}</p>
+                          <p className="text-xs font-semibold text-text-primary">
+                            {item.title || "Notification"}
+                          </p>
+                          <p className="mt-1 text-[11px] text-text-secondary">
+                            {item.message || ""}
+                          </p>
                         </button>
                       ))}
                     </div>
@@ -1100,9 +1277,28 @@ const Navbar = () => {
       )}
 
       {locationOpen && (
-        <div className={`mx-auto mt-2 max-w-6xl rounded-2xl border p-4 md:hidden ${locationPanelClass}`}>
+        <div
+          className={`mx-auto mt-2 max-w-6xl rounded-2xl border p-4 md:hidden max-h-[70vh] overflow-y-auto ${locationPanelClass}`}
+          ref={mobileLocationRef}
+        >
+          <div className="flex items-center justify-between pb-2">
+            <p className="text-sm font-semibold text-text-primary">
+              Choose your city
+            </p>
+            <button
+              type="button"
+              onClick={() => setLocationOpen(false)}
+              className="rounded-md p-2 text-text-secondary hover:text-text-primary hover:bg-white/10 transition"
+              aria-label="Close location selector"
+            >
+              <X size={16} />
+            </button>
+          </div>
           <div className="relative">
-            <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+            <Search
+              size={16}
+              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"
+            />
             <input
               value={citySearch}
               onChange={(e) => setCitySearch(e.target.value)}
@@ -1157,7 +1353,9 @@ const Navbar = () => {
                     <Icon
                       size={18}
                       className={`${
-                        city.name === selectedCity ? "text-accent" : "text-text-secondary"
+                        city.name === selectedCity
+                          ? "text-accent"
+                          : "text-text-secondary"
                       }`}
                     />
                   )}
@@ -1172,23 +1370,21 @@ const Navbar = () => {
           <div className="mt-2 max-h-40 overflow-y-auto rounded-lg border border-white/10 p-2">
             <div className="grid grid-cols-2 gap-2">
               {filteredOtherCities.map((city) => (
-              <button
-                key={city.value}
-                type="button"
-                onClick={() => {
-                  applySelectedCity(city.value);
-                  setLocationOpen(false);
-                }}
-                className="rounded-md border border-white/20 px-2 py-1 text-left text-xs font-medium text-text-secondary transition hover:border-accent hover:text-text-primary"
-              >
-                {city.label}
-              </button>
+                <button
+                  key={city.value}
+                  type="button"
+                  onClick={() => {
+                    applySelectedCity(city.value);
+                    setLocationOpen(false);
+                  }}
+                  className="rounded-md border border-white/20 px-2 py-1 text-left text-xs font-medium text-text-secondary transition hover:border-accent hover:text-text-primary"
+                >
+                  {city.label}
+                </button>
               ))}
             </div>
           </div>
-          <div className="mt-3 flex justify-center">
-          
-          </div>
+          <div className="mt-3 flex justify-center"></div>
         </div>
       )}
     </nav>

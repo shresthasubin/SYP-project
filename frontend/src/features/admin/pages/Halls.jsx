@@ -1,11 +1,48 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Plus, Search, Edit2, Trash2, X, Upload, MapPin, Phone, Users, Armchair, CheckCircle2 } from "lucide-react";
+import {
+  Alert,
+  Box,
+  Button,
+  Card,
+  CardContent,
+  CardMedia,
+  Chip,
+  Container,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Divider,
+  Grid,
+  IconButton,
+  InputAdornment,
+  LinearProgress,
+  Stack,
+  Step,
+  StepLabel,
+  Stepper,
+  TextField,
+  Paper,
+  Typography,
+} from "@mui/material";
+import {
+  Plus,
+  Search,
+  Edit2,
+  Trash2,
+  X,
+  Upload,
+  MapPin,
+  Phone,
+  Users,
+  Armchair,
+  CheckCircle2,
+} from "lucide-react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import LocationPickerMap from "../../../shared/components/LocationPickerMap.jsx";
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api";
-const API_SERVER_URL = import.meta.env.VITE_API_SERVER_URL || "http://localhost:3000";
+import { API_BASE_URL, API_SERVER_URL } from "../../../shared/config/api";
+import { useAuth } from "../../../shared/hooks/useAuth.js";
 
 const createRoom = () => ({
   roomName: "",
@@ -25,35 +62,94 @@ const emptyForm = {
 
 const seatKey = (rowIndex, seatIndex) => `${rowIndex}-${seatIndex}`;
 
+const getRoomsFromHallPayload = (hall) => {
+  if (Array.isArray(hall?.Hallrooms)) return hall.Hallrooms;
+  if (Array.isArray(hall?.hallrooms)) return hall.hallrooms;
+  return [];
+};
+
+const getRoomCapacity = (room) => {
+  const rows = Number(room?.rows ?? room?.totalRows ?? 0) || 0;
+  const seatsPerRow = Number(room?.seatsPerRow ?? room?.columns ?? room?.totalColumns ?? 0) || 0;
+  const blockedSeats = Array.isArray(room?.emptySeats) ? room.emptySeats.length : 0;
+  return Math.max(rows * seatsPerRow - blockedSeats, 0);
+};
+
+const normalizeRoomList = (hallrooms = []) => {
+  if (!hallrooms.length) return [createRoom()];
+
+  return hallrooms.map((room) => ({
+    roomName: room?.roomName || room?.name || "",
+    rows: Number(room?.rows ?? room?.totalRows ?? 5) || 5,
+    seatsPerRow: Number(room?.seatsPerRow ?? room?.columns ?? room?.totalColumns ?? 10) || 10,
+    emptySeats: Array.isArray(room?.emptySeats) ? room.emptySeats : [],
+    seatTypes: room?.seatTypes && typeof room.seatTypes === "object" ? room.seatTypes : {},
+  }));
+};
+
+const fetchHallrooms = async () => {
+  try {
+    return await axios.get(`${API_BASE_URL}/hallroom/get`, {
+      withCredentials: true,
+    });
+  } catch (error) {
+    if (error.response?.status !== 404) {
+      throw error;
+    }
+
+    return axios.get(`${API_BASE_URL}/hall-room/get`, {
+      withCredentials: true,
+    });
+  }
+};
+
 const Halls = () => {
+  const { user } = useAuth();
+  const isHallAdmin = user?.role === "hall-admin";
   const [halls, setHalls] = useState([]);
+  const [hallRooms, setHallRooms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [editingHall, setEditingHall] = useState(null);
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(0);
   const [formData, setFormData] = useState(emptyForm);
   const [rooms, setRooms] = useState([createRoom()]);
   const [seatBrush, setSeatBrush] = useState("regular");
+  const [error, setError] = useState("");
+  const [deactivateTarget, setDeactivateTarget] = useState(null);
+  const steps = ["Basic Info", "Location", "Rooms", "Seat Layout"];
 
   useEffect(() => {
     fetchHalls();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isHallAdmin]);
 
-  const totalCapacity = useMemo(() => {
-    return rooms.reduce((sum, room) => {
-      const total = Number(room.rows) * Number(room.seatsPerRow);
-      return sum + Math.max(total - room.emptySeats.length, 0);
-    }, 0);
-  }, [rooms]);
+  const totalCapacity = useMemo(
+    () =>
+      rooms.reduce((sum, room) => {
+        const total = Number(room.rows) * Number(room.seatsPerRow);
+        return sum + Math.max(total - room.emptySeats.length, 0);
+      }, 0),
+    [rooms],
+  );
 
   const fetchHalls = async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/hall/get`, {
-        withCredentials: true,
-      });
-      if (response.data.success) {
-        setHalls(response.data.data);
+      setLoading(true);
+      const [hallsResponse, hallRoomsResponse] = await Promise.all([
+        axios.get(`${API_BASE_URL}${isHallAdmin ? "/hall/get" : "/hall/get-active"}`, {
+          withCredentials: true,
+        }),
+        fetchHallrooms(),
+      ]);
+
+      if (hallsResponse.data.success) {
+        setHalls(hallsResponse.data.data);
+      }
+
+      if (hallRoomsResponse.data?.success) {
+        setHallRooms(hallRoomsResponse.data.data || []);
       }
     } catch {
       toast.error("Failed to fetch halls");
@@ -77,9 +173,7 @@ const Halls = () => {
   };
 
   const addRoom = () => setRooms((prev) => [...prev, createRoom()]);
-  const removeRoom = (index) => {
-    setRooms((prev) => prev.filter((_, i) => i !== index));
-  };
+  const removeRoom = (index) => setRooms((prev) => prev.filter((_, i) => i !== index));
 
   const applySeatBrush = (roomIndex, rowIndex, colIndex) => {
     const key = seatKey(rowIndex, colIndex);
@@ -98,32 +192,40 @@ const Halls = () => {
     updateRoom(roomIndex, { emptySeats: Array.from(emptySet), seatTypes });
   };
 
-  const canProceedDetails =
-    formData.hall_name.trim() &&
-    formData.hall_contact.trim() &&
-    formData.license.trim();
-  const canProceedLocation = formData.hall_location.trim();
+  const validateStep = () => {
+    if (editingHall) {
+      if (step === 0) {
+        return formData.hall_name.trim() && formData.hall_contact.trim() && formData.license.trim();
+      }
+      if (step === 1) return formData.hall_location.trim();
+      return true;
+    }
 
-  const validateRooms = () => {
-    if (!rooms.length) return false;
-    return rooms.every(
-      (room) => room.roomName.trim() && Number(room.rows) > 0 && Number(room.seatsPerRow) > 0,
-    );
+    if (step === 0) {
+      return formData.hall_name.trim() && formData.hall_contact.trim() && formData.license.trim();
+    }
+    if (step === 1) return formData.hall_location.trim();
+    if (step === 2) return rooms.length > 0 && rooms.every((r) => r.roomName.trim() && r.rows > 0 && r.seatsPerRow > 0);
+    if (step === 3) return true;
+    return true;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
+    const lastStep = editingHall ? 1 : steps.length - 1;
+
+    if (step < lastStep) {
+      return;
+    }
+
+    setError("");
     const data = new FormData();
     data.append("hall_name", formData.hall_name);
     data.append("hall_location", formData.hall_location);
     data.append("hall_contact", formData.hall_contact);
-    data.append("license", formData.license);
-    if (formData.hallPoster) data.append("hallPoster", formData.hallPoster);
-
-    if (!editingHall) {
-      data.append("hallrooms", JSON.stringify(rooms));
-      data.append("totalCapacity", String(totalCapacity));
+    if (!editingHall || !isHallAdmin) {
+      data.append("license", formData.license);
     }
+    if (formData.hallPoster) data.append("hallPoster", formData.hallPoster);
 
     try {
       if (editingHall) {
@@ -133,35 +235,31 @@ const Halls = () => {
         });
         toast.success("Hall updated successfully");
       } else {
+        data.append("hallrooms", JSON.stringify(rooms));
+        data.append("totalCapacity", String(totalCapacity));
         await axios.post(`${API_BASE_URL}/hall/register`, data, {
           withCredentials: true,
           headers: { "Content-Type": "multipart/form-data" },
         });
         toast.success("Hall registered successfully");
       }
-      setShowModal(false);
-      resetForm();
+      closeModal();
       fetchHalls();
-    } catch (error) {
-      console.error("Hall register/update failed:", error.response?.data || error.message);
-      const detailMessage = error.response?.data?.details?.[0]?.message;
-      toast.error(
-        detailMessage ||
-        error.response?.data?.error ||
-          error.response?.data?.message ||
-          "Operation failed",
-      );
+    } catch (err) {
+      console.error("Hall register/update failed:", err.response?.data || err.message);
+      const detailMessage = err.response?.data?.details?.[0]?.message;
+      const msg = detailMessage || err.response?.data?.error || err.response?.data?.message || "Operation failed";
+      setError(msg);
+      toast.error("Operation failed");
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to deactivate this hall?")) return;
-
+  const handleDelete = async () => {
+    if (!deactivateTarget?.id) return;
     try {
-      await axios.delete(`${API_BASE_URL}/hall/delete/${id}`, {
-        withCredentials: true,
-      });
+      await axios.delete(`${API_BASE_URL}/hall/delete/${deactivateTarget.id}`, { withCredentials: true });
       toast.success("Hall deactivated successfully");
+      setDeactivateTarget(null);
       fetchHalls();
     } catch {
       toast.error("Failed to deactivate hall");
@@ -183,12 +281,40 @@ const Halls = () => {
     }
   };
 
-  const getPosterUrl = (poster) => (poster ? `${API_SERVER_URL}/uploads/${poster}` : "");
+  const getPosterUrl = (poster) => {
+    if (!poster) return "";
+    // If backend already returns an absolute URL, use it as-is.
+    if (/^https?:\/\//i.test(poster)) return poster;
+    // Avoid double "uploads/uploads" cases.
+    const normalized = poster.replace(/^\/+/, "").replace(/^uploads\//, "");
+    return `${API_SERVER_URL}/uploads/${normalized}`;
+  };
 
   const openCreateModal = () => {
     resetForm();
-    setStep(1);
+    setStep(0);
     setShowModal(true);
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+    resetForm();
+  };
+
+  const getHallMeta = (hall) => {
+    const roomsFromHall = getRoomsFromHallPayload(hall);
+    const roomsFromEndpoint = hallRooms.filter((room) => {
+      const roomHallId = room?.Hall?.id ?? room?.hallId ?? room?.HallId;
+      return String(roomHallId) === String(hall?.id);
+    });
+    const resolvedRooms = roomsFromEndpoint.length ? roomsFromEndpoint : roomsFromHall;
+    const derivedSeatCount = resolvedRooms.reduce((sum, room) => sum + getRoomCapacity(room), 0);
+
+    return {
+      roomCount: resolvedRooms.length || Number(hall?.roomsCount) || 0,
+      seatCount: derivedSeatCount || Number(hall?.capacity ?? hall?.totalCapacity) || 0,
+      status: hall?.isActive ? "Active" : "Inactive",
+    };
   };
 
   const openEditModal = (hall) => {
@@ -201,7 +327,7 @@ const Halls = () => {
       hallPoster: null,
     });
     setRooms([createRoom()]);
-    setStep(1);
+    setStep(0);
     setShowModal(true);
   };
 
@@ -209,425 +335,527 @@ const Halls = () => {
     setFormData(emptyForm);
     setRooms([createRoom()]);
     setEditingHall(null);
-    setStep(1);
+    setStep(0);
+    setError("");
   };
 
   const filteredHalls = halls.filter((hall) =>
     (hall.hall_name || "").toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-white">Halls</h1>
-          <p className="mt-2 text-slate-400">Manage your cinema halls</p>
-        </div>
-        <button
-          onClick={openCreateModal}
-          className="flex items-center gap-2 rounded-lg bg-[#D72626] px-4 py-2 font-semibold text-white hover:bg-[#D72626]/90 transition-colors"
-        >
-          <Plus size={20} />
-          Add Hall
-        </button>
-      </div>
+  const currentPosterUrl = editingHall?.hallPoster ? getPosterUrl(editingHall.hallPoster) : "";
 
-      <div className="relative">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
-        <input
-          type="text"
+  return (
+    <Container maxWidth="lg" sx={{ py: 3 }}>
+      <Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems={{ xs: "flex-start", sm: "center" }} justifyContent="space-between" mb={2.5}>
+        <Box>
+          <Typography variant="h4" fontWeight={700}>{isHallAdmin ? "My Hall" : "Halls"}</Typography>
+          <Typography variant="body2" color="text.secondary" mt={0.5}>
+            {isHallAdmin ? "Manage the hall assigned to your hall admin account" : "Manage your cinema halls"}
+          </Typography>
+        </Box>
+        {!isHallAdmin ? (
+          <Button variant="contained" size="small" startIcon={<Plus size={16} />} onClick={openCreateModal}>
+            Add Hall
+          </Button>
+        ) : null}
+      </Stack>
+
+      <Paper sx={{ p: 1.5, mb: 2.5, border: "1px solid", borderColor: "divider" }} elevation={0}>
+        <TextField
+          fullWidth
           placeholder="Search halls..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full rounded-xl bg-black border border-white/10 py-3 pl-12 pr-4 text-white placeholder:text-slate-500 focus:border-[#D72626] focus:outline-none"
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <Search size={18} />
+              </InputAdornment>
+            ),
+          }}
         />
-      </div>
+      </Paper>
 
-      {loading ? (
-        <p className="text-slate-300">Loading halls...</p>
-      ) : (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {filteredHalls.map((hall) => (
-            <div
-              key={hall.id}
-              className={`group relative overflow-hidden rounded-xl bg-black border ${
-                hall.isActive ? "border-white/10" : "border-red-900/50 opacity-75"
-              } transition-all hover:border-[#D72626]/50`}
-            >
-              <div className="aspect-video w-full bg-slate-800 relative">
-                {hall.hallPoster ? (
-                  <img src={getPosterUrl(hall.hallPoster)} alt={hall.hall_name} className="h-full w-full object-cover" />
-                ) : (
-                  <div className="flex h-full items-center justify-center">
-                    <MapPin size={48} className="text-slate-600" />
-                  </div>
-                )}
-                <div className="absolute top-2 right-2 px-2 py-1 rounded bg-black/80 text-xs text-white">
-                  {hall.isActive ? "Active" : "Inactive"}
-                </div>
-                <div className="absolute inset-0 bg-black/60 opacity-0 transition-opacity group-hover:opacity-100 flex items-center justify-center gap-4">
-                  <button
-                    onClick={() => openEditModal(hall)}
-                    className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+      <Paper elevation={0} sx={{ border: "1px solid", borderColor: "divider", p: 1.5 }}>
+        {loading ? (
+          <LinearProgress color="primary" />
+        ) : filteredHalls.length === 0 ? (
+          <Box sx={{ textAlign: "center", py: 6 }}>
+            <Typography color="text.secondary">No halls found</Typography>
+          </Box>
+        ) : (
+          <Grid container spacing={1.5}>
+            {filteredHalls.map((hall) => {
+              const meta = getHallMeta(hall);
+              return (
+                <Grid size={12} key={hall.id}>
+                  <Card
+                    variant="outlined"
+                    sx={{
+                      height: "100%",
+                      display: "flex",
+                      flexDirection: "row",
+                      borderRadius: 1.5,
+                      overflow: "hidden",
+                      bgcolor: "rgba(255,255,255,0.015)",
+                      borderColor: "rgba(255,255,255,0.1)",
+                    }}
                   >
-                    <Edit2 size={20} />
-                  </button>
-                  {hall.isActive && (
-                    <button
-                      onClick={() => handleDelete(hall.id)}
-                      className="p-2 rounded-full bg-red-500/20 hover:bg-red-500/40 text-red-500 transition-colors"
+                    <Box
+                      sx={{
+                        position: "relative",
+                        width: { xs: 120, sm: 150 },
+                        minWidth: { xs: 120, sm: 150 },
+                        flexShrink: 0,
+                      }}
                     >
-                      <Trash2 size={20} />
-                    </button>
-                  )}
-                  {!hall.isActive && (
-                    <button
-                      onClick={() => handleActivate(hall)}
-                      className="p-2 rounded-full bg-emerald-500/20 hover:bg-emerald-500/40 text-emerald-400 transition-colors"
-                      title="Activate Hall"
-                    >
-                      <CheckCircle2 size={20} />
-                    </button>
-                  )}
-                </div>
-              </div>
-              <div className="p-4 space-y-2">
-                <h3 className="font-bold text-white text-lg">{hall.hall_name}</h3>
-                <div className="flex items-center gap-2 text-sm text-slate-400">
-                  <MapPin size={16} className="text-[#D72626]" />
-                  <span className="truncate">{hall.hall_location}</span>
-                </div>
-                <div className="flex items-center justify-between text-sm text-slate-400 pt-2 border-t border-white/5">
-                  <div className="flex items-center gap-2">
-                    <Phone size={14} />
-                    <span>{hall.hall_contact}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Users size={14} />
-                    <span>{hall.capacity ?? "-"} Seats</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-5xl rounded-2xl bg-[#1a1a1a] p-6 shadow-xl border border-white/10 max-h-[90vh] overflow-y-auto">
-            <div className="mb-6 flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl font-bold text-white">{editingHall ? "Edit Hall" : "Add New Hall"}</h2>
-                {!editingHall && (
-                  <div className="mt-2 flex gap-2 text-xs">
-                    {[1, 2, 3, 4].map((s) => (
-                      <span
-                        key={s}
-                        className={`rounded-full border px-3 py-1 ${
-                          s === step ? "border-[#D72626] bg-[#D72626]/20 text-[#D72626]" : "border-white/15 text-slate-300"
-                        }`}
-                      >
-                        Step {s}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-              <button
-                onClick={() => setShowModal(false)}
-                className="p-2 rounded-full hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
-              >
-                <X size={24} />
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {(editingHall || step === 1) && (
-                <div className="grid gap-6 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-300">Hall Name</label>
-                    <input
-                      type="text"
-                      name="hall_name"
-                      value={formData.hall_name}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full rounded-lg bg-black border border-white/10 p-3 text-white focus:border-[#D72626] focus:outline-none"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-300">Contact</label>
-                    <input
-                      type="text"
-                      name="hall_contact"
-                      value={formData.hall_contact}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full rounded-lg bg-black border border-white/10 p-3 text-white focus:border-[#D72626] focus:outline-none"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-300">License Number</label>
-                    <input
-                      type="text"
-                      name="license"
-                      value={formData.license}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full rounded-lg bg-black border border-white/10 p-3 text-white focus:border-[#D72626] focus:outline-none"
-                    />
-                  </div>
-                  <div className="space-y-2 md:col-span-2">
-                    <label className="text-sm font-medium text-slate-300">Hall Poster</label>
-                    <div className="relative">
-                      <input
-                        type="file"
-                        name="hallPoster"
-                        onChange={handleFileChange}
-                        accept="image/*"
-                        className="hidden"
-                        id="hall-poster-upload"
-                      />
-                      <label
-                        htmlFor="hall-poster-upload"
-                        className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-white/10 bg-black/50 p-4 text-slate-400 hover:border-[#D72626]/50 hover:text-[#D72626] transition-colors"
-                      >
-                        <Upload size={20} />
-                        <span>{formData.hallPoster ? formData.hallPoster.name : "Upload Hall Image"}</span>
-                      </label>
-                    </div>
-                  </div>
-                  {editingHall && (
-                    <>
-                      <div className="space-y-2 md:col-span-2">
-                        <label className="text-sm font-medium text-slate-300">Location</label>
-                        <input
-                          type="text"
-                          name="hall_location"
-                          value={formData.hall_location}
-                          onChange={handleInputChange}
-                          required
-                          className="w-full rounded-lg bg-black border border-white/10 p-3 text-white focus:border-[#D72626] focus:outline-none"
+                      {hall.hallPoster ? (
+                        <CardMedia
+                          component="img"
+                          image={getPosterUrl(hall.hallPoster)}
+                          alt={hall.hall_name}
+                          sx={{
+                            height: "100%",
+                            minHeight: 220,
+                            objectFit: "cover",
+                          }}
                         />
-                      </div>
-                      <div className="space-y-2 md:col-span-2">
-                        <label className="text-sm font-medium text-slate-300">Pick Location On Map</label>
-                        <LocationPickerMap
-                          key={`${editingHall?.id || "edit"}-${showModal ? "open" : "closed"}`}
-                          locationValue={formData.hall_location}
-                          onLocationSelect={(nextLocation) =>
-                            setFormData((prev) => ({ ...prev, hall_location: nextLocation }))
-                          }
-                        />
-                      </div>
-                    </>
-                  )}
-                </div>
-              )}
-
-              {!editingHall && step === 2 && (
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-white">Hall Location</h3>
-                  <input
-                    type="text"
-                    name="hall_location"
-                    value={formData.hall_location}
-                    onChange={handleInputChange}
-                    placeholder="Search or click the map to set hall location"
-                    required
-                    className="w-full rounded-lg bg-black border border-white/10 p-3 text-white focus:border-[#D72626] focus:outline-none"
-                  />
-                  <LocationPickerMap
-                    key={`create-location-${showModal ? "open" : "closed"}`}
-                    locationValue={formData.hall_location}
-                    onLocationSelect={(nextLocation) =>
-                      setFormData((prev) => ({ ...prev, hall_location: nextLocation }))
-                    }
-                  />
-                </div>
-              )}
-
-              {!editingHall && step === 3 && (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold text-white">Hall Rooms</h3>
-                    <button
-                      type="button"
-                      onClick={addRoom}
-                      className="rounded-md border border-[#D72626] px-3 py-2 text-sm text-[#D72626]"
-                    >
-                      + Add Room
-                    </button>
-                  </div>
-
-                  {rooms.map((room, idx) => (
-                    <div key={idx} className="rounded-lg border border-white/10 p-4">
-                      <div className="grid gap-3 md:grid-cols-3">
-                        <input
-                          value={room.roomName}
-                          onChange={(e) => updateRoom(idx, { roomName: e.target.value })}
-                          placeholder="Room Name"
-                          className="rounded-lg bg-black border border-white/10 p-3 text-white"
-                        />
-                        <input
-                          type="number"
-                          min={1}
-                          value={room.rows}
-                          onChange={(e) =>
-                            updateRoom(idx, {
-                              rows: Number(e.target.value) || 1,
-                              emptySeats: [],
-                              seatTypes: {},
-                            })
-                          }
-                          className="rounded-lg bg-black border border-white/10 p-3 text-white"
-                        />
-                        <input
-                          type="number"
-                          min={1}
-                          value={room.seatsPerRow}
-                          onChange={(e) =>
-                            updateRoom(idx, {
-                              seatsPerRow: Number(e.target.value) || 1,
-                              emptySeats: [],
-                              seatTypes: {},
-                            })
-                          }
-                          className="rounded-lg bg-black border border-white/10 p-3 text-white"
-                        />
-                      </div>
-                      {rooms.length > 1 && (
-                        <button type="button" onClick={() => removeRoom(idx)} className="mt-3 text-sm text-red-400">
-                          Remove room
-                        </button>
+                      ) : (
+                        <Box
+                          sx={{
+                            height: "100%",
+                            minHeight: 220,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            bgcolor: "background.default",
+                          }}
+                        >
+                          <MapPin size={36} />
+                        </Box>
                       )}
-                    </div>
-                  ))}
-                </div>
-              )}
 
-              {!editingHall && step === 4 && (
-                <div className="space-y-6">
-                  <div className="rounded-lg border border-emerald-600/30 bg-emerald-900/20 p-3 text-sm text-emerald-200">
-                    Calculated total capacity: {totalCapacity}
-                  </div>
-                  <div className="flex items-center gap-2 text-xs">
-                    <span className="text-slate-300">Brush:</span>
-                    <button
-                      type="button"
-                      onClick={() => setSeatBrush("regular")}
-                      className={`rounded border px-3 py-1 ${seatBrush === "regular" ? "border-emerald-400 bg-emerald-500/20 text-emerald-300" : "border-white/15 text-slate-300"}`}
-                    >
-                      Regular
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setSeatBrush("premium")}
-                      className={`rounded border px-3 py-1 ${seatBrush === "premium" ? "border-amber-400 bg-amber-500/20 text-amber-300" : "border-white/15 text-slate-300"}`}
-                    >
-                      Premium
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setSeatBrush("blocked")}
-                      className={`rounded border px-3 py-1 ${seatBrush === "blocked" ? "border-slate-400 bg-slate-500/20 text-slate-200" : "border-white/15 text-slate-300"}`}
-                    >
-                      Blocked
-                    </button>
-                  </div>
+                      <Box
+                        sx={{
+                          position: "absolute",
+                          inset: 0,
+                          background: "linear-gradient(180deg, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0.82) 100%)",
+                        }}
+                      />
+
+                      <Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={1} sx={{ position: "absolute", inset: 0, p: 1 }}>
+                        <Chip
+                          label={meta.status}
+                          color={hall.isActive ? "success" : "warning"}
+                          size="small"
+                          variant={hall.isActive ? "filled" : "outlined"}
+                          sx={{ height: 22, fontSize: 11 }}
+                        />
+                        <Chip
+                          label={`${meta.roomCount} room${meta.roomCount === 1 ? "" : "s"}`}
+                          size="small"
+                          variant="outlined"
+                          sx={{ height: 22, fontSize: 11, bgcolor: "rgba(0,0,0,0.3)" }}
+                        />
+                      </Stack>
+
+                      <Box sx={{ position: "absolute", left: 0, right: 0, bottom: 0, p: 1.25 }}>
+                        <Typography variant="subtitle1" fontWeight={800} sx={{ lineHeight: 1.15 }}>
+                          {hall.hall_name}
+                        </Typography>
+                        <Typography variant="caption" color="rgba(255,255,255,0.72)" sx={{ mt: 0.35, display: "block" }}>
+                          {hall.license || "License pending"}
+                        </Typography>
+                      </Box>
+                    </Box>
+
+                    <CardContent sx={{ flex: 1, p: 1.75, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                      <Stack spacing={1.5}>
+                        <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+                          <Chip
+                            icon={<Users size={14} />}
+                            label={`${meta.seatCount || 0} seats`}
+                            size="small"
+                            variant="outlined"
+                            sx={{ borderRadius: 1 }}
+                          />
+                          <Chip
+                            label={`${meta.roomCount} room${meta.roomCount === 1 ? "" : "s"}`}
+                            size="small"
+                            variant="outlined"
+                            sx={{ borderRadius: 1 }}
+                          />
+                        </Stack>
+
+                        <Stack spacing={1.1}>
+                          <Stack direction="row" spacing={1.1} alignItems="flex-start">
+                            <MapPin size={15} />
+                            <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.55 }}>
+                              {hall.hall_location || "Location unavailable"}
+                            </Typography>
+                          </Stack>
+                          <Stack direction="row" spacing={1.1} alignItems="center">
+                            <Phone size={15} />
+                            <Typography variant="body2" color="text.secondary">
+                              {hall.hall_contact || "N/A"}
+                            </Typography>
+                          </Stack>
+                        </Stack>
+                      </Stack>
+
+                      <Divider sx={{ my: 1.5 }} />
+
+                      <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ width: "100%" }}>
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          startIcon={<Edit2 size={14} />}
+                          onClick={() => openEditModal(hall)}
+                          sx={{ px: 1.5, flex: 1, borderRadius: 1 }}
+                        >
+                          Edit Hall
+                        </Button>
+                        {!isHallAdmin ? (
+                          hall.isActive ? (
+                            <Button
+                              size="small"
+                              color="error"
+                              variant="outlined"
+                              startIcon={<Trash2 size={14} />}
+                              onClick={() => setDeactivateTarget({ id: hall.id, name: hall.hall_name })}
+                              sx={{ px: 1.5, flex: 1, borderRadius: 1 }}
+                            >
+                              Deactivate
+                            </Button>
+                          ) : (
+                            <Button
+                              size="small"
+                              color="success"
+                              variant="outlined"
+                              startIcon={<CheckCircle2 size={14} />}
+                              onClick={() => handleActivate(hall)}
+                              sx={{ px: 1.5, flex: 1, borderRadius: 1 }}
+                            >
+                              Activate
+                            </Button>
+                          )
+                        ) : null}
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              );
+            })}
+          </Grid>
+        )}
+      </Paper>
+
+      <Dialog open={showModal} onClose={closeModal} fullWidth maxWidth="lg">
+        <DialogTitle sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <Box>
+            <Typography variant="h6" fontWeight={700}>{editingHall ? "Edit Hall" : "Add New Hall"}</Typography>
+            <Typography variant="body2" color="text.secondary">
+              Step {step + 1} of {editingHall ? 2 : steps.length}
+            </Typography>
+          </Box>
+          <IconButton onClick={closeModal}>
+            <X size={20} />
+          </IconButton>
+        </DialogTitle>
+        <Divider />
+        {error && <Alert severity="error" sx={{ mx: 3, mt: 2 }}>{error}</Alert>}
+        <DialogContent dividers sx={{ pt: 3 }}>
+          <Stepper activeStep={step} alternativeLabel sx={{ mb: 3 }}>
+            {(editingHall ? steps.slice(0, 2) : steps).map((label) => (
+              <Step key={label}>
+                <StepLabel>{label}</StepLabel>
+              </Step>
+            ))}
+          </Stepper>
+
+          <form id="hall-form" onSubmit={(e) => e.preventDefault()}>
+            {step === 0 && (
+              <Grid container spacing={2} sx={{ mb: 3 }}>
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <TextField
+                    label="Hall Name"
+                    name="hall_name"
+                    fullWidth
+                    value={formData.hall_name}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <TextField
+                    label="Contact"
+                    name="hall_contact"
+                    fullWidth
+                    value={formData.hall_contact}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <TextField
+                    label="License Number"
+                    name="license"
+                    fullWidth
+                    value={formData.license}
+                    onChange={handleInputChange}
+                    disabled={isHallAdmin && Boolean(editingHall)}
+                    helperText={isHallAdmin && editingHall ? "Hall admins can view license details but cannot change them." : ""}
+                    required
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <Button
+                    variant="outlined"
+                    component="label"
+                    startIcon={<Upload size={16} />}
+                    fullWidth
+                  >
+                    {formData.hallPoster ? formData.hallPoster.name : editingHall ? "Replace Hall Poster" : "Upload Hall Poster"}
+                    <input type="file" hidden accept="image/*" onChange={handleFileChange} />
+                  </Button>
+                  {(currentPosterUrl && !formData.hallPoster) && (
+                    <Box sx={{ mt: 1, border: "1px solid", borderColor: "divider", borderRadius: 1.5, overflow: "hidden" }}>
+                      <img
+                        src={currentPosterUrl}
+                        alt={editingHall?.hall_name}
+                        style={{ width: "100%", maxHeight: 180, objectFit: "cover", display: "block" }}
+                      />
+                      <Typography variant="caption" color="text.secondary" sx={{ display: "block", px: 1, py: 0.5 }}>
+                        Current poster
+                      </Typography>
+                    </Box>
+                  )}
+                </Grid>
+              </Grid>
+            )}
+
+            {step === 1 && (
+              <Box sx={{ mb: 3 }}>
+                <TextField
+                  label="Hall Location"
+                  name="hall_location"
+                  fullWidth
+                  value={formData.hall_location}
+                  onChange={handleInputChange}
+                  required
+                  sx={{ mb: 2 }}
+                />
+                <LocationPickerMap
+                  key={`${editingHall ? "edit" : "create"}-${showModal ? "open" : "closed"}`}
+                  locationValue={formData.hall_location}
+                  onLocationSelect={(nextLocation) =>
+                    setFormData((prev) => ({ ...prev, hall_location: nextLocation }))
+                  }
+                />
+              </Box>
+            )}
+
+            {!editingHall && step === 2 && (
+              <Box sx={{ mb: 3 }}>
+                <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
+                  <Typography fontWeight={700}>Hall Rooms</Typography>
+                  <Button size="small" variant="outlined" onClick={addRoom}>+ Add Room</Button>
+                </Stack>
+                <Stack spacing={2}>
+                  {rooms.map((room, idx) => (
+                    <Paper key={idx} variant="outlined" sx={{ p: 2 }}>
+                      <Grid container spacing={2}>
+                        <Grid size={{ xs: 12, md: 4 }}>
+                          <TextField
+                            label="Room Name"
+                            value={room.roomName}
+                            onChange={(e) => updateRoom(idx, { roomName: e.target.value })}
+                            fullWidth
+                          />
+                        </Grid>
+                        <Grid size={{ xs: 6, md: 4 }}>
+                          <TextField
+                            label="Rows"
+                            type="number"
+                            value={room.rows}
+                            onChange={(e) =>
+                              updateRoom(idx, {
+                                rows: Number(e.target.value) || 1,
+                                emptySeats: [],
+                                seatTypes: {},
+                              })
+                            }
+                            fullWidth
+                          />
+                        </Grid>
+                        <Grid size={{ xs: 6, md: 4 }}>
+                          <TextField
+                            label="Seats per Row"
+                            type="number"
+                            value={room.seatsPerRow}
+                            onChange={(e) =>
+                              updateRoom(idx, {
+                                seatsPerRow: Number(e.target.value) || 1,
+                                emptySeats: [],
+                                seatTypes: {},
+                              })
+                            }
+                            fullWidth
+                          />
+                        </Grid>
+                      </Grid>
+                      {rooms.length > 1 && (
+                        <Button
+                          size="small"
+                          color="error"
+                          sx={{ mt: 1 }}
+                          onClick={() => removeRoom(idx)}
+                        >
+                          Remove room
+                        </Button>
+                      )}
+                    </Paper>
+                  ))}
+                </Stack>
+              </Box>
+            )}
+
+            {!editingHall && step === 3 && (
+              <Box sx={{ mb: 1 }}>
+                <Alert severity="info" sx={{ mb: 2 }}>
+                  Calculated total capacity: {totalCapacity}
+                </Alert>
+                <Stack direction="row" spacing={1} alignItems="center" mb={2}>
+                  <Typography variant="body2" color="text.secondary">Brush:</Typography>
+                  {["regular", "premium", "blocked"].map((brush) => (
+                    <Chip
+                      key={brush}
+                      label={brush.charAt(0).toUpperCase() + brush.slice(1)}
+                      color={seatBrush === brush ? "primary" : "default"}
+                      variant={seatBrush === brush ? "filled" : "outlined"}
+                      onClick={() => setSeatBrush(brush)}
+                      size="small"
+                    />
+                  ))}
+                </Stack>
+                <Stack spacing={2}>
                   {rooms.map((room, roomIndex) => {
                     const rows = Number(room.rows);
                     const seats = Number(room.seatsPerRow);
                     const available = rows * seats - room.emptySeats.length;
                     return (
-                      <div key={roomIndex} className="rounded-lg border border-white/10 p-4">
-                        <div className="mb-3 flex items-center justify-between">
-                          <h4 className="font-semibold text-white">{room.roomName || `Room ${roomIndex + 1}`}</h4>
-                          <span className="text-sm text-slate-300">
+                      <Paper key={roomIndex} variant="outlined" sx={{ p: 2 }}>
+                        <Stack direction="row" justifyContent="space-between" mb={1}>
+                          <Typography fontWeight={700}>{room.roomName || `Room ${roomIndex + 1}`}</Typography>
+                          <Typography variant="body2" color="text.secondary">
                             {available}/{rows * seats} available
-                          </span>
-                        </div>
-                        <div className="overflow-x-auto">
-                          <div className="inline-flex flex-col gap-2">
+                          </Typography>
+                        </Stack>
+                        <Box sx={{ overflowX: "auto" }}>
+                          <Stack spacing={1}>
                             {Array.from({ length: rows }).map((_, rowIndex) => (
-                              <div key={rowIndex} className="flex items-center gap-2">
-                                <span className="w-6 text-xs text-slate-300">{String.fromCharCode(65 + rowIndex)}</span>
-                                <div className="flex gap-1">
+                              <Stack key={rowIndex} direction="row" spacing={1} alignItems="center">
+                                <Typography variant="caption" sx={{ width: 16 }}>
+                                  {String.fromCharCode(65 + rowIndex)}
+                                </Typography>
+                                <Stack direction="row" spacing={0.5}>
                                   {Array.from({ length: seats }).map((__, colIndex) => {
                                     const key = seatKey(rowIndex, colIndex);
                                     const isEmpty = room.emptySeats.includes(key);
                                     const seatType = room.seatTypes?.[key] === "premium" ? "premium" : "regular";
                                     return (
-                                      <button
+                                      <IconButton
                                         key={key}
-                                        type="button"
+                                        size="small"
                                         onClick={() => applySeatBrush(roomIndex, rowIndex, colIndex)}
-                                        className="p-0.5 transition-transform hover:scale-110"
-                                        title={`${String.fromCharCode(65 + rowIndex)}${colIndex + 1} - ${isEmpty ? "blocked" : seatType}`}
+                                        sx={{ p: 0.5 }}
+                                        title={`${String.fromCharCode(65 + rowIndex)}${colIndex + 1}`}
                                       >
                                         <Armchair
                                           size={16}
                                           className={
                                             isEmpty
-                                              ? "text-slate-600 opacity-50"
+                                              ? "text-slate-500"
                                               : seatType === "premium"
                                                 ? "text-amber-400"
                                                 : "text-pink-400"
                                           }
                                         />
-                                      </button>
+                                      </IconButton>
                                     );
                                   })}
-                                </div>
-                              </div>
+                                </Stack>
+                              </Stack>
                             ))}
-                          </div>
-                        </div>
-                      </div>
+                          </Stack>
+                        </Box>
+                      </Paper>
                     );
                   })}
-                </div>
-              )}
+                </Stack>
+              </Box>
+            )}
+          </form>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, py: 2 }}>
+          <Button type="button" onClick={closeModal} color="inherit">Cancel</Button>
+          {step > 0 && (
+            <Button type="button" variant="outlined" onClick={() => setStep((s) => Math.max(0, s - 1))}>
+              Back
+            </Button>
+          )}
+          {step < (editingHall ? 1 : steps.length - 1) ? (
+            <Button
+              key="next-step"
+              type="button"
+              variant="contained"
+              onClick={() => {
+                if (!validateStep()) return;
+                setStep((s) => s + 1);
+              }}
+            >
+              Next
+            </Button>
+          ) : (
+            <Button
+              key="submit-hall"
+              type="button"
+              variant="contained"
+              onClick={handleSubmit}
+            >
+              {editingHall ? "Update Hall" : "Create Hall"}
+            </Button>
+          )}
+        </DialogActions>
+      </Dialog>
 
-              <div className="flex justify-end gap-3 border-t border-white/10 pt-4">
-                {!editingHall && step > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => setStep((s) => s - 1)}
-                    className="rounded-lg px-6 py-2 font-medium text-slate-300 hover:text-white"
-                  >
-                    Back
-                  </button>
-                )}
-                {!editingHall && step < 4 && (
-                  <button
-                    type="button"
-                    onClick={() => setStep((s) => s + 1)}
-                    disabled={
-                      (step === 1 && !canProceedDetails) ||
-                      (step === 2 && !canProceedLocation) ||
-                      (step === 3 && !validateRooms())
-                    }
-                    className="rounded-lg bg-[#D72626] px-6 py-2 font-semibold text-white disabled:opacity-50"
-                  >
-                    Next
-                  </button>
-                )}
-                {(editingHall || step === 4) && (
-                  <button
-                    type="submit"
-                    className="rounded-lg bg-[#D72626] px-6 py-2 font-semibold text-white hover:bg-[#D72626]/90 transition-colors"
-                  >
-                    {editingHall ? "Update Hall" : "Create Hall"}
-                  </button>
-                )}
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-    </div>
+      <Dialog
+        open={Boolean(deactivateTarget)}
+        onClose={() => setDeactivateTarget(null)}
+        fullWidth
+        maxWidth="xs"
+      >
+        <DialogTitle>Deactivate Hall</DialogTitle>
+        <DialogContent>
+          <Typography color="text.secondary">
+            Are you sure you want to deactivate
+            <Box component="span" sx={{ fontWeight: 700, color: "text.primary" }}>
+              {" "}{deactivateTarget?.name || "this hall"}
+            </Box>
+            ? You can activate it again later if needed.
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setDeactivateTarget(null)} color="inherit">
+            Cancel
+          </Button>
+          <Button variant="contained" color="error" onClick={handleDelete}>
+            Deactivate
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Container>
   );
 };
 

@@ -1,6 +1,6 @@
 import { useState, useContext } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
-import { User, Lock, Eye, EyeOff, Film } from "lucide-react";
+import { User, Lock, Eye, EyeOff, Film, ArrowLeft } from "lucide-react";
 import { toast } from "react-hot-toast";
 import axios from "axios";
 import { AuthContext } from "../../../shared/context/AuthContext.jsx";
@@ -74,6 +74,14 @@ const Login = () => {
         {/* Left Side - Login Form */}
         <div className="relative z-10 flex w-full flex-col justify-center bg-black p-8 md:w-1/2 lg:w-2/5">
           <div className="mx-auto w-full max-w-sm">
+            <Link
+              to="/"
+              className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-slate-400 transition hover:text-white"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to Home
+            </Link>
+
             <div className="mb-8 text-left">
               <h1 className="text-4xl font-bold tracking-tight">Login</h1>
               <p className="mt-2 text-base text-slate-400">

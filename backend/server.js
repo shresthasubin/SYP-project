@@ -6,6 +6,7 @@ import router from "./routes/index.js";
 import cookieParser from "cookie-parser";
 import bcrypt from "bcryptjs";
 import User from "./model/user.model.js";
+import { ensureNotificationColumns } from "./model/notification.model.js";
 import swaggerSpec from "./swagger.js";
 import swaggerUi from "swagger-ui-express";
 import http from "http";
@@ -22,7 +23,7 @@ const port = process.env.PORT || 3000;
 app.use(express.json());
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: ["https://cinemahub-frontend.vercel.app","http://localhost:5173"],
     credentials: true,
   }),
 );
@@ -37,7 +38,7 @@ app.use("/api", router);
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5173",
+    origin: ["https://cinemahub-frontend.vercel.app","http://localhost:5173"],
     credentials: true,
   },
 });
@@ -85,6 +86,7 @@ const syncDatabase = async () => {
 
   try {
     await sequelize.sync({ force: forceSync });
+    await ensureNotificationColumns();
   } finally {
     if (forceSync) {
       await sequelize.query("SET FOREIGN_KEY_CHECKS = 1");

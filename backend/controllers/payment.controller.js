@@ -152,7 +152,7 @@ const generateTicketsForBooking = async ({ bookingId, userId, transaction }) => 
     },
     { transaction }
   );
-  
+
   return { booking, created: true };
 };
 

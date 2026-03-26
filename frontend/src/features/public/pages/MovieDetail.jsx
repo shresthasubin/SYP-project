@@ -65,6 +65,11 @@ const rowToLabel = (rowNumber) => {
   return String.fromCharCode(64 + n);
 };
 
+const normalizeId = (value) => {
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+};
+
 export default function MovieDetail() {
   const { id } = useParams();
   const { user, isAuthenticated } = useAuth();
@@ -156,15 +161,18 @@ export default function MovieDetail() {
   }, [showtimes, activeDate, uniqueDates]);
 
   const toggleSeatSelection = (seat) => {
-    if (!seat || seat.type !== "seat" || seat.isBooked || heldSeatIds.includes(Number(seat.id))) return;
+    const seatId = normalizeId(seat?.id);
+    if (!seat || seat.type !== "seat" || !seatId || seat.isBooked || heldSeatIds.includes(seatId)) return;
+
     setSelectedSeatIds((prev) => {
-      if (prev.includes(seat.id)) return prev.filter((sid) => sid !== seat.id);
-      return [...prev, seat.id];
+      if (prev.includes(seatId)) return prev.filter((sid) => sid !== seatId);
+      return [...prev, seatId];
     });
   };
 
   const openBookingModal = async (showtimeId) => {
-    const showtime = showtimes.find((item) => item.id === showtimeId);
+    const normalizedShowtimeId = normalizeId(showtimeId);
+    const showtime = showtimes.find((item) => normalizeId(item.id) === normalizedShowtimeId);
     if (!showtime) return;
     if (!isAuthenticated) {
       window.location.href = "/login";
@@ -176,7 +184,7 @@ export default function MovieDetail() {
       setSelectedShowtime(showtime);
       setSelectedSeatIds([]);
       setBookingOpen(true);
-      const availabilityRes = await axios.get(`${API_BASE_URL}/ticket/availability/${showtimeId}`);
+      const availabilityRes = await axios.get(`${API_BASE_URL}/ticket/availability/${normalizedShowtimeId}`);
       const seats = availabilityRes.data?.success ? availabilityRes.data?.data?.seats || [] : [];
       setAvailableSeats(seats.sort(sortSeats));
     } catch (err) {
@@ -186,6 +194,21 @@ export default function MovieDetail() {
       setAvailableSeats([]);
     } finally {
       setBookingLoading(false);
+    }
+  };
+
+  const changeBookingDate = (dateKey) => {
+    if (!selectedShowtime) return;
+
+    const nextShowtime =
+      showtimes.find(
+        (item) =>
+          Number(item.hallroom_id) === Number(selectedShowtime.hallroom_id) &&
+          toDateKey(item.show_date) === dateKey,
+      ) || showtimes.find((item) => toDateKey(item.show_date) === dateKey);
+
+    if (nextShowtime?.id) {
+      openBookingModal(nextShowtime.id);
     }
   };
 
@@ -202,18 +225,26 @@ export default function MovieDetail() {
 
   const handleBookTickets = async () => {
     if (!selectedShowtime?.id) return;
-    if (selectedSeatIds.length === 0) return toast.error("Please select at least one seat");
+    const normalizedSeatIds = [...new Set(selectedSeatIds.map(normalizeId).filter(Boolean))];
+    if (normalizedSeatIds.length === 0) return toast.error("Please select at least one seat");
 
     try {
       setBookingSubmitting(true);
       const response = await axios.post(
         `${API_BASE_URL}/ticket/book/${selectedShowtime.id}`,
-        { seatIds: selectedSeatIds },
+        { seatIds: normalizedSeatIds },
         { withCredentials: true },
       );
       if (response.data?.success) {
         toast.success("Booking created. Complete payment to generate tickets.");
-        setGeneratedTicketPayload(response.data?.data || null);
+        setGeneratedTicketPayload({
+          ...(response.data?.data || {}),
+          bookingSummary: {
+            seatCount: normalizedSeatIds.length,
+            seatLabels: selectedSeatObjects.map((seat) => seat.seat_number).filter(Boolean),
+            totalAmount: ticketTotal,
+          },
+        });
         closeBookingModal();
       }
     } catch (err) {
@@ -240,7 +271,7 @@ export default function MovieDetail() {
   }, [availableSeats]);
 
   const selectedSeatObjects = useMemo(
-    () => availableSeats.filter((seat) => seat.type === "seat" && selectedSeatIds.includes(seat.id)),
+    () => availableSeats.filter((seat) => seat.type === "seat" && selectedSeatIds.includes(normalizeId(seat.id))),
     [availableSeats, selectedSeatIds],
   );
 
@@ -366,16 +397,16 @@ export default function MovieDetail() {
 
   if (loading) {
     return (
-      <section className="min-h-[60vh] bg-[#0a0a0a] py-20 pt-24">
-        <div className="mx-auto max-w-6xl px-6 text-gray-300">Loading movie details...</div>
+      <section className="min-h-[60vh] bg-[#0a0a0a] px-4 py-16 pt-20 sm:px-6 sm:py-20 sm:pt-24">
+        <div className="mx-auto max-w-6xl text-white/70">Loading movie details...</div>
       </section>
     );
   }
 
   if (error || !movie) {
     return (
-      <section className="min-h-[60vh] bg-[#0a0a0a] py-20 pt-24">
-        <div className="mx-auto max-w-6xl px-6">
+      <section className="min-h-[60vh] bg-[#0a0a0a] px-4 py-16 pt-20 sm:px-6 sm:py-20 sm:pt-24">
+        <div className="mx-auto max-w-6xl">
           <p className="text-red-400">{error || "Movie not found."}</p>
           <Link to="/movies" className="mt-4 inline-block rounded border border-white/10 px-6 py-3 text-sm font-semibold hover:bg-white/5">
             Back to list
@@ -386,7 +417,7 @@ export default function MovieDetail() {
   }
 
   return (
-    <section className="min-h-screen bg-[#0a0a0a] pb-14 pt-16 font-[Oswald] text-white">
+    <section className="min-h-screen bg-[#0a0a0a] pb-12 pt-4 sm:pb-14 sm:pt-6 md:pt-8 font-[Oswald] text-white">
       <MovieDetailPanel
         movie={movie}
         genreLabel={genreLabel}
@@ -421,6 +452,7 @@ export default function MovieDetail() {
         bookingSubmitting={bookingSubmitting}
         onToggleSeatSelection={toggleSeatSelection}
         onOpenBooking={openBookingModal}
+        onSelectBookingDate={changeBookingDate}
         onSubmitBooking={handleBookTickets}
         onClose={closeBookingModal}
         getPosterUrl={getPosterUrl}
